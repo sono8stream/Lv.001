@@ -71,8 +71,6 @@ public class PlayerController : MonoBehaviour
                     transform.position = nodePos[0];
                 }
                 Vector2 curPos = new Vector2((int)transform.position.x, (int)(transform.position.y - corPosY)) + corPosMap;//現在位置
-                Debug.Log(dest);
-                Debug.Log(curPos);
                 nodePos = new List<Vector2>();
                 SearchRoute(dest, curPos, 0);
                 if (c != null)
@@ -118,7 +116,11 @@ public class PlayerController : MonoBehaviour
             }
             else if (eventObject != null)
             {
+                direction = directionDic[(Vector2)eventObject.transform.position - (Vector2)transform.position];
+                spriteAniCor *= -1;
+                GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
                 eventObject.GetComponent<EventObject>().ReadScript();
+                EventCommands.isProcessing = true;
                 eventObject = null;
             }
         }
