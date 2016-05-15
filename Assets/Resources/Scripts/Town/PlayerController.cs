@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
     int[,] mapData;//レイヤー2のマップデータ、7以外では移動不可
     int[,] mapCostData;
     int direction;
-    Dictionary<Vector2,int> directionDic;//主人公向き
+    Dictionary<Vector2, int> directionDic;//主人公向き
     int validChipNo;
     List<Vector2> nodePos;
     float corPosY;//y座標位置の補正
@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
     Sprite[] sprites;//すべてのスプライト
     int spritePat = 3;//スプライトのアニメーションパターン
     int spriteAniCor = 1;//移動中アニメの変化パターン
+    [SerializeField]
+    GameObject selectPos;
     GameObject eventObject;
 
     // Use this for initialization
@@ -36,11 +38,11 @@ public class PlayerController : MonoBehaviour
                 mapCostData[i, j] = -1;
             }
         }
-        directionDic = new Dictionary<Vector2,int>();
-        directionDic.Add(Vector2.up,3);
-        directionDic.Add(Vector2.right,2);
-        directionDic.Add(Vector2.down,0);
-        directionDic.Add(Vector2.left,1);
+        directionDic = new Dictionary<Vector2, int>();
+        directionDic.Add(Vector2.up, 3);
+        directionDic.Add(Vector2.right, 2);
+        directionDic.Add(Vector2.down, 0);
+        directionDic.Add(Vector2.left, 1);
         direction = directionDic[Vector2.down];
         validChipNo = 7;
         nodePos = new List<Vector2>();
@@ -70,6 +72,8 @@ public class PlayerController : MonoBehaviour
                 {
                     transform.position = nodePos[0];
                 }
+                selectPos.SetActive(true);
+                selectPos.transform.position = dest - corPosMap + Vector2.up * 0.5f;
                 Vector2 curPos = new Vector2((int)transform.position.x, (int)(transform.position.y - corPosY)) + corPosMap;//現在位置
                 nodePos = new List<Vector2>();
                 SearchRoute(dest, curPos, 0);
@@ -100,6 +104,10 @@ public class PlayerController : MonoBehaviour
                     transform.position = nodePos[0];
                     nodePos.RemoveAt(0);
                     GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+                    if(nodePos.Count==0)
+                    {
+                        selectPos.SetActive(false);
+                    }
                 }
                 else /*if (count < inter)*/
                 {
@@ -122,6 +130,7 @@ public class PlayerController : MonoBehaviour
                 eventObject.GetComponent<EventObject>().ReadScript();
                 EventCommands.isProcessing = true;
                 eventObject = null;
+                selectPos.SetActive(false);
             }
         }
     }
@@ -187,14 +196,14 @@ public class PlayerController : MonoBehaviour
             nodePos.Add(pos - new Vector2((mapData.GetLength(0) - 1) / 2, (mapData.GetLength(1) - 1) / 2 + corPosY));
         }
         if (pos.y - 1 >= 0 && mapData[(int)pos.x, (int)pos.y - 1] == validChipNo
-            && mapCostData[(int)pos.x, (int)pos.y - 1]!=-1&&mapCostData[(int)pos.x, (int)pos.y - 1] <= cost)
+            && mapCostData[(int)pos.x, (int)pos.y - 1] != -1 && mapCostData[(int)pos.x, (int)pos.y - 1] <= cost)
         {
             GetRoute(pos + Vector2.down, cost);
         }
         else
         if (pos.x + 1 <= mapData.GetLength(0) - 1
             && mapData[(int)pos.x + 1, (int)pos.y] == validChipNo &&
-            mapCostData[(int)pos.x+1, (int)pos.y] != -1 &&  mapCostData[(int)pos.x + 1, (int)pos.y] <= cost)
+            mapCostData[(int)pos.x + 1, (int)pos.y] != -1 && mapCostData[(int)pos.x + 1, (int)pos.y] <= cost)
         {
             GetRoute(pos + Vector2.right, cost);
         }
@@ -207,11 +216,9 @@ public class PlayerController : MonoBehaviour
         }
         else
         if (pos.x - 1 >= 0 && mapData[(int)pos.x - 1, (int)pos.y] == validChipNo
-            && mapCostData[(int)pos.x-1, (int)pos.y] != -1 && mapCostData[(int)pos.x - 1, (int)pos.y] <= cost)
+            && mapCostData[(int)pos.x - 1, (int)pos.y] != -1 && mapCostData[(int)pos.x - 1, (int)pos.y] <= cost)
         {
             GetRoute(pos + Vector2.left, cost);
         }
     }
-
-
 }
