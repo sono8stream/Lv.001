@@ -116,28 +116,26 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.CloseMessage());
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[3] { 1, 6, 11 }));
+                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[3] { 1, 5, 9 }));
                 events.Add(new UnityEvent());//以下、買う処理
                 events[events.Count - 1].AddListener(() =>
                   eventCommands.MakeChoices(true, properties.Skip(1).Take(properties.GetLength(0) - 1).ToArray()));
                 events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.money.ToString() + "G",
+                    -100, 800, 800, 200));
+                events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.BuyOrSellItem(true));
-                events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.CloseChoices());
-                events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.JumpAction(6));//買う　ここまで
                 events.Add(new UnityEvent());//以下、売る処理
                 events[events.Count - 1].AddListener(() => eventCommands.ChoiceSellItem());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.money.ToString() + "G",
+                    -100, 800, 800, 200));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.BuyOrSellItem(false));
-                events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.CloseChoices());
-                events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.JumpAction(1));//売る　ここまで
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WriteMessage("おおきに!"));
                 events.Add(new UnityEvent());

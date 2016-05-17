@@ -48,7 +48,6 @@ public class PlayerController : MonoBehaviour
         nodePos = new List<Vector2>();
         corPosY = 0.5f;
         sprites = Resources.LoadAll<Sprite>("Sprites/" + spriteName);
-        Debug.Log(sprites.GetLength(0));
         eventObject = null;
     }
 
@@ -104,19 +103,21 @@ public class PlayerController : MonoBehaviour
                     transform.position = nodePos[0];
                     nodePos.RemoveAt(0);
                     GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
-                    if(nodePos.Count==0)
+                    if (nodePos.Count == 0)
                     {
                         selectPos.SetActive(false);
+                    }
+                    else
+                    {
+                        Vector2 d
+                            = new Vector2((int)(nodePos[0].x - transform.position.x), (int)(nodePos[0].y - transform.position.y));
+                        direction = directionDic[d];
+                        spriteAniCor *= -1;
+                        GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
                     }
                 }
                 else /*if (count < inter)*/
                 {
-                    if (count == 0)//方向を取得して画像変更
-                    {
-                        direction = directionDic[nodePos[0] - (Vector2)transform.position];
-                        spriteAniCor *= -1;
-                        GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
-                    }
                     transform.position = (nodePos[0] - (Vector2)transform.position) / (inter - count)
                         + (Vector2)transform.position;
                     count++;
@@ -124,7 +125,20 @@ public class PlayerController : MonoBehaviour
             }
             else if (eventObject != null)
             {
-                direction = directionDic[(Vector2)eventObject.transform.position - (Vector2)transform.position];
+                Vector2 d
+                    = new Vector2((int)(eventObject.transform.position.x - transform.position.x),
+                    (int)(eventObject.transform.position.y - transform.position.y));
+                try
+                {
+                    direction = directionDic[d];
+                }
+                catch
+                {
+                    Debug.Log("line142");
+                    Debug.Log(eventObject.transform.position);
+                    Debug.Log(transform.position);
+                    Debug.Log(d);
+                }
                 spriteAniCor *= -1;
                 GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
                 eventObject.GetComponent<EventObject>().ReadScript();
@@ -186,7 +200,6 @@ public class PlayerController : MonoBehaviour
     void GetRoute(Vector2 pos, int cost)
     {
         cost = mapCostData[(int)pos.x, (int)pos.y];
-        Debug.Log(cost);
         if (cost <= 0)
         {
             return;

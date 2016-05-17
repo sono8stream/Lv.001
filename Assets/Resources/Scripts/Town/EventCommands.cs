@@ -39,6 +39,7 @@ public class EventCommands : MonoBehaviour
     {
         canvas = GameObject.Find("Canvas");
         choiceButtons = new List<GameObject>();
+        windows = new List<GameObject>();
         eventDic = new Dictionary<string, int>();
         eventDic.Add("メッセージ", 0);
         eventDic.Add("選択肢", 1);
@@ -59,22 +60,44 @@ public class EventCommands : MonoBehaviour
     public void WriteMessage(string message, float x = 0, float y = -690, float width = 1060, float height = 500)
     {
         GameObject messageBox = canvas.transform.FindChild("Message Box").gameObject;
-        GameObject text = messageBox.transform.FindChild("Text").gameObject;
+        windows.Add(Instantiate(messageBox));
+        GameObject win = windows[windows.Count - 1];
+        GameObject text = win.transform.FindChild("Text").gameObject;
         text.GetComponent<Text>().text = message;
-        messageBox.SetActive(true);
-        messageBox.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, y);
-        messageBox.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
+        win.transform.SetParent(canvas.transform);
+        win.GetComponent<RectTransform>().localScale = Vector3.one;
+        win.SetActive(true);
+        win.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, y);
+        win.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
         text.GetComponent<RectTransform>().sizeDelta = new Vector2(width - 100, height - 50);
         text.SetActive(true);
         isCompleted = true;
     }
 
-    public void CloseMessage()
+    public void CloseMessage(bool all = false)
     {
-        GameObject messageBox = canvas.transform.FindChild("Message Box").gameObject;
-        messageBox.SetActive(false);
-        messageBox.transform.FindChild("Text").gameObject.SetActive(false);
-        isCompleted = true;
+        if (all)
+        {
+            if (windows.Count > 0)
+            {
+                for (int i = 0; i < windows.Count; i++)
+                {
+                    Destroy(windows[i]);
+                }
+                windows = new List<GameObject>();
+            }
+        }
+        else
+        {
+            int winNo = windows.Count - 1;
+            if (winNo >= 0)
+            {
+                GameObject sub = windows[winNo];
+                windows.RemoveAt(winNo);
+                Destroy(sub);
+                isCompleted = true;
+            }
+        }
     }
 
     public void WaitForInput()
@@ -119,7 +142,7 @@ public class EventCommands : MonoBehaviour
                 if (i < commandCount - 1)
                 {
                     t = Data.items[int.Parse(choices[i])].name;
-                    s = "所持数: " + Data.items[int.Parse(choices[i])].possessionCount.ToString();
+                    s = Data.items[int.Parse(choices[i])].price.ToString() + "G";
                 }
                 else
                 {
@@ -132,6 +155,7 @@ public class EventCommands : MonoBehaviour
                 t = choices[i];
                 s = "";
             }
+            int no = i;
             choiceButtons[i].GetComponent<Text>().text = t;
             choiceButtons[i].transform.FindChild("Text").GetComponent<Text>().text = s;
             choiceButtons[i].transform.SetParent(choiceBox.transform);
@@ -139,12 +163,11 @@ public class EventCommands : MonoBehaviour
             choiceButtons[i].transform.localPosition
                 = new Vector2(0, choiceBox.GetComponent<RectTransform>().sizeDelta.y / 2 - margin - textSizeY * (i + 0.5f));
             choiceButtons[i].transform.localScale = Vector3.one;
-            choiceButtons[i].GetComponent<Button>().onClick.AddListener(() => SetChoice(t, !isShopping));
+            choiceButtons[i].GetComponent<Button>().onClick.AddListener(() => SetChoice(t));
             trigger = choiceButtons[i].GetComponent<EventTrigger>();
             trigger.triggers = new List<EventTrigger.Entry>();
             entry = new EventTrigger.Entry();
             entry.eventID = EventTriggerType.PointerDown;    //イベントのタイプSelectが発生した際に
-            int no = i;
             entry.callback.AddListener((x) => SetSelectBranch(choiceButtons[no].GetComponent<RectTransform>().anchoredPosition));
             trigger.triggers.Add(entry);
         }
@@ -191,18 +214,9 @@ public class EventCommands : MonoBehaviour
     /// 原則2連続タップだが、
     /// onceは一回選択で遷移可能なケース
     /// </summary>
-    public void SetChoice(string choiceName, bool once = true)
+    public void SetChoice(string choiceName)
     {
-        if (once || (isSelecting && choiceNameSub.Equals(choiceName)))
-        {
-            this.choiceName = choiceName;
-            isSelecting = false;
-        }
-        else
-        {
-            choiceNameSub = choiceName;
-            isSelecting = true;
-        }
+        this.choiceName = choiceName;
     }
 
     public void SetSelectBranch(Vector2 pos)
@@ -228,27 +242,46 @@ public class EventCommands : MonoBehaviour
                     break;
                 }
             }
-            if (buy)
+            if (!ChoiceName.Equals(choiceNameSub))//何も選択していない
             {
-                if (PlayerData.money > Data.items[itemNo].price)
+                if (!choiceNameSub.Equals(""))
                 {
-                    Data.items[itemNo].possessionCount++;
-                    PlayerData.money -= Data.items[itemNo].price;
+                    CloseMessage();//説明消す
+                    CloseMessage();//所持数消す
                 }
+                choiceNameSub = string.Copy(choiceName);
+                choiceName = "";
+                WriteMessage(Data.items[itemNo].exp);
+                WriteMessage("所持数:　" + Data.items[itemNo].possessionCount.ToString(),300,300,700,200);
+                JumpAction(-1);
             }
             else
             {
-                Data.items[itemNo].possessionCount--;
-                PlayerData.money += Data.items[itemNo].price;
+                if (buy)
+                {
+                    if (PlayerData.money > Data.items[itemNo].price)
+                    {
+                        Data.items[itemNo].possessionCount++;
+                        PlayerData.money -= Data.items[itemNo].price;
+                    }
+                }
+                else
+                {
+                    Data.items[itemNo].possessionCount--;
+                    PlayerData.money += Data.items[itemNo].price;
+                }
+                CloseChoices();
+                CloseMessage(true);
+                JumpAction(-4);
             }
-            JumpAction(-2);
         }
         else
         {
             JumpAction(-99);
             isCompleted = true;
+            CloseMessage(true);
+            CloseChoices();
         }
-        CloseChoices();
     }
 
     public void DrawImage(Sprite sprite, Rect rect)
@@ -292,7 +325,7 @@ public class EventCommands : MonoBehaviour
         actNo += destNo - 1;
         if(actNo<0)
         {
-            actNo = 0;
+            actNo = -1;
         }
         isCompleted = true;
     }
