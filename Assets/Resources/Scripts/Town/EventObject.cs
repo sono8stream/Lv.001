@@ -7,7 +7,6 @@ using System.Linq;
 
 public class EventObject : MonoBehaviour
 {
-
     [SerializeField]
     TextAsset scriptText;//スクリプトファイル
     [SerializeField]
@@ -17,6 +16,7 @@ public class EventObject : MonoBehaviour
     int line;//現在読んでいるスクリプトの行数
     EventCommands eventCommands;
     List<UnityEvent> events;
+    [SerializeField]
     bool canThrough;
     public bool CanThrough
     {
@@ -30,16 +30,15 @@ public class EventObject : MonoBehaviour
         line = 0;
         char[] kugiri = { '\r' };
         scripts = scriptText.text.Split(kugiri);
-        //eventCommands = Resources.Load<EventCommands>("/Scripts/EventCommands");
         eventCommands = GetComponent<EventCommands>();
         events = new List<UnityEvent>();
         eventCommands.actNo = 0;
+        eventCommands.IsCompleted = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-
         if (events.Count > 0)
         {
             events[eventCommands.actNo].Invoke();
@@ -64,6 +63,11 @@ public class EventObject : MonoBehaviour
         {
             line = 0;
             EventCommands.isProcessing = false;
+            if(eventCommands.SelfVar[0]==1)
+            {
+                GetComponent<EventObject>().enabled = false;
+                GetComponent<SpriteRenderer>().enabled = false;
+            }
             return;
         }
         eventCommands.actNo = 0;
@@ -76,11 +80,21 @@ public class EventObject : MonoBehaviour
                 scripts[line].IndexOf(")") - scripts[line].IndexOf("(") - 1);//引数を取得
         }
         string[] properties;
+        string[] branch;
         switch (eventCommands.eventDic[command])
         {
             case 0://メッセージ描画
+                string[] t = param1.Split('|');
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(param1));
+                if (t.Length == 1)
+                {
+                    events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(t[0]));
+                }
+                else
+                {
+                    events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(t[0],float.Parse(t[1]),
+                        float.Parse(t[2]), float.Parse(t[3]), float.Parse(t[4])));
+                }
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForInput());
                 events.Add(new UnityEvent());
@@ -91,8 +105,9 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(properties[0]));
                 events.Add(new UnityEvent());
+                float length = float.Parse(properties[properties.Length - 1]);
                 events[events.Count - 1].AddListener(()
-                    => eventCommands.MakeChoices(false, properties.Skip(1).Take(properties.GetLength(0) - 1).ToArray()));
+                    => eventCommands.MakeChoices(false, Vector2.zero, length, -1, properties.Skip(1).Take(properties.GetLength(0) - 2).ToArray()));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
@@ -104,11 +119,14 @@ public class EventObject : MonoBehaviour
                 break;
             case 2://買い物
                 properties = param1.Split('|');//一文字目はメッセージ、それ以降は選択肢
-                string[] branch = new string[3] { "買う", "売る", "さようなら" };
+                branch = new string[3] { "買う", "売る", "さようなら" };
+                string st = string.Copy(properties[0]);
+                float winLength = 500;
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(properties[0]));
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(/*properties[0]*/st));
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, branch));
+                events[events.Count - 1].AddListener(()
+                    => eventCommands.MakeChoices(false, Vector2.zero, winLength, -1, branch));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
@@ -119,19 +137,19 @@ public class EventObject : MonoBehaviour
                 events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[3] { 1, 5, 9 }));
                 events.Add(new UnityEvent());//以下、買う処理
                 events[events.Count - 1].AddListener(() =>
-                  eventCommands.MakeChoices(true, properties.Skip(1).Take(properties.GetLength(0) - 1).ToArray()));
+                  eventCommands.MakeChoices(true, Vector2.zero, 1000, -1, properties.Skip(1).Take(properties.GetLength(0) - 1).ToArray()));
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.money.ToString() + "G",
-                    -100, 800, 800, 200));
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.Instance.money.ToString() + "G",
+                    -100, 860, 400, 150));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.BuyOrSellItem(true));
                 events.Add(new UnityEvent());//以下、売る処理
-                events[events.Count - 1].AddListener(() => eventCommands.ChoiceSellItem());
+                events[events.Count - 1].AddListener(() => eventCommands.ChoiceHaveItem(true));
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.money.ToString() + "G",
-                    -100, 800, 800, 200));
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.Instance.money.ToString() + "G",
+                    -100, 860, 400, 150));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
@@ -143,7 +161,7 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.CloseMessage());
                 break;
-            case 3:
+            case 3://画像表示
                 properties = param1.Split('|');//一文字目はファイル名、それ以降はrect
                 Sprite sprite = Resources.Load<Sprite>("Sprites/" + properties[0]);
                 events.Add(new UnityEvent());
@@ -151,7 +169,90 @@ public class EventObject : MonoBehaviour
                     new Rect(float.Parse(properties[1]), float.Parse(properties[2]),
                     float.Parse(properties[3]), float.Parse(properties[4]))));
                 break;
-            case 4://分岐終点
+            case 4://メニュー
+                branch = new string[4] { "道具", "装備", "中断", "閉じる" };
+                Vector2 v = new Vector2(-380, -400);
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, v, 300, -1, branch));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.Instance.money.ToString() + "G",
+                    -100, 860, 400, 150));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[4] { 1, 5, 12, 13 }));
+                events.Add(new UnityEvent());//以下、"道具"コマンド処理
+                events[events.Count - 1].AddListener(() => eventCommands.ChoiceHaveItem(false));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CheckItem());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.JumpAction(-3));
+                events.Add(new UnityEvent());//以下、"装備"コマンド処理
+                events[events.Count - 1].AddListener(() => eventCommands.WriteStatus());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.SaveChoice());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.SetWeapon());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.EquipWeapon());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.JumpAction(-3));
+                events.Add(new UnityEvent());//以下、"中断"処理
+                events[events.Count - 1].AddListener(() => Application.Quit());
+                events.Add(new UnityEvent());//以下、"閉じる"処理
+                events[events.Count - 1].AddListener(() => eventCommands.CloseChoices(true));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CloseMessage(true));
+                break;
+            case 5://移動
+                properties = param1.Split('|');//一文字目は移動先、それ以降は座標
+                int sceneNo = int.Parse(properties[0]);
+                Vector2 pos = new Vector2(float.Parse(properties[1]), float.Parse(properties[2]));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.Move(sceneNo, pos));
+                break;
+            case 6://条件分岐
+                properties = param1.Split('|');
+                string[] p = new string[properties.Length];
+                for (int i = 0; i < p.Length; i++)
+                {
+                    p[i] = string.Copy(properties[i]);
+                }
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.SetBoolean(p));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => JumpCommand());
+                break;
+            case 7://勧誘
+                string[] ms = param1.Split('|');
+                int no = int.Parse(ms[0]);
+                Vector2 vpos = new Vector2(200, -400);
+                branch = new string[3] { ms[1], ms[2], ms[3] };
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WriteStatusOne(no));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, vpos, 600, -1, branch));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CloseMessage(true));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CloseChoices());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => JumpCommand());
+                break;
+            case 8://パーティ追加
+                int charaNo = int.Parse(param1);
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.AddParty(charaNo));
+                break;
+            case 9://分岐終点
                 events.Add(new UnityEvent());
                 string s = "選択肢終点";
                 events[events.Count - 1].AddListener(() => JumpCommand(s));

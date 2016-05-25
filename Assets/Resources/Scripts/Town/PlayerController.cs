@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        transform.position = PlayerData.Instance.pos;
         mapData = new int[layer.mapdata.GetLength(0), layer.mapdata.GetLength(1)];
         mapCostData = new int[mapData.GetLength(0), mapData.GetLength(1)];
         for (int i = 0; i < mapCostData.GetLength(0); i++)
@@ -49,6 +50,7 @@ public class PlayerController : MonoBehaviour
         corPosY = 0.5f;
         sprites = Resources.LoadAll<Sprite>("Sprites/" + spriteName);
         eventObject = null;
+        PlayerData.LoadSelfVars(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 
     // Update is called once per frame
@@ -74,9 +76,17 @@ public class PlayerController : MonoBehaviour
                 selectPos.SetActive(true);
                 selectPos.transform.position = dest - corPosMap + Vector2.up * 0.5f;
                 Vector2 curPos = new Vector2((int)transform.position.x, (int)(transform.position.y - corPosY)) + corPosMap;//現在位置
+                Debug.Log(dest);
+                Debug.Log(curPos);
+                if (dest == curPos)//メニュー呼び出し
+                {
+                    GetComponent<EventObject>().ReadScript();
+                    EventCommands.isProcessing = true;
+                    return;
+                }
                 nodePos = new List<Vector2>();
                 SearchRoute(dest, curPos, 0);
-                if (c != null)
+                if (c != null && !c.GetComponent<EventObject>().CanThrough)
                 {
                     eventObject = c.gameObject;
                     mapCostData[(int)dest.x, (int)dest.y] = 99;
@@ -123,7 +133,7 @@ public class PlayerController : MonoBehaviour
                     count++;
                 }
             }
-            else if (eventObject != null)
+            else if (eventObject != null)//イベント実行
             {
                 Vector2 d
                     = new Vector2((int)(eventObject.transform.position.x - transform.position.x),
@@ -146,16 +156,18 @@ public class PlayerController : MonoBehaviour
                 eventObject = null;
                 selectPos.SetActive(false);
             }
+            else//接触中のイベントを実行
+            {
+                Collider2D c = Physics2D.OverlapPoint(transform.position);
+                if(c!=null)
+                {
+                    EventCommands.isProcessing = true;
+                    eventObject = c.gameObject;
+                    eventObject.GetComponent
+                        <EventObject>().ReadScript();
+                }
+            }
         }
-    }
-
-    /// <summary>
-    /// 目的地を検索し、そこへ移動
-    /// </summary>
-    /// <param name="destination">目的の座標</param>
-    void GoDestination(Vector2 destination)
-    {
-
     }
 
     /// <summary>
