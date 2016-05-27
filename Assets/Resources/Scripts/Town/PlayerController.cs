@@ -26,6 +26,11 @@ public class PlayerController : MonoBehaviour
     GameObject eventObject;
 
     // Use this for initialization
+    void Awake()
+    {
+        PlayerData.LoadSelfVars(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
+
     void Start()
     {
         transform.position = PlayerData.Instance.pos;
@@ -50,7 +55,6 @@ public class PlayerController : MonoBehaviour
         corPosY = 0.5f;
         sprites = Resources.LoadAll<Sprite>("Sprites/" + spriteName);
         eventObject = null;
-        PlayerData.LoadSelfVars(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 
     // Update is called once per frame
@@ -86,7 +90,7 @@ public class PlayerController : MonoBehaviour
                 }
                 nodePos = new List<Vector2>();
                 SearchRoute(dest, curPos, 0);
-                if (c != null && !c.GetComponent<EventObject>().CanThrough)
+                if (c != null && !c.GetComponent<EventObject>().CanThrough&&c.GetComponent<EventObject>().enabled)
                 {
                     eventObject = c.gameObject;
                     mapCostData[(int)dest.x, (int)dest.y] = 99;

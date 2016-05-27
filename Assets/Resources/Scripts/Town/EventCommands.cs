@@ -36,6 +36,7 @@ public class EventCommands : MonoBehaviour
     public Dictionary<string, int> eventDic;
     public int actNo;//処理中のコマンド内での処理の番号
     bool isSelecting;
+    [SerializeField]
     int[] selfVar = new int[10] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     public int[] SelfVar
     {
@@ -60,7 +61,8 @@ public class EventCommands : MonoBehaviour
         eventDic.Add("条件分岐", 6);
         eventDic.Add("勧誘", 7);
         eventDic.Add("パーティ追加", 8);
-        eventDic.Add("分岐終点", 9);
+        eventDic.Add("パーティ変更", 9);
+        eventDic.Add("分岐終点", 10);
         isProcessing = false;
         if(selfVar[0]==1)
         {
@@ -81,6 +83,7 @@ public class EventCommands : MonoBehaviour
     public void WriteMessage(string message, float x = 0, float y = -690, float width = 1060, float height = 500)
     {
         isCompleted = true;
+        Debug.Log(message);
         if (message.Equals(""))
         {
             return;
@@ -109,10 +112,12 @@ public class EventCommands : MonoBehaviour
         for (int i = 0; i < choices.Length; i++)
         {
             string status;
+            int pow = PlayerData.Instance.party[i].weapon.name.Equals("--") ? 0 :
+                PlayerData.Instance.party[i].weapon.param;
             status = PlayerData.Instance.party[i].name + "  "
-            + (JobType)(PlayerData.Instance.characters[i].status[(int)StatusParams.skillNo]);
-            status += "\r\nLv:  " + PlayerData.Instance.party[i].status[(int)StatusParams.Lv].ToString()
-                + " HP:  " + PlayerData.Instance.party[i].status[(int)StatusParams.HP].ToString()
+            + (JobType)(PlayerData.Instance.party[i].status[(int)StatusParams.skillNo]);
+            status += "\r\nLv:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.Lv]+pow).ToString()
+                + " HP:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.HP]+pow/2).ToString()
                 + "\r\n" + (SkillType)(PlayerData.Instance.party[i].status[(int)StatusParams.skillNo]);
             WriteMessage(status, 130, 600 - 370 * i, 750, 350);
             choices[i] = windows[windows.Count - 1];
@@ -121,33 +126,101 @@ public class EventCommands : MonoBehaviour
         isCompleted = true;
     }
 
-    public void WriteStatusOne(int charaNo)
+    public void WriteStatusOne(int charaNo, bool kanyu = true)
     {
         string status;
+        int pow = PlayerData.Instance.characters[charaNo].weapon.name.Equals("--") ? 0 :
+            PlayerData.Instance.characters[charaNo].weapon.param;
         status = PlayerData.Instance.characters[charaNo].name + "  "
             + (JobType)(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.skillNo]);
-        status += "\r\nLv:  " + PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv].ToString()
+        status += "\r\nLv:  " + (PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv]+pow).ToString()
             + "\r\n" + (SkillType)(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.skillNo]);
-        WriteMessage(status, -140, 200, 750, 300);
-        int trust = 0;
-        for(int i=0;i<PlayerData.Instance.party.Count;i++)
+        WriteMessage(status, -40, 250, 950, 400);
+        if (kanyu)
         {
-            trust += PlayerData.Instance.party[i].status[(int)StatusParams.Lv];
+            int trust = 0;
+            for (int i = 0; i < PlayerData.Instance.party.Count; i++)
+            {
+                trust += PlayerData.Instance.party[i].status[(int)StatusParams.Lv];
+                if (PlayerData.Instance.party[i].weapon.name != ("--"))
+                {
+                    trust += PlayerData.Instance.party[i].weapon.param;
+                }
+            }
+            WriteMessage("信頼度:  " + trust.ToString(), -220, 800, 600, 150);
         }
-        WriteMessage("信頼度:  " + trust.ToString(), -270, 800, 500, 150);
-        IsCompleted = true;
+        isCompleted = true;
     }
 
     public void AddParty(int charaNo)
     {
-        if (PlayerData.Instance.party.Count < 4)
+        PlayerData.Instance.party.Add(PlayerData.Instance.characters[charaNo]);
+        SetSelfVar();
+        if (!PlayerData.Instance.characters[charaNo].onceFriend)
         {
-            PlayerData.Instance.party.Add(PlayerData.Instance.characters[charaNo]);
-            SetSelfVar();
             PlayerData.Instance.money
-                += (int)Math.Pow(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv], 2) / 2;
+                += (int)Math.Pow(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv], 2);
         }
+        PlayerData.Instance.characters[charaNo].onceFriend = true;
         isCompleted = true;
+    }
+
+    public void ChangeParty(int charaNo)
+    {
+        if (!choiceName.Equals("やめる"))
+        {
+            int motoNo = 0;
+            for (int i = 0; i < PlayerData.Instance.party.Count; i++)
+            {
+                if (PlayerData.Instance.party[i].name.Equals(choiceName))
+                {
+                    motoNo = i;
+                    break;
+                }
+            }
+            int motoCNo = 0;
+            for (int i = 0; i < PlayerData.Instance.characters.Count; i++)
+            {
+                if (PlayerData.Instance.characters[i].name.Equals(PlayerData.Instance.party[motoNo].name))
+                {
+                    motoCNo = i;
+                    break;
+                }
+            }
+            if (!choiceNameSub.Equals(""))
+            {
+                CloseMessage();//説明消す
+            }
+            if (choiceName.Equals(choiceNameSub))//2度選択
+            {
+                PlayerData.Instance.party[motoNo] = PlayerData.Instance.characters[charaNo];
+                CloseMessage(true);
+                WriteMessage("仲間の変更を行いました");
+                SetSelfVar();
+                if (!PlayerData.Instance.characters[charaNo].onceFriend)
+                {
+                    PlayerData.Instance.money
+                        += (int)Math.Pow(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv], 2);
+                }
+                PlayerData.Instance.characters[charaNo].onceFriend = true;
+                GameObject g = GameObject.Find("Character" + (motoCNo + 1).ToString());
+                g.GetComponent<EventCommands>().SelfVar[0] = 0;
+                isCompleted = true;
+            }
+            else
+            {
+                choiceNameSub = string.Copy(choiceName);
+                choiceName = "";
+                WriteStatusOne(motoCNo,false);
+                JumpAction(-1);
+            }
+        }
+        else
+        {
+            CloseMessage(true);
+            WriteMessage("仲間の変更をやめました");
+        isCompleted = true;
+        }
     }
 
     /// <summary>
@@ -164,10 +237,12 @@ public class EventCommands : MonoBehaviour
         WriteMessage(PlayerData.Instance.money.ToString() + "G", -100, 860, 400, 150);
         string status;
         int unitNo = int.Parse(choiceName);
+        int pow = PlayerData.Instance.party[unitNo].weapon.name.Equals("--") ? 0 :
+            PlayerData.Instance.party[unitNo].weapon.param;
         status = PlayerData.Instance.party[unitNo].name + "  " 
             + (JobType)(PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo]);
-        status += "\r\nLv:  " + PlayerData.Instance.party[unitNo].status[(int)StatusParams.Lv].ToString()
-                + " HP:  " + PlayerData.Instance.party[unitNo].status[(int)StatusParams.HP].ToString()
+        status += "\r\nLv:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.Lv]+pow).ToString()
+                + " HP:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.HP]+pow/2).ToString()
             + "\r\n" + (SkillType)(PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo]);
         WriteMessage(status, 150, 550, 750, 350);
         WriteMessage("装備:  " + PlayerData.Instance.party[unitNo].weapon.name, 150, 300, 600, 150);
@@ -425,7 +500,7 @@ public class EventCommands : MonoBehaviour
         {
             CloseChoices();
             CloseMessage(true);
-            WriteMessage(PlayerData.Instance.money.ToString() + "G", -300, 860, 400, 150);
+            WriteMessage(PlayerData.Instance.money.ToString() + "G", -100, 860, 600, 150);
             JumpAction(2, false);
         }
         Debug.Log(isMenu);
@@ -503,7 +578,7 @@ public class EventCommands : MonoBehaviour
                     break;
                 }
             }
-            if (!ChoiceName.Equals(choiceNameSub))//何も選択していない
+            if (!choiceName.Equals(choiceNameSub))//何も選択していない
             {
                 if (!choiceNameSub.Equals(""))
                 {
@@ -593,11 +668,25 @@ public class EventCommands : MonoBehaviour
             }
             else if (conditions[no].Equals("キャラ"))
             {
-                param[i] = PlayerData.Instance.party[int.Parse(conditions[no + 1])].status[int.Parse(conditions[no + 2])];
+                param[i] = PlayerData.Instance.characters[int.Parse(conditions[no + 1])]
+                    .status[int.Parse(conditions[no + 2])];
             }
-            else if(conditions[no].Equals("パーティ人数"))
+            else if (conditions[no].Equals("パーティ人数"))
             {
                 param[i] = PlayerData.Instance.party.Count;
+            }
+            else if (conditions[no].Equals("信頼度"))
+            {
+                param[i] = 0;
+                for (int j = 0; j < PlayerData.Instance.party.Count; j++)
+                {
+                    param[i] += PlayerData.Instance.party[j].status[(int)StatusParams.Lv];
+                    if (PlayerData.Instance.party[j].weapon.name != ("--"))
+                    {
+                        param[i] += PlayerData.Instance.party[j].weapon.param;
+                    }
+                }
+                param[i] += int.Parse(conditions[no + 1]);
             }
             else
             {

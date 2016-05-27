@@ -23,6 +23,13 @@ public class EventObject : MonoBehaviour
         get { return canThrough; }
         set { canThrough = value; }
     }
+    [SerializeField]
+    Sprite[] sprites;
+    [SerializeField]
+    bool isAnimating;
+    int aniLimit = 20;
+    int aniCount;
+    int spriteCount;
 
     // Use this for initialization
     void Start()
@@ -34,6 +41,13 @@ public class EventObject : MonoBehaviour
         events = new List<UnityEvent>();
         eventCommands.actNo = 0;
         eventCommands.IsCompleted = false;
+        if(gameObject.name.Contains("Character"))
+        {
+            sprites = PlayerData.Instance.characters[gameObject.name[9] - '1'].sprite;
+            GetComponent<SpriteRenderer>().sprite = sprites[0];
+        }
+        aniCount = 0;
+        spriteCount = 0;
     }
 
     // Update is called once per frame
@@ -52,6 +66,20 @@ public class EventObject : MonoBehaviour
                     line++;
                     ReadScript();
                 }
+            }
+        }
+        if(isAnimating)
+        {
+            aniCount++;
+                if(aniLimit<aniCount)
+            {
+                aniCount = 0;
+                spriteCount++;
+                if(sprites.Length<=spriteCount)
+                {
+                    spriteCount = 0;
+                }
+                GetComponent<SpriteRenderer>().sprite = sprites[spriteCount];
             }
         }
     }
@@ -81,6 +109,7 @@ public class EventObject : MonoBehaviour
         }
         string[] properties;
         string[] branch;
+        Debug.Log(command);
         switch (eventCommands.eventDic[command])
         {
             case 0://メッセージ描画
@@ -149,7 +178,7 @@ public class EventObject : MonoBehaviour
                 events[events.Count - 1].AddListener(() => eventCommands.ChoiceHaveItem(true));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.Instance.money.ToString() + "G",
-                    -100, 860, 400, 150));
+                    -100, 860, 600, 150));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
@@ -176,7 +205,7 @@ public class EventObject : MonoBehaviour
                 events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, v, 300, -1, branch));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.Instance.money.ToString() + "G",
-                    -100, 860, 400, 150));
+                    -100, 860, 600, 150));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
@@ -232,12 +261,12 @@ public class EventObject : MonoBehaviour
             case 7://勧誘
                 string[] ms = param1.Split('|');
                 int no = int.Parse(ms[0]);
-                Vector2 vpos = new Vector2(200, -400);
+                Vector2 vpos = new Vector2(150, -400);
                 branch = new string[3] { ms[1], ms[2], ms[3] };
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WriteStatusOne(no));
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, vpos, 600, -1, branch));
+                events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, vpos, 700, -1, branch));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
@@ -252,7 +281,28 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.AddParty(charaNo));
                 break;
-            case 9://分岐終点
+            case 9://パーティ変更
+                int changeNo = int.Parse(param1);
+                string[] choices = new string[3] {PlayerData.Instance.party[1].name,
+                PlayerData.Instance.party[2].name,"やめる"};
+                Vector2 choicePos = new Vector2(150, -400);
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WriteMessage("パーティを入れ替えてください"));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() =>
+                eventCommands.MakeChoices(false, choicePos, 500, -1, choices));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.ChangeParty(changeNo));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.WaitForInput());
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CloseMessage(true));
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CloseChoices(true));
+                break;
+            case 10://分岐終点
                 events.Add(new UnityEvent());
                 string s = "選択肢終点";
                 events[events.Count - 1].AddListener(() => JumpCommand(s));
