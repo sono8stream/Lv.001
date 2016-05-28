@@ -17,7 +17,7 @@ public class Data
             {
                 instance = new Data();
                 instance.items = new List<Item>();
-                instance.items.Add(new Item("勇者の聖杯", (int)ItemType.武器, 990000, 499, "勇者の証を得る"));
+                instance.items.Add(new Item("勇者の聖杯", (int)ItemType.武器, /*990000*/1500, 499, "勇者の証を得る"));
                 instance.items.Add(new Item("鉄の剣", (int)ItemType.武器, 400, 50, "鉄でできた剣 Lv+49"));
                 instance.items.Add(new Item("銀の剣", (int)ItemType.武器, 1000, 200, "銀でできた剣 Lv+199"));
                 instance.items.Add(new Item("傷薬", (int)ItemType.道具, 100, 100, "傷を癒す薬 回復+100"));
@@ -96,14 +96,14 @@ public class PlayerData
                         s = instance.spritesF[jobNo-1];
                     }
                     instance.characters.Add(new Unit(name, lv,
-                        Random.Range(100, 500) + lv / 2, lv, lv, lv, jobNo,s));
+                        Random.Range(100, 300) + lv / 2, lv, lv, lv, jobNo,s));
 
                 }
                 instance.pos = Vector2.up * 0.5f;
                 //instance.selfVars = new List<int[]>[UnityEngine.SceneManagement.SceneManager.sceneCount];
                 instance.selfVars = new List<int[]>[sceneCount];
-                /*instance.party.Add(instance.characters[0]);
-                instance.party.Add(instance.characters[1]);*/
+                instance.party.Add(instance.characters[0]);
+                instance.party.Add(instance.characters[1]);
                 //instance.party.Add(instance.characters[2]);
             }
             return instance;
@@ -239,7 +239,7 @@ public enum JobType
 
 public enum SkillType
 {
-    気合い切り = 0, 呪文, 体当たり, かばう, 治療, 千鳥足, 調査, 勝利の舞, ドラゴンキル
+    気合い切り = 0, 呪文, 体当たり, かばう, 治療, 千鳥足, 検証, 復活の舞, ドラゴンキル
 }
 
 public enum StatusParams

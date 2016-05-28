@@ -11,7 +11,7 @@ public class BattleController : MonoBehaviour {
         Start = 0, Standby, Battle, End,Last
     }
     int phaseNo;
-    const int INTERVAL = 30;
+    const int INTERVAL = 50;
     int interCount;
     [SerializeField]
     Text message;
@@ -25,7 +25,8 @@ public class BattleController : MonoBehaviour {
     List<StatusManager> battlerData;//戦闘参加者（敵味方両方）の行動順に合わせたリスト
     int battlerNo;
     int allyCount;
-    int target;//ターゲットの番号、かばう実行時などに処理される、それ以外は-1
+    int target;//かばわれているターゲットの番号、かばう実行時などに処理される、それ以外は-1
+    int kabauTarget;//かばっている対象
 
     // Use this for initialization
     void Start()
@@ -58,7 +59,68 @@ public class BattleController : MonoBehaviour {
                 phaseNo = (int)PHASE.Battle;
                 break;
             case (int)PHASE.Battle:
-                Attack();
+                if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+                {
+                    interCount = 0;
+                    battlerNo++;
+                }
+                else if (interCount == 0)
+                {
+                    if (battlerData[battlerNo].isAlly)
+                    {
+                        switch (battlerData[battlerNo].jobNo)
+                        {
+                            case (int)JobType.就活生:
+                                Attack();
+                                break;
+                            case (int)JobType.魔導士:
+                                Magic();
+                                break;
+                            case (int)JobType.戦士:
+                                Dash();
+                                break;
+                            case (int)JobType.武闘家:
+                                Guard();
+                                break;
+                            case (int)JobType.医者:
+                                Recover();
+                                break;
+                            case (int)JobType.学者:
+                                Search();
+                                break;
+                            case (int)JobType.アル中:
+                                DrunkAttack();
+                                break;
+                            case (int)JobType.踊り子:
+                                Dance();
+                                break;
+                            case (int)JobType.勇者:
+                                DragonKill();
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        Attack();
+                    }
+                }
+                else if (interCount >= INTERVAL)
+                {
+                    if (!battlerData[battlerNo].isAlly)
+                    {
+                        effect.transform.localScale = Vector3.one;
+                    }
+                    interCount = 0;
+                    battlerNo++;
+                    if (End())
+                    {
+                        UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+                    }
+                }
+                else
+                {
+                    interCount++;
+                }
                 if(battlerNo>=battlerData.Count)
                 {
                     phaseNo = (int)PHASE.End;
@@ -90,7 +152,7 @@ public class BattleController : MonoBehaviour {
     void SetOrder()//戦闘者を速さ順に並べ替え
     {
         battlerData = new List<StatusManager>();
-        if(allyCount==-1)
+        if (allyCount == -1)
         {
             allyCount = allyData.Count;
         }
@@ -116,7 +178,7 @@ public class BattleController : MonoBehaviour {
         Debug.Log(battlerData.Count);
     }
 
-    bool Attack()//ダメージ計算
+    bool Attack()//ダメージ計算,気合い切り
     {
         bool ret = false;
         if(battlerData[battlerNo].status[(int)STATUS.HP]==0)
@@ -135,16 +197,537 @@ public class BattleController : MonoBehaviour {
             }
             else
             {
-                diffencer = allyData[Random.Range(0, allyCount)];
+                int tarNo = 0;
+                while (allyData[tarNo].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = Random.Range(0, allyCount);
+                }
+                diffencer = target == tarNo ? allyData[kabauTarget] : allyData[tarNo];
                 effectScale = 0.5f;
             }
             damage= battlerData[battlerNo].status[(int)STATUS.ATT] - diffencer.status[(int)STATUS.DEF];
             diffencer.status[(int)STATUS.HP] -= damage;
             effect.transform.localScale *= effectScale;
             effect.transform.position = diffencer.transform.position;
-            effect.GetComponent<Animator>().SetTrigger(battlerData[battlerNo].attackTrigger);
+            effect.GetComponent<Animator>().SetTrigger("Slash");
             diffencer.GetComponent<Animator>().SetTrigger("Damaged");
             message.text = battlerData[battlerNo].myName + "の攻撃！\r\n"+damage.ToString()+"のダメージ！";
+            End();
+            if (diffencer.isAlly)
+            {
+                diffencer.SetStatus();
+            }
+            else
+            {
+                diffencer.SetHPBar();
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+            if (End())
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool Dash()//ダメージ計算,体当たり
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int damage;
+            if (battlerData[battlerNo].isAlly)
+            {
+                diffencer = enemyStatus;
+            }
+            else
+            {
+                int tarNo = 0;
+                while (allyData[tarNo].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = Random.Range(0, allyCount);
+                }
+                diffencer = target == tarNo ? allyData[kabauTarget] : allyData[tarNo];
+                effectScale = 0.5f;
+            }
+            damage = battlerData[battlerNo].status[(int)STATUS.ATT] * 3 / 2 - diffencer.status[(int)STATUS.DEF];
+            diffencer.status[(int)STATUS.HP] -= damage;
+            battlerData[battlerNo].status[(int)STATUS.HP] -= damage / 3;
+            effect.transform.localScale *= effectScale;
+            effect.transform.position = diffencer.transform.position;
+            effect.GetComponent<Animator>().SetTrigger("Dash");
+            diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+            battlerData[battlerNo].GetComponent<Animator>().SetTrigger("Damaged");
+            message.text = battlerData[battlerNo].myName + "の体当たり！\r\n" + damage.ToString() + "のダメージ！　反動を受けた！";
+            End();
+            if (diffencer.isAlly)
+            {
+                diffencer.SetStatus();
+            }
+            else
+            {
+                diffencer.SetHPBar();
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+            if (End())
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool Recover()//ダメージ回復,治療
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int recover;
+                int tarNo = 0;
+            for (int i = 0; i < allyData.Count; i++)
+            {
+                if (allyData[tarNo].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = i;
+                }
+                else
+                {
+                    if (allyData[i].status[(int)STATUS.HP] < allyData[tarNo].status[(int)STATUS.HP])
+                    {
+                        tarNo = i;
+                    }
+                }
+            }
+            diffencer = allyData[tarNo];
+                effectScale = 0.5f;
+            recover = battlerData[battlerNo].status[(int)STATUS.MHP] / 2;
+            diffencer.status[(int)STATUS.HP] += recover;
+            if(diffencer.status[(int)STATUS.HP]>diffencer.status[(int)STATUS.MHP])
+            {
+                diffencer.status[(int)STATUS.HP] = diffencer.status[(int)STATUS.MHP];
+            }
+            effect.transform.localScale *= effectScale;
+            effect.transform.position = diffencer.transform.position;
+            effect.GetComponent<Animator>().SetTrigger("Recover");
+            diffencer.GetComponent<Animator>().SetTrigger("Recovered");
+            message.text = battlerData[battlerNo].myName + "は治療した！\r\n"
+                + diffencer.myName + "のHPが" + recover.ToString() + "回復！";
+            if (diffencer.isAlly)
+            {
+                diffencer.SetStatus();
+            }
+            else
+            {
+                diffencer.SetHPBar();
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool Guard()//HP最小の仲間をかばう
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            int tarNo = 0;
+            for (int i = 0; i < allyData.Count; i++)
+            {
+                if (allyData[tarNo].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = i;
+                }
+                else
+                {
+                    if (allyData[i].status[(int)STATUS.HP] < allyData[tarNo].status[(int)STATUS.HP])
+                    {
+                        tarNo = i;
+                    }
+                }
+            }
+            if (allyData[tarNo] == battlerData[battlerNo])
+            {
+                Attack();
+            }
+            else
+            {
+                target = tarNo;
+                kabauTarget = allyData.IndexOf(battlerData[battlerNo]);
+                battlerData[battlerNo].GetComponent<Animator>().SetTrigger("Recovered");
+                message.text = battlerData[battlerNo].myName + "は"+ allyData[target].myName
+                    + "をかばっている！";
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool Dance()//ダンス　死者蘇生
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int recover;
+            int tarNo = -1;
+            for (int i = 0; i < allyCount; i++)
+            {
+                if (allyData[i].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = i;
+                }
+            }
+            if (tarNo==-1)
+            {
+                Attack();
+            }
+            else
+            {
+                allyData[tarNo].status[(int)STATUS.HP] = allyData[tarNo].status[(int)STATUS.MHP] / 2;
+                allyData[tarNo].GetComponent<Animator>().SetTrigger("Recovered");
+                effect.transform.localScale *= effectScale;
+                effect.transform.position = allyData[tarNo].transform.position;
+                effect.GetComponent<Animator>().SetTrigger("Recover");
+                message.text = battlerData[battlerNo].myName + "の復活の舞！" + allyData[tarNo].myName
+                    + "は復活した！";
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool Magic()//呪文
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int damage;
+            if (battlerData[battlerNo].isAlly)
+            {
+                diffencer = enemyStatus;
+            }
+            else
+            {
+                int tarNo = 0;
+                while (allyData[tarNo].status[(int)STATUS.HP]== 0)
+                {
+                    tarNo = Random.Range(0, allyCount);
+                }
+                diffencer = target == tarNo ? allyData[kabauTarget] : allyData[tarNo];
+                effectScale = 0.5f;
+            }
+            effectScale = 0.5f;
+            damage = (int)(battlerData[battlerNo].status[(int)STATUS.ATT] * 2 * Random.Range(0.7f, 2));//振れ幅大
+            diffencer.status[(int)STATUS.HP] -= damage;
+            effect.transform.localScale *= effectScale;
+            effect.transform.position = diffencer.transform.position;
+            effect.GetComponent<Animator>().SetTrigger("Slash");
+            diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+            message.text = battlerData[battlerNo].myName + "は呪文を唱えた！"
+                + damage.ToString() + "のダメージ！";
+            End();
+            if (diffencer.isAlly)
+            {
+                diffencer.SetStatus();
+            }
+            else
+            {
+                diffencer.SetHPBar();
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+            if (End())
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool DrunkAttack()//千鳥足
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int damage;
+            if (battlerData[battlerNo].isAlly)
+            {
+                diffencer = enemyStatus;
+            }
+            else
+            {
+                int tarNo = 0;
+                while (allyData[tarNo].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = Random.Range(0, allyCount);
+                }
+                diffencer = target == tarNo ? allyData[kabauTarget] : allyData[tarNo];
+                effectScale = 0.5f;
+            }
+            effectScale = 0.5f;
+            damage = Random.Range(0, 4) == 3 ? 4 : 0;
+            damage *= battlerData[battlerNo].status[(int)STATUS.ATT];//振れ幅大
+            diffencer.status[(int)STATUS.HP] -= damage;
+            effect.transform.localScale *= effectScale;
+            effect.transform.position = diffencer.transform.position;
+            effect.GetComponent<Animator>().SetTrigger(battlerData[battlerNo].attackTrigger);
+            diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+            message.text = battlerData[battlerNo].myName + "、惑いの千鳥足！" + damage.ToString() + "のダメージ！";
+            End();
+            if (diffencer.isAlly)
+            {
+                diffencer.SetStatus();
+            }
+            else
+            {
+                diffencer.SetHPBar();
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+            if (End())
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool Search()//調査、仲間の能力をランダムで強化、敵弱化
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int damage;
+            int tarNo = 0;
+            while (tarNo == allyCount || allyData[tarNo].status[(int)STATUS.HP] == 0)
+            {
+                tarNo = Random.Range(0, allyCount + 1);
+            }
+            if(tarNo<allyCount)
+            {
+                diffencer = allyData[tarNo];
+                damage = diffencer.status[(int)STATUS.ATT] / 4;
+                diffencer.status[(int)STATUS.ATT] += damage;
+                message.text = battlerData[battlerNo].myName 
+                    + "は研究・検証を行った！\r\n" + damage.ToString() + "の攻撃力が上がった！";
+                diffencer.GetComponent<Animator>().SetTrigger("Recovered");
+            }
+            else
+            {
+                diffencer = enemyStatus;
+                damage = diffencer.status[(int)STATUS.ATT] / 8;
+                diffencer.status[(int)STATUS.ATT] -= damage;
+                message.text = battlerData[battlerNo].myName
+                    + "は研究・検証を行った！\r\n" + damage.ToString() + "の攻撃力が下がった！";
+                diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+            }
+            effectScale = 0.5f;
+            effect.transform.localScale *= effectScale;
+            effect.transform.position = diffencer.transform.position;
+            effect.GetComponent<Animator>().SetTrigger(battlerData[battlerNo].attackTrigger);
+            End();
+            if (diffencer.isAlly)
+            {
+                diffencer.SetStatus();
+            }
+            else
+            {
+                diffencer.SetHPBar();
+            }
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+            if (End())
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
+    bool DragonKill()//読んで字のごとく　勇者専用
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int damage;
+            if (battlerData[battlerNo].isAlly)
+            {
+                diffencer = enemyStatus;
+            }
+            else
+            {
+                int tarNo = 0;
+                while (allyData[tarNo].status[(int)STATUS.HP] == 0)
+                {
+                    tarNo = Random.Range(0, allyCount);
+                }
+                diffencer = target == tarNo ? allyData[kabauTarget] : allyData[tarNo];
+                effectScale = 0.5f;
+            }
+            effectScale = 0.5f;
+            damage = battlerData[battlerNo].status[(int)STATUS.ATT]*2;//二倍ダメージ！
+            diffencer.status[(int)STATUS.HP] -= damage;
+            effect.transform.localScale *= effectScale;
+            effect.transform.position = diffencer.transform.position;
+            effect.GetComponent<Animator>().SetTrigger("LargeSlash");
+            diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+            message.text = battlerData[battlerNo].myName + "のドラゴンキリング！\r\n" 
+                + damage.ToString() + "のダメージ！";
             End();
             if (diffencer.isAlly)
             {
@@ -192,6 +775,11 @@ public class BattleController : MonoBehaviour {
             {
                 ending &= true;
                 allyData[i].status[(int)STATUS.HP] = 0;
+                if (target != -1 && allyData[kabauTarget] == battlerData[battlerNo])
+                {
+                    target = -1;
+                    kabauTarget = -1;
+                }
             }
             else
             {

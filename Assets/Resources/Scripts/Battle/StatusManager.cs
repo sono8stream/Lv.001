@@ -12,6 +12,7 @@ public class StatusManager : MonoBehaviour {
     public string attackTrigger;//攻撃時のエフェクトトリガー
     public int charaNo;
     public string myName;
+    public int jobNo;
     public Text charaName, hp, lv;
     public RectTransform gage;
 
@@ -29,6 +30,10 @@ public class StatusManager : MonoBehaviour {
             myName = PlayerData.Instance.party[charaNo].name;
             int pow = PlayerData.Instance.party[charaNo].weapon.name.Equals("--") ? 0 :
                 PlayerData.Instance.party[charaNo].weapon.param;
+            if (PlayerData.Instance.party[charaNo].weapon.name.Equals("勇者の聖杯"))
+            {
+                PlayerData.Instance.party[charaNo].status[(int)StatusParams.skillNo] = (int)JobType.勇者;
+            }
             status = new int[Enum.GetNames(typeof(STATUS)).Length];
             status[(int)STATUS.ATT] = PlayerData.Instance.party[charaNo].status[(int)StatusParams.Lv]+pow;
             status[(int)STATUS.DEF] = 0;
@@ -40,6 +45,7 @@ public class StatusManager : MonoBehaviour {
             hp = transform.FindChild("Name (2)").GetComponent<Text>();
             lv = transform.FindChild("Name (4)").GetComponent<Text>();
             lv.text = PlayerData.Instance.party[charaNo].status[(int)StatusParams.Lv].ToString();
+            jobNo = PlayerData.Instance.party[charaNo].status[(int)StatusParams.skillNo];
             SetStatus();
         }
     }

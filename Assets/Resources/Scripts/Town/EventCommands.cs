@@ -279,6 +279,10 @@ public class EventCommands : MonoBehaviour
         }
         int unitNo = int.Parse(subParam);
         PlayerData.Instance.party[unitNo].weapon = Data.Instance.items[itemNo];
+        if(itemNo==0)
+        {
+            PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo] = (int)JobType.勇者;
+        }
         choiceName = subParam;
         isCompleted = true;
     }
@@ -595,7 +599,7 @@ public class EventCommands : MonoBehaviour
             {
                 if (buy)
                 {
-                    if (PlayerData.Instance.money > Data.Instance.items[itemNo].price)
+                    if (PlayerData.Instance.money >= Data.Instance.items[itemNo].price)
                     {
                         Data.Instance.items[itemNo].possessionCount++;
                         PlayerData.Instance.money -= Data.Instance.items[itemNo].price;
