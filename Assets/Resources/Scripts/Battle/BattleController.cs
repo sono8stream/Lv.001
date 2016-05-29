@@ -25,8 +25,9 @@ public class BattleController : MonoBehaviour {
     List<StatusManager> battlerData;//戦闘参加者（敵味方両方）の行動順に合わせたリスト
     int battlerNo;
     int allyCount;
-    int target;//かばわれているターゲットの番号、かばう実行時などに処理される、それ以外は-1
-    int kabauTarget;//かばっている対象
+    public  int target;//かばわれているターゲットの番号、かばう実行時などに処理される、それ以外は-1
+    public int kabauTarget;//かばっている対象
+    bool isEnemy;//二回行動判定用
 
     // Use this for initialization
     void Start()
@@ -43,6 +44,7 @@ public class BattleController : MonoBehaviour {
                 allyData.Add(allyStatus[i]); 
             }
         }
+        isEnemy = false;
     }
 
     // Update is called once per frame
@@ -59,14 +61,18 @@ public class BattleController : MonoBehaviour {
                 phaseNo = (int)PHASE.Battle;
                 break;
             case (int)PHASE.Battle:
-                if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+                if (battlerNo >= battlerData.Count)
                 {
-                    interCount = 0;
-                    battlerNo++;
+                    phaseNo = (int)PHASE.End;
                 }
                 else if (interCount == 0)
                 {
-                    if (battlerData[battlerNo].isAlly)
+                    if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+                    {
+                        interCount = 0;
+                        battlerNo++;
+                    }
+                    else if (battlerData[battlerNo].isAlly)
                     {
                         switch (battlerData[battlerNo].jobNo)
                         {
@@ -101,7 +107,15 @@ public class BattleController : MonoBehaviour {
                     }
                     else
                     {
-                        Attack();
+                        if (Random.Range(0, 5) < 3)
+                        {
+                            Attack();
+                        }
+                        else
+                        {
+                            Fire();
+                        }
+                        isEnemy = !isEnemy;
                     }
                 }
                 else if (interCount >= INTERVAL)
@@ -111,19 +125,18 @@ public class BattleController : MonoBehaviour {
                         effect.transform.localScale = Vector3.one;
                     }
                     interCount = 0;
-                    battlerNo++;
                     if (End())
                     {
                         UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+                    }
+                    if (!isEnemy)
+                    {
+                        battlerNo++;
                     }
                 }
                 else
                 {
                     interCount++;
-                }
-                if(battlerNo>=battlerData.Count)
-                {
-                    phaseNo = (int)PHASE.End;
                 }
                 break;
             case (int)PHASE.End:
@@ -206,6 +219,7 @@ public class BattleController : MonoBehaviour {
                 effectScale = 0.5f;
             }
             damage= battlerData[battlerNo].status[(int)STATUS.ATT] - diffencer.status[(int)STATUS.DEF];
+            damage += Random.Range(-30, 30);
             diffencer.status[(int)STATUS.HP] -= damage;
             effect.transform.localScale *= effectScale;
             effect.transform.position = diffencer.transform.position;
@@ -287,6 +301,7 @@ public class BattleController : MonoBehaviour {
             else
             {
                 diffencer.SetHPBar();
+                battlerData[battlerNo].SetStatus();
             }
         }
         else if (interCount >= INTERVAL)
@@ -468,6 +483,14 @@ public class BattleController : MonoBehaviour {
                 effect.GetComponent<Animator>().SetTrigger("Recover");
                 message.text = battlerData[battlerNo].myName + "の復活の舞！" + allyData[tarNo].myName
                     + "は復活した！";
+                if (allyData[tarNo].isAlly)
+                {
+                    allyData[tarNo].SetStatus();
+                }
+                else
+                {
+                    allyData[tarNo].SetHPBar();
+                }
             }
         }
         else if (interCount >= INTERVAL)
@@ -515,11 +538,11 @@ public class BattleController : MonoBehaviour {
                 effectScale = 0.5f;
             }
             effectScale = 0.5f;
-            damage = (int)(battlerData[battlerNo].status[(int)STATUS.ATT] * 2 * Random.Range(0.7f, 2));//振れ幅大
+            damage = (int)(battlerData[battlerNo].status[(int)STATUS.ATT] * Random.Range(0.7f, 2));//振れ幅大
             diffencer.status[(int)STATUS.HP] -= damage;
             effect.transform.localScale *= effectScale;
             effect.transform.position = diffencer.transform.position;
-            effect.GetComponent<Animator>().SetTrigger("Slash");
+            effect.GetComponent<Animator>().SetTrigger("Magic");
             diffencer.GetComponent<Animator>().SetTrigger("Damaged");
             message.text = battlerData[battlerNo].myName + "は呪文を唱えた！"
                 + damage.ToString() + "のダメージ！";
@@ -587,7 +610,14 @@ public class BattleController : MonoBehaviour {
             diffencer.status[(int)STATUS.HP] -= damage;
             effect.transform.localScale *= effectScale;
             effect.transform.position = diffencer.transform.position;
-            effect.GetComponent<Animator>().SetTrigger(battlerData[battlerNo].attackTrigger);
+            if (damage == 0)
+            {
+                effect.GetComponent<Animator>().SetTrigger("Miss");
+            }
+            else
+            {
+                effect.GetComponent<Animator>().SetTrigger("DrunkAttack");
+            }
             diffencer.GetComponent<Animator>().SetTrigger("Damaged");
             message.text = battlerData[battlerNo].myName + "、惑いの千鳥足！" + damage.ToString() + "のダメージ！";
             End();
@@ -660,7 +690,7 @@ public class BattleController : MonoBehaviour {
             effectScale = 0.5f;
             effect.transform.localScale *= effectScale;
             effect.transform.position = diffencer.transform.position;
-            effect.GetComponent<Animator>().SetTrigger(battlerData[battlerNo].attackTrigger);
+            effect.GetComponent<Animator>().SetTrigger("ParamChange");
             End();
             if (diffencer.isAlly)
             {
@@ -759,6 +789,73 @@ public class BattleController : MonoBehaviour {
         return ret;
     }
 
+    bool Fire()//ダメージ計算,気合い切り
+    {
+        bool ret = false;
+        if (battlerData[battlerNo].status[(int)STATUS.HP] == 0)
+        {
+            return true;
+        }
+        if (interCount == 0)
+        {
+            interCount++;
+            StatusManager diffencer;
+            float effectScale = 1;
+            int damage;
+            if (battlerData[battlerNo].isAlly)
+            {
+                diffencer = enemyStatus;
+                effect.transform.position = diffencer.transform.position;
+                damage = battlerData[battlerNo].status[(int)STATUS.ATT] / 2 - diffencer.status[(int)STATUS.DEF];
+                damage += Random.Range(-30, 30);
+                diffencer.status[(int)STATUS.HP] -= damage;
+                diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+                End();
+                diffencer.SetHPBar();
+            }
+            else
+            {
+                int tarNo = 0;
+                for (int i = 0; i < allyCount; i++)
+                {
+                    if (allyData[i].status[(int)STATUS.HP] > 0)
+                    {
+                        diffencer = target == tarNo ? allyData[kabauTarget] : allyData[i];
+                        damage = battlerData[battlerNo].status[(int)STATUS.ATT] / 2 - diffencer.status[(int)STATUS.DEF];
+                        damage += Random.Range(-30, 30);
+                        diffencer.status[(int)STATUS.HP] -= damage;
+                        diffencer.GetComponent<Animator>().SetTrigger("Damaged");
+                        End();
+                        diffencer.SetStatus();
+                    }
+                }
+                effect.transform.localPosition = new Vector2(0, allyData[0].transform.position.y);
+            }
+            effect.transform.localScale *= effectScale;
+            effect.GetComponent<Animator>().SetTrigger("Fire");
+            message.text = battlerData[battlerNo].myName + "は火を吹いた！\r\n" + "全体にダメージ！";
+        }
+        else if (interCount >= INTERVAL)
+        {
+            if (!battlerData[battlerNo].isAlly)
+            {
+                effect.transform.localScale = Vector3.one;
+            }
+            interCount = -1;
+            battlerNo++;
+            ret = true;
+            if (End())
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+        }
+        else
+        {
+            interCount++;
+        }
+        return ret;
+    }
+
     bool End()
     {
         bool ending = false;
@@ -775,7 +872,7 @@ public class BattleController : MonoBehaviour {
             {
                 ending &= true;
                 allyData[i].status[(int)STATUS.HP] = 0;
-                if (target != -1 && allyData[kabauTarget] == battlerData[battlerNo])
+                if (target != -1 && kabauTarget == i)
                 {
                     target = -1;
                     kabauTarget = -1;
