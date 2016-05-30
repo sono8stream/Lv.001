@@ -28,6 +28,9 @@ public class BattleController : MonoBehaviour {
     public  int target;//かばわれているターゲットの番号、かばう実行時などに処理される、それ以外は-1
     public int kabauTarget;//かばっている対象
     bool isEnemy;//二回行動判定用
+    bool win;//勝った？
+    [SerializeField]
+    AudioClip[] se;
 
     // Use this for initialization
     void Start()
@@ -45,6 +48,7 @@ public class BattleController : MonoBehaviour {
             }
         }
         isEnemy = false;
+        win = false;
     }
 
     // Update is called once per frame
@@ -127,7 +131,7 @@ public class BattleController : MonoBehaviour {
                     interCount = 0;
                     if (End())
                     {
-                        UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+                        phaseNo = (int)PHASE.Last;
                     }
                     if (!isEnemy)
                     {
@@ -143,7 +147,35 @@ public class BattleController : MonoBehaviour {
                 phaseNo = (int)PHASE.Standby;
                 break;
             case (int)PHASE.Last:
-                message.text = "全滅しました...";
+                if (interCount == 0)
+                {
+                    if (win)
+                    {
+                        message.text = "ドラゴン討伐！！";
+                    }
+                    else
+                    {
+                        message.text = "全滅しました...";
+                    }
+                    interCount++;
+                }
+                else if(interCount>100)
+                {
+                    int no;
+                    if(win)
+                    {
+                        no = 0;//タイトル
+                    }
+                    else
+                    {
+                        no = 1;
+                    }
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(no);
+                }
+                else
+                {
+                    interCount++;
+                }
                 break;
         }
         /*interCount++;
@@ -829,7 +861,7 @@ public class BattleController : MonoBehaviour {
                         diffencer.SetStatus();
                     }
                 }
-                effect.transform.localPosition = new Vector2(0, allyData[0].transform.position.y);
+                effect.transform.localPosition = new Vector2(0, allyData[0].transform.position.y - 100);
             }
             effect.transform.localScale *= effectScale;
             effect.GetComponent<Animator>().SetTrigger("Fire");
@@ -863,6 +895,7 @@ public class BattleController : MonoBehaviour {
         if(ending)
         {
             enemyStatus.status[(int)STATUS.HP] = 0;
+            win = true;
             return ending;
         }
         ending = true;
@@ -885,5 +918,12 @@ public class BattleController : MonoBehaviour {
 
         }
         return ending;
+    }
+
+    void SetSE(int seNo)
+    {
+        AudioSource sound = GetComponent<AudioSource>();
+        sound.clip = se[seNo];
+        sound.Play();
     }
 }

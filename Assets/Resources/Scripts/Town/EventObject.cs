@@ -209,7 +209,7 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[4] { 1, 5, 12, 13 }));
+                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[4] { 1, 5, 12, 14 }));
                 events.Add(new UnityEvent());//以下、"道具"コマンド処理
                 events[events.Count - 1].AddListener(() => eventCommands.ChoiceHaveItem(false));
                 events.Add(new UnityEvent());
@@ -233,6 +233,8 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.JumpAction(-3));
                 events.Add(new UnityEvent());//以下、"中断"処理
+                events[events.Count - 1].AddListener(() => eventCommands.SaveLoadData(true));
+                events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => Application.Quit());
                 events.Add(new UnityEvent());//以下、"閉じる"処理
                 events[events.Count - 1].AddListener(() => eventCommands.CloseChoices(true));
@@ -307,6 +309,16 @@ public class EventObject : MonoBehaviour
                 string s = "選択肢終点";
                 events[events.Count - 1].AddListener(() => JumpCommand(s));
                 break;
+            case 11://セーブロード
+                bool c = param1[0].Equals("セーブ");
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.SaveLoadData(c));
+                break;
+            case 12://ゲーム終了
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => Application.Quit());
+                break;
+
         }
         //EventCommands.isProcessing = true;
     }

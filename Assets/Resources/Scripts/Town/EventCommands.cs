@@ -63,6 +63,8 @@ public class EventCommands : MonoBehaviour
         eventDic.Add("パーティ追加", 8);
         eventDic.Add("パーティ変更", 9);
         eventDic.Add("分岐終点", 10);
+        eventDic.Add("セーブロード", 11);
+        eventDic.Add("ゲーム終了", 12);
         isProcessing = false;
         if(selfVar[0]==1)
         {
@@ -114,11 +116,13 @@ public class EventCommands : MonoBehaviour
             string status;
             int pow = PlayerData.Instance.party[i].weapon.name.Equals("--") ? 0 :
                 PlayerData.Instance.party[i].weapon.param;
+            int jobNo = PlayerData.Instance.party[i].weapon.name.Equals("勇者の聖杯") ? (int)JobType.勇者
+                : PlayerData.Instance.party[i].status[(int)StatusParams.skillNo];
             status = PlayerData.Instance.party[i].name + "  "
-            + (JobType)(PlayerData.Instance.party[i].status[(int)StatusParams.skillNo]);
-            status += "\r\nLv:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.Lv]+pow).ToString()
-                + " HP:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.HP]+pow/2).ToString()
-                + "\r\n" + (SkillType)(PlayerData.Instance.party[i].status[(int)StatusParams.skillNo]);
+            + (JobType)jobNo;
+            status += "\r\nLv:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.Lv] + pow).ToString()
+                + " HP:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.HP] + pow / 2).ToString()
+                + "\r\n" + (SkillType)jobNo;
             WriteMessage(status, 130, 600 - 370 * i, 750, 350);
             choices[i] = windows[windows.Count - 1];
         }
@@ -131,10 +135,12 @@ public class EventCommands : MonoBehaviour
         string status;
         int pow = PlayerData.Instance.characters[charaNo].weapon.name.Equals("--") ? 0 :
             PlayerData.Instance.characters[charaNo].weapon.param;
+        int jobNo = PlayerData.Instance.characters[charaNo].weapon.name.Equals("勇者の聖杯") ? (int)JobType.勇者
+            : PlayerData.Instance.characters[charaNo].status[(int)StatusParams.skillNo];
         status = PlayerData.Instance.characters[charaNo].name + "  "
-            + (JobType)(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.skillNo]);
+            + (JobType)jobNo;
         status += "\r\nLv:  " + (PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv]+pow).ToString()
-            + "\r\n" + (SkillType)(PlayerData.Instance.characters[charaNo].status[(int)StatusParams.skillNo]);
+            + "\r\n" + (SkillType)jobNo;
         WriteMessage(status, -40, 250, 950, 400);
         if (kanyu)
         {
@@ -239,11 +245,13 @@ public class EventCommands : MonoBehaviour
         int unitNo = int.Parse(choiceName);
         int pow = PlayerData.Instance.party[unitNo].weapon.name.Equals("--") ? 0 :
             PlayerData.Instance.party[unitNo].weapon.param;
+        int jobNo = PlayerData.Instance.party[unitNo].weapon.name.Equals("勇者の聖杯") ? (int)JobType.勇者
+            : PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo];
         status = PlayerData.Instance.party[unitNo].name + "  " 
-            + (JobType)(PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo]);
+            + (JobType)(jobNo);
         status += "\r\nLv:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.Lv]+pow).ToString()
                 + " HP:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.HP]+pow/2).ToString()
-            + "\r\n" + (SkillType)(PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo]);
+            + "\r\n" + (SkillType)(jobNo);
         WriteMessage(status, 150, 550, 750, 350);
         WriteMessage("装備:  " + PlayerData.Instance.party[unitNo].weapon.name, 150, 300, 600, 150);
         WriteMessage(PlayerData.Instance.party[unitNo].weapon.exp);
@@ -267,21 +275,20 @@ public class EventCommands : MonoBehaviour
         {
             return;
         }
-        Debug.Log(subParam);
-        int itemNo = 0;
-        for (int i = 0; i < Data.Instance.items.Count; i++)
-        {
-            if (Data.Instance.items[i].name.Equals(choiceName))
-            {
-                itemNo = i;
-                break;
-            }
-        }
         int unitNo = int.Parse(subParam);
-        PlayerData.Instance.party[unitNo].weapon = Data.Instance.items[itemNo];
-        if(itemNo==0)
+        if (unitNo == 0)
         {
-            PlayerData.Instance.party[unitNo].status[(int)StatusParams.skillNo] = (int)JobType.勇者;
+            Debug.Log(subParam);
+            int itemNo = 0;
+            for (int i = 0; i < Data.Instance.items.Count; i++)
+            {
+                if (Data.Instance.items[i].name.Equals(choiceName))
+                {
+                    itemNo = i;
+                    break;
+                }
+            }
+            PlayerData.Instance.party[unitNo].weapon = Data.Instance.items[itemNo];
         }
         choiceName = subParam;
         isCompleted = true;
@@ -484,6 +491,10 @@ public class EventCommands : MonoBehaviour
                 posItems.Add(text);
             }
         }
+        if (!isShopping && itemTypeNo == (int)ItemType.武器)
+        {
+            posItems.Add("--");
+        }
         float x = isShopping ? 30 : 200;
         float length = isShopping ? 1000 : 600;
         MakeChoices(isShopping, new Vector2(x, -400), length, -1, posItems.ToArray());
@@ -498,13 +509,13 @@ public class EventCommands : MonoBehaviour
         Debug.Log(choiceName);
         for (int i = 0; i < commands.Length; i++)
         {
-            isMenu |= (choiceName.Equals(commands[i]) && !choiceName.Equals(nowCommand));
+            isMenu |= (choiceName.Equals(commands[i]) /*&& !choiceName.Equals(nowCommand)*/);
         }
         if (isMenu)
         {
             CloseChoices();
             CloseMessage(true);
-            WriteMessage(PlayerData.Instance.money.ToString() + "G", -100, 860, 600, 150);
+            WriteMessage(PlayerData.Instance.money.ToString() + "G", -100, 860, 600, 150);            
             JumpAction(2, false);
         }
         Debug.Log(isMenu);
@@ -735,13 +746,30 @@ public class EventCommands : MonoBehaviour
             }
         }
         isCompleted = true;
+        choiceName = "";
     }
 
     public void Move(int sceneNo,Vector2 pos)
     {
         PlayerData.Instance.pos = pos;
-        PlayerData.SaveSelfVars(SceneManager.GetActiveScene().buildIndex);
+        PlayerData.Instance.SaveSelfVars(SceneManager.GetActiveScene().buildIndex);
         SceneManager.LoadScene(sceneNo);
+    }
+
+    public void SaveLoadData(bool canSave)
+    {
+        Debug.Log("okashii");
+        if(canSave)
+        {
+            PlayerData.Instance.SaveData();
+        }
+        else
+        {
+            Debug.Log("i'll load");
+            PlayerData.Instance.LoadData();
+        }
+        isCompleted = true;
+        Debug.Log("comp!!");
     }
 
     /// <summary>
