@@ -43,7 +43,9 @@ public class EventObject : MonoBehaviour
         eventCommands.IsCompleted = false;
         if(gameObject.name.Contains("Character"))
         {
+            Debug.Log(gameObject.name[9] - '1');
             sprites = PlayerData.Instance.characters[gameObject.name[9] - '1'].sprite;
+            Debug.Log(PlayerData.Instance.characters[gameObject.name[9] - '1'].sprite);
             GetComponent<SpriteRenderer>().sprite = sprites[0];
         }
         aniCount = 0;
@@ -95,6 +97,7 @@ public class EventObject : MonoBehaviour
             {
                 GetComponent<EventObject>().enabled = false;
                 GetComponent<SpriteRenderer>().enabled = false;
+                Debug.Log("breaked");
             }
             return;
         }
@@ -121,7 +124,7 @@ public class EventObject : MonoBehaviour
                 }
                 else
                 {
-                    events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(t[0],float.Parse(t[1]),
+                    events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(t[0], float.Parse(t[1]),
                         float.Parse(t[2]), float.Parse(t[3]), float.Parse(t[4])));
                 }
                 events.Add(new UnityEvent());
@@ -318,7 +321,13 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => Application.Quit());
                 break;
-
+            case 13://フラグ
+                bool d, e;
+                d = false;
+                e = true;
+                events.Add(new UnityEvent());
+                events[events.Count - 1].AddListener(() => eventCommands.CloseMessage(d, e));
+                break;
         }
         //EventCommands.isProcessing = true;
     }

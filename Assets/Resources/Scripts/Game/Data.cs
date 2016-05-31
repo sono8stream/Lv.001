@@ -52,11 +52,11 @@ public class PlayerData
         {
             if (instance == null)
             {
-                int sceneCount = 5;
+                int sceneCount = /*UnityEngine.SceneManagement.SceneManager.sceneCount*/6;
                 instance = new PlayerData();
                 instance.money = 1500;
                 instance.party = new List<Unit>();
-                instance.party.Add(new Unit("主人公", 1, 100, 10, 10, 10, 0,true, null));
+                instance.party.Add(new Unit("あなた", 1, 100, 10, 10, 10, 0,true, null));
                 const int charaCount = 7;
                 instance.spritesM = new List<Sprite[]>();
                 instance.spritesF = new List<Sprite[]>();
@@ -92,14 +92,14 @@ public class PlayerData
                         int namePat = UnityEngine.Random.Range(0, namesM.Count);
                         name = namesM[namePat];
                         namesM.RemoveAt(namePat);
-                        s = instance.spritesM[jobNo-1];
+                        s = instance.spritesM[jobNo - 1];
                     }
                     else
                     {
                         int namePat = UnityEngine.Random.Range(0, namesF.Count);
                         name = namesF[UnityEngine.Random.Range(0, namesF.Count)];
                         namesF.RemoveAt(namePat);
-                        s = instance.spritesF[jobNo-1];
+                        s = instance.spritesF[jobNo - 1];
                     }
                     instance.characters.Add(new Unit(name, lv,
                         UnityEngine.Random.Range(100, 300) + lv / 2, lv, lv, lv, jobNo, male, s));
@@ -136,9 +136,12 @@ public class PlayerData
     {
         instance.selfVars[sceneNo] = new List<int[]>();
         GameObject[] g = GameObject.FindGameObjectsWithTag("Event");
-        for (int i=0;i<g.Length;i++)
+        if (g != null)
         {
-            instance.selfVars[sceneNo].Add(g[i].GetComponent<EventCommands>().SelfVar);
+            for (int i = 0; i < g.Length; i++)
+            {
+                instance.selfVars[sceneNo].Add(g[i].GetComponent<EventCommands>().SelfVar);
+            }
         }
     }
 
@@ -209,18 +212,59 @@ public class PlayerData
         }
         for (int i = 0; i < charaCount; i++)
         {
-            if (characters[i].skillNo > 0)
+            if (characters[i].status[(int)StatusParams.skillNo] > 0)
             {
                 if (instance.characters[i].isMale)
                 {
-                    instance.characters[i].sprite = instance.spritesM[characters[i].skillNo - 1];
+                    instance.characters[i].sprite
+                        = instance.spritesM[instance.characters[i].status[(int)StatusParams.skillNo] - 1];
                 }
                 else
                 {
-                    instance.characters[i].sprite = instance.spritesF[characters[i].skillNo - 1];
+                    instance.characters[i].sprite
+                        = instance.spritesF[instance.characters[i].status[(int)StatusParams.skillNo] - 1];
                 }
             }
         }
+    }
+
+    public bool Save()
+    {
+        MemoryStream memoryStream = new MemoryStream();
+#if UNITY_IPHONE || UNITY_IOS
+		System.Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
+#endif
+        BinaryFormatter bf = new BinaryFormatter();
+        bf.Serialize(memoryStream, instance);
+
+        string tmp = System.Convert.ToBase64String(memoryStream.ToArray());
+        try
+        {
+            PlayerPrefs.SetString(savePath, tmp);
+        }
+        catch (PlayerPrefsException)
+        {
+            return false;
+        }
+        PlayerPrefs.Save();
+        return true;
+    }
+
+    public PlayerData Load()
+    {
+        if (!PlayerPrefs.HasKey(savePath)) return default(PlayerData);
+#if UNITY_IPHONE || UNITY_IOS
+		System.Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
+#endif
+        BinaryFormatter bf = new BinaryFormatter();
+        string serializedData = PlayerPrefs.GetString(savePath);
+
+        MemoryStream dataStream = new MemoryStream(System.Convert.FromBase64String(serializedData));
+        instance = (PlayerData)bf.Deserialize(dataStream);
+
+        instance.pos = Vector2.up * 0.5f;
+        SetSprites();
+        return instance;
     }
 }
 

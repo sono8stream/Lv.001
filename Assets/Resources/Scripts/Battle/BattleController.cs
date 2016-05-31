@@ -164,11 +164,12 @@ public class BattleController : MonoBehaviour {
                     int no;
                     if(win)
                     {
-                        no = 0;//タイトル
+                        no = 5;
+                        PlayerData.Instance.pos = new Vector2(0, 2.5f);
                     }
                     else
                     {
-                        no = 1;
+                        no = 2;
                     }
                     UnityEngine.SceneManagement.SceneManager.LoadScene(no);
                 }

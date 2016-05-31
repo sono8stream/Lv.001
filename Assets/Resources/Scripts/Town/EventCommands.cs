@@ -65,6 +65,7 @@ public class EventCommands : MonoBehaviour
         eventDic.Add("分岐終点", 10);
         eventDic.Add("セーブロード", 11);
         eventDic.Add("ゲーム終了", 12);
+        eventDic.Add("フラグ", 13);
         isProcessing = false;
         if(selfVar[0]==1)
         {
@@ -294,7 +295,7 @@ public class EventCommands : MonoBehaviour
         isCompleted = true;
     }
 
-    public void CloseMessage(bool all = false)
+    public void CloseMessage(bool all = false,bool once=false)
     {
         if (all)
         {
@@ -316,6 +317,10 @@ public class EventCommands : MonoBehaviour
                 windows.RemoveAt(winNo);
                 Destroy(sub);
             }
+        }
+        if(once)
+        {
+            SetSelfVar();
         }
         isCompleted = true;
     }
@@ -729,6 +734,7 @@ public class EventCommands : MonoBehaviour
     public void SetSelfVar()
     {
         selfVar[0] = 1;
+        //isCompleted = true;
     }
 
     /// <summary>
@@ -761,12 +767,12 @@ public class EventCommands : MonoBehaviour
         Debug.Log("okashii");
         if(canSave)
         {
-            PlayerData.Instance.SaveData();
+            PlayerData.Instance.Save();
         }
         else
         {
             Debug.Log("i'll load");
-            PlayerData.Instance.LoadData();
+            PlayerData.Instance.Load();
         }
         isCompleted = true;
         Debug.Log("comp!!");

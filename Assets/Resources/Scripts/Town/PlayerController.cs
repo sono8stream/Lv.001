@@ -90,7 +90,7 @@ public class PlayerController : MonoBehaviour
                 }
                 nodePos = new List<Vector2>();
                 SearchRoute(dest, curPos, 0);
-                if (c != null && !c.GetComponent<EventObject>().CanThrough&&c.GetComponent<EventObject>().enabled)
+                if (c != null && !c.GetComponent<EventObject>().CanThrough && c.GetComponent<EventObject>().enabled)
                 {
                     eventObject = c.gameObject;
                     mapCostData[(int)dest.x, (int)dest.y] = 99;
@@ -148,7 +148,6 @@ public class PlayerController : MonoBehaviour
                 }
                 catch
                 {
-                    Debug.Log("line142");
                     Debug.Log(eventObject.transform.position);
                     Debug.Log(transform.position);
                     Debug.Log(d);
@@ -163,12 +162,12 @@ public class PlayerController : MonoBehaviour
             else//接触中のイベントを実行
             {
                 Collider2D c = Physics2D.OverlapPoint(transform.position);
-                if(c!=null)
+                if (c != null && c.GetComponent<EventObject>().enabled)
                 {
                     EventCommands.isProcessing = true;
                     eventObject = c.gameObject;
-                    eventObject.GetComponent
-                        <EventObject>().ReadScript();
+                    eventObject.GetComponent<EventObject>().ReadScript();
+                    eventObject = null;
                 }
             }
         }
