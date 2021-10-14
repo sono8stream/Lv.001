@@ -1,41 +1,90 @@
 fileFormatVersion: 2
 guid: 8f118d0b856aeed46bc0599362ba657e
-timeCreated: 1460211558
-licenseType: Free
 TextureImporter:
-  fileIDToRecycleName:
-    21300000: '[Special]Edy_0'
-    21300002: '[Special]Edy_1'
-    21300004: '[Special]Edy_2'
-    21300006: '[Special]Edy_3'
-    21300008: '[Special]Edy_4'
-    21300010: '[Special]Edy_5'
-    21300012: '[Special]Edy_6'
-    21300014: '[Special]Edy_7'
-    21300016: '[Special]Edy_8'
-    21300018: '[Special]Edy_9'
-    21300020: '[Special]Edy_10'
-    21300022: '[Special]Edy_11'
-    21300024: Human_0
-    21300026: Human_1
-    21300028: Human_2
-    21300030: Human_3
-    21300032: Human_4
-    21300034: Human_5
-    21300036: Human_6
-    21300038: Human_7
-    21300040: Human_8
-    21300042: Human_9
-    21300044: Human_10
-    21300046: Human_11
-  serializedVersion: 2
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: '[Special]Edy_0'
+  - first:
+      213: 21300002
+    second: '[Special]Edy_1'
+  - first:
+      213: 21300004
+    second: '[Special]Edy_2'
+  - first:
+      213: 21300006
+    second: '[Special]Edy_3'
+  - first:
+      213: 21300008
+    second: '[Special]Edy_4'
+  - first:
+      213: 21300010
+    second: '[Special]Edy_5'
+  - first:
+      213: 21300012
+    second: '[Special]Edy_6'
+  - first:
+      213: 21300014
+    second: '[Special]Edy_7'
+  - first:
+      213: 21300016
+    second: '[Special]Edy_8'
+  - first:
+      213: 21300018
+    second: '[Special]Edy_9'
+  - first:
+      213: 21300020
+    second: '[Special]Edy_10'
+  - first:
+      213: 21300022
+    second: '[Special]Edy_11'
+  - first:
+      213: 21300024
+    second: Human_0
+  - first:
+      213: 21300026
+    second: Human_1
+  - first:
+      213: 21300028
+    second: Human_2
+  - first:
+      213: 21300030
+    second: Human_3
+  - first:
+      213: 21300032
+    second: Human_4
+  - first:
+      213: 21300034
+    second: Human_5
+  - first:
+      213: 21300036
+    second: Human_6
+  - first:
+      213: 21300038
+    second: Human_7
+  - first:
+      213: 21300040
+    second: Human_8
+  - first:
+      213: 21300042
+    second: Human_9
+  - first:
+      213: 21300044
+    second: Human_10
+  - first:
+      213: 21300046
+    second: Human_11
+  externalObjects: {}
+  serializedVersion: 11
   mipmaps:
     mipMapMode: 0
     enableMipMap: 1
+    sRGBTexture: 1
     linearTexture: 0
-    correctGamma: 0
     fadeOut: 0
     borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
     mipMapFadeDistanceStart: 1
     mipMapFadeDistanceEnd: 3
   bumpmap:
@@ -44,37 +93,65 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
   isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
   grayScaleToAlpha: 0
-  generateCubemap: 0
+  generateCubemap: 6
   cubemapConvolution: 0
-  cubemapConvolutionSteps: 7
-  cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
   textureFormat: -1
   maxTextureSize: 2048
   textureSettings:
+    serializedVersion: 2
     filterMode: 0
     aniso: 16
-    mipBias: -1
-    wrapMode: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
   nPOTScale: 0
   lightmap: 0
-  rGBM: 0
   compressionQuality: 50
-  allowsAlphaSplitting: 0
   spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 16
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
   alphaIsTransparency: 1
+  spriteTessellationDetail: -1
   textureType: 8
-  buildTargetSettings: []
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
+    serializedVersion: 2
     sprites:
-    - name: Human_0
+    - serializedVersion: 2
+      name: Human_0
       rect:
         serializedVersion: 2
         x: 0
@@ -85,7 +162,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_1
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83305410000000000800000000000000
+      internalID: 21300024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_1
       rect:
         serializedVersion: 2
         x: 14
@@ -96,7 +183,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_2
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3305410000000000800000000000000
+      internalID: 21300026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_2
       rect:
         serializedVersion: 2
         x: 28
@@ -107,7 +204,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_3
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3305410000000000800000000000000
+      internalID: 21300028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_3
       rect:
         serializedVersion: 2
         x: 0
@@ -118,7 +225,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_4
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3305410000000000800000000000000
+      internalID: 21300030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_4
       rect:
         serializedVersion: 2
         x: 14
@@ -129,7 +246,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_5
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04305410000000000800000000000000
+      internalID: 21300032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_5
       rect:
         serializedVersion: 2
         x: 28
@@ -140,7 +267,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_6
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24305410000000000800000000000000
+      internalID: 21300034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_6
       rect:
         serializedVersion: 2
         x: 0
@@ -151,7 +288,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_7
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44305410000000000800000000000000
+      internalID: 21300036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_7
       rect:
         serializedVersion: 2
         x: 14
@@ -162,7 +309,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_8
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64305410000000000800000000000000
+      internalID: 21300038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_8
       rect:
         serializedVersion: 2
         x: 28
@@ -173,7 +330,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_9
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84305410000000000800000000000000
+      internalID: 21300040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_9
       rect:
         serializedVersion: 2
         x: 0
@@ -184,7 +351,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_10
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4305410000000000800000000000000
+      internalID: 21300042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_10
       rect:
         serializedVersion: 2
         x: 14
@@ -195,7 +372,17 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Human_11
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4305410000000000800000000000000
+      internalID: 21300044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Human_11
       rect:
         serializedVersion: 2
         x: 28
@@ -206,8 +393,28 @@ TextureImporter:
       pivot: {x: 0.5, y: 0.4}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4305410000000000800000000000000
+      internalID: 21300046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
   spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

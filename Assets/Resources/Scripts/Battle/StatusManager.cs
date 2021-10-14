@@ -40,10 +40,10 @@ public class StatusManager : MonoBehaviour {
             status[(int)STATUS.HP] = PlayerData.Instance.party[charaNo].status[(int)StatusParams.HP]+pow/2;
             status[(int)STATUS.MHP] = status[(int)STATUS.HP];
             status[(int)STATUS.SPD] = PlayerData.Instance.party[charaNo].status[(int)StatusParams.Lv]+pow;
-            charaName = transform.FindChild("Name").GetComponent<Text>();
+            charaName = transform.Find("Name").GetComponent<Text>();
             charaName.text = myName;
-            hp = transform.FindChild("Name (2)").GetComponent<Text>();
-            lv = transform.FindChild("Name (4)").GetComponent<Text>();
+            hp = transform.Find("Name (2)").GetComponent<Text>();
+            lv = transform.Find("Name (4)").GetComponent<Text>();
             lv.text = PlayerData.Instance.party[charaNo].status[(int)StatusParams.Lv].ToString();
             jobNo = PlayerData.Instance.party[charaNo].status[(int)StatusParams.skillNo];
             SetStatus();

@@ -35,7 +35,7 @@ public class EventObject : MonoBehaviour
     void Start()
     {
         line = 0;
-        char[] kugiri = { '\r' };
+        char[] kugiri = { '\n' };
         scripts = scriptText.text.Split(kugiri);
         eventCommands = GetComponent<EventCommands>();
         events = new List<UnityEvent>();

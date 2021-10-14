@@ -91,10 +91,10 @@ public class EventCommands : MonoBehaviour
         {
             return;
         }
-        GameObject messageBox = canvas.transform.FindChild("Message Box").gameObject;
+        GameObject messageBox = canvas.transform.Find("Message Box").gameObject;
         windows.Add(Instantiate(messageBox));
         GameObject win = windows[windows.Count - 1];
-        GameObject text = win.transform.FindChild("Text").gameObject;
+        GameObject text = win.transform.Find("Text").gameObject;
         text.GetComponent<Text>().text = message;
         win.transform.SetParent(canvas.transform);
         win.GetComponent<RectTransform>().localScale = Vector3.one;
@@ -340,13 +340,13 @@ public class EventCommands : MonoBehaviour
         choiceButtons = new List<GameObject>();
         choiceName = "";
         choiceNameSub = "";
-        GameObject choiceBox = canvas.transform.FindChild("Choice Box").gameObject;//選択肢ウィンドウ
+        GameObject choiceBox = canvas.transform.Find("Choice Box").gameObject;//選択肢ウィンドウ
         choiceBoxes.Add(Instantiate(choiceBox));
         int boxNo = choiceBoxes.Count - 1;
         choiceBoxes[boxNo].transform.SetParent(canvas.transform);
         choiceBoxes[boxNo].transform.localScale = Vector3.one;
         choiceBoxes[boxNo].SetActive(true);
-        GameObject selectBranch = choiceBoxes[boxNo].transform.FindChild("Select Branch").gameObject;
+        GameObject selectBranch = choiceBoxes[boxNo].transform.Find("Select Branch").gameObject;
         selectBranch.SetActive(false);
         selectBranch.GetComponent<RectTransform>().sizeDelta = new Vector2(length, 100);
         int textSizeY = 100;
@@ -369,7 +369,7 @@ public class EventCommands : MonoBehaviour
         choiceBoxes[boxNo].GetComponent < RectTransform>().sizeDelta = new Vector2(length, margin * 2 + /*textSizeY * commandCount*/height);
         EventTrigger trigger;//イベント
         EventTrigger.Entry entry;
-        GameObject buttonOrigin = canvas.transform.FindChild("Button Origin").gameObject;
+        GameObject buttonOrigin = canvas.transform.Find("Button Origin").gameObject;
         for (int i = 0; i < commandCount; i++)
         {
             choiceButtons.Add(Instantiate(buttonOrigin));
@@ -394,7 +394,7 @@ public class EventCommands : MonoBehaviour
             }
             int no = i;
             choiceButtons[i].GetComponent<Text>().text = t;
-            Transform text = choiceButtons[i].transform.FindChild("Text");
+            Transform text = choiceButtons[i].transform.Find("Text");
                 text.GetComponent<Text>().text = s;
             choiceButtons[i].transform.SetParent(choiceBoxes[boxNo].transform);
             choiceButtons[i].SetActive(true);
@@ -426,13 +426,13 @@ public class EventCommands : MonoBehaviour
     {
         choiceName = "";
         choiceNameSub = "";
-        GameObject choiceBox = canvas.transform.FindChild("Choice Box").gameObject;//選択肢ウィンドウ
+        GameObject choiceBox = canvas.transform.Find("Choice Box").gameObject;//選択肢ウィンドウ
         choiceBoxes.Add(Instantiate(choiceBox));
         int boxNo = choiceBoxes.Count - 1;
         choiceBoxes[boxNo].transform.SetParent(canvas.transform);
         choiceBoxes[boxNo].transform.localScale = Vector3.one;
         choiceBoxes[boxNo].SetActive(true);
-        GameObject selectBranch = choiceBoxes[boxNo].transform.FindChild("Select Branch").gameObject;
+        GameObject selectBranch = choiceBoxes[boxNo].transform.Find("Select Branch").gameObject;
         selectBranch.SetActive(false);
         selectBranch.GetComponent<RectTransform>().sizeDelta = choices[0].GetComponent<RectTransform>().sizeDelta;
         int textSizeY = 100;
@@ -662,7 +662,7 @@ public class EventCommands : MonoBehaviour
 
     public void DrawImage(Sprite sprite, Rect rect)
     {
-        GameObject imageBox = canvas.transform.FindChild("Image Box").gameObject;
+        GameObject imageBox = canvas.transform.Find("Image Box").gameObject;
         imageBox.SetActive(true);
         imageBox.GetComponent<Image>().sprite = sprite;
         imageBox.GetComponent<RectTransform>().anchoredPosition = rect.position;
@@ -671,7 +671,7 @@ public class EventCommands : MonoBehaviour
     }
     public void CloseImage()
     {
-        canvas.transform.FindChild("Image Box").gameObject.SetActive(false);
+        canvas.transform.Find("Image Box").gameObject.SetActive(false);
         isCompleted = true;
     }
 

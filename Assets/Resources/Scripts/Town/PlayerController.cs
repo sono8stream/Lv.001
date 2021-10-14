@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
-
     [SerializeField]
     MapLoader layer;
     [SerializeField]
@@ -16,7 +15,7 @@ public class PlayerController : MonoBehaviour
     int validChipNo;
     List<Vector2> nodePos;
     float corPosY;//y座標位置の補正
-    int inter = 3;
+    int inter = 10;
     int count = 0;
     Sprite[] sprites;//すべてのスプライト
     int spritePat = 3;//スプライトのアニメーションパターン
@@ -40,7 +39,7 @@ public class PlayerController : MonoBehaviour
         {
             for (int j = 0; j < mapCostData.GetLength(1); j++)
             {
-                mapData[i, j] = layer.mapdata[i, layer.mapdata.GetLength(1) - 1 - j];
+                mapData[i, j] = layer.mapdata[i, j];
                 mapCostData[i, j] = -1;
             }
         }
@@ -65,11 +64,12 @@ public class PlayerController : MonoBehaviour
             if (Input.GetMouseButtonDown(0))//クリックされたとき、その座標まで主人公を移動
             {
                 count = 0;
-                Vector2 corPosMap = new Vector2(Mathf.FloorToInt(mapData.GetLength(0) / 2), Mathf.FloorToInt(mapData.GetLength(1) / 2));
                 Vector2 dest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 Collider2D c = Physics2D.OverlapPoint(dest);
-                dest = new Vector2(Mathf.RoundToInt(dest.x), Mathf.RoundToInt(dest.y - corPosY)) + corPosMap;
-                if (mapData[(int)dest.x, (int)dest.y] != validChipNo)//移動座標が通行不可だったら処理無効
+                Debug.Log(dest);
+                dest = GetNormalizedUnityPos(dest);
+                Vector2Int destGeneral = GetGeneralPos(dest);
+                if (mapData[destGeneral.y, destGeneral.x] != validChipNo)//移動座標が通行不可だったら処理無効
                 {
                     return;
                 }
@@ -78,28 +78,28 @@ public class PlayerController : MonoBehaviour
                     transform.position = nodePos[0];
                 }
                 selectPos.SetActive(true);
-                selectPos.transform.position = dest - corPosMap + Vector2.up * 0.5f;
-                Vector2 curPos = new Vector2((int)transform.position.x, (int)(transform.position.y - corPosY)) + corPosMap;//現在位置
+                selectPos.transform.position = dest;
+                Vector2Int curGeneral = GetGeneralPos(transform.position);//現在位置
                 Debug.Log(dest);
-                Debug.Log(curPos);
-                if (dest == curPos)//メニュー呼び出し
+                Debug.Log(destGeneral);
+                if (destGeneral == curGeneral)//メニュー呼び出し
                 {
                     GetComponent<EventObject>().ReadScript();
                     EventCommands.isProcessing = true;
                     return;
                 }
                 nodePos = new List<Vector2>();
-                SearchRoute(dest, curPos, 0);
+                SearchRoute(destGeneral, curGeneral, 0);
                 if (c != null && !c.GetComponent<EventObject>().CanThrough && c.GetComponent<EventObject>().enabled)
                 {
                     eventObject = c.gameObject;
-                    mapCostData[(int)dest.x, (int)dest.y] = 99;
+                    mapCostData[destGeneral.y, destGeneral.x] = 99;
                 }
                 else
                 {
                     eventObject = null;
                 }
-                GetRoute(dest, mapCostData[(int)dest.x, (int)dest.y]);
+                GetRoute(destGeneral, mapCostData[destGeneral.y, destGeneral.x]);
                 nodePos.Reverse();
                 for (int i = 0; i < mapCostData.GetLength(0); i++)
                 {
@@ -177,76 +177,109 @@ public class PlayerController : MonoBehaviour
     /// 目的地までの最短距離を求める再帰関数
     /// </summary>
     /// <param name="destination"></param>
-    void SearchRoute(Vector2 destPos, Vector2 checkPos, int cost)
+    void SearchRoute(Vector2Int destPos, Vector2Int checkPos, int cost)
     {
-        if (cost >= mapCostData[(int)checkPos.x, (int)checkPos.y] && mapCostData[(int)checkPos.x, (int)checkPos.y] != -1)
+        if (cost >= mapCostData[checkPos.y, checkPos.x] && mapCostData[checkPos.y, checkPos.x] != -1)
         {
             return;
         }
         else
         {
-            mapCostData[(int)checkPos.x, (int)checkPos.y] = cost;//より小さいコストに
+            mapCostData[checkPos.y, checkPos.x] = cost;//より小さいコストに
             if (checkPos == destPos)
             {
                 return;
             }
             cost++;
-            if (checkPos.y - 1 >= 0 && mapData[(int)checkPos.x, (int)checkPos.y - 1] == validChipNo)
+            if (checkPos.x - 1 >= 0 && mapData[checkPos.y, checkPos.x - 1] == validChipNo)
             {
-                SearchRoute(destPos, checkPos + Vector2.down, cost);
+                SearchRoute(destPos, checkPos + Vector2Int.left, cost);
             }
-            if (checkPos.x + 1 <= mapData.GetLength(0) - 1
-                && mapData[(int)checkPos.x + 1, (int)checkPos.y] == validChipNo)
+            if (checkPos.y + 1 <= mapData.GetLength(0) - 1
+                && mapData[checkPos.y + 1, checkPos.x] == validChipNo)
             {
-                SearchRoute(destPos, checkPos + Vector2.right, cost);
+                SearchRoute(destPos, checkPos + Vector2Int.up, cost);
             }
-            if (checkPos.y + 1 <= mapData.GetLength(1) - 1
-                && mapData[(int)checkPos.x, (int)checkPos.y + 1] == validChipNo)
+            if (checkPos.x + 1 <= mapData.GetLength(1) - 1
+                && mapData[checkPos.y, checkPos.x + 1] == validChipNo)
             {
-                SearchRoute(destPos, checkPos + Vector2.up, cost);
+                SearchRoute(destPos, checkPos + Vector2Int.right, cost);
             }
-            if (checkPos.x - 1 >= 0 && mapData[(int)checkPos.x - 1, (int)checkPos.y] == validChipNo)
+            if (checkPos.y - 1 >= 0 && mapData[checkPos.y - 1, checkPos.x] == validChipNo)
             {
-                SearchRoute(destPos, checkPos + Vector2.left, cost);
+                SearchRoute(destPos, checkPos + Vector2Int.down, cost);
             }
         }
     }
 
-    void GetRoute(Vector2 pos, int cost)
+    void GetRoute(Vector2Int pos, int cost)
     {
-        cost = mapCostData[(int)pos.x, (int)pos.y];
+        cost = mapCostData[pos.y, pos.x];
         if (cost <= 0)
         {
             return;
         }
         if (cost != 99)
         {
-            nodePos.Add(pos - new Vector2((mapData.GetLength(0) - 1) / 2, (mapData.GetLength(1) - 1) / 2 + corPosY));
+            nodePos.Add(GetUnityPos(pos));
         }
-        if (pos.y - 1 >= 0 && mapData[(int)pos.x, (int)pos.y - 1] == validChipNo
-            && mapCostData[(int)pos.x, (int)pos.y - 1] != -1 && mapCostData[(int)pos.x, (int)pos.y - 1] <= cost)
+        if (pos.x - 1 >= 0 && mapData[pos.y, pos.x - 1] == validChipNo
+            && mapCostData[pos.y, pos.x - 1] != -1 && mapCostData[pos.y, pos.x - 1] <= cost)
         {
-            GetRoute(pos + Vector2.down, cost);
+            GetRoute(pos + Vector2Int.left, cost);
         }
         else
-        if (pos.x + 1 <= mapData.GetLength(0) - 1
-            && mapData[(int)pos.x + 1, (int)pos.y] == validChipNo &&
-            mapCostData[(int)pos.x + 1, (int)pos.y] != -1 && mapCostData[(int)pos.x + 1, (int)pos.y] <= cost)
+        if (pos.y + 1 <= mapData.GetLength(0) - 1
+            && mapData[pos.y + 1, pos.x] == validChipNo &&
+            mapCostData[pos.y + 1, pos.x] != -1 && mapCostData[pos.y + 1, pos.x] <= cost)
         {
-            GetRoute(pos + Vector2.right, cost);
+            GetRoute(pos + Vector2Int.up, cost);
         }
         else
-        if (pos.y + 1 <= mapData.GetLength(1) - 1
-            && mapData[(int)pos.x, (int)pos.y + 1] == validChipNo &&
-            mapCostData[(int)pos.x, (int)pos.y + 1] != -1 && mapCostData[(int)pos.x, (int)pos.y + 1] <= cost)
+        if (pos.x + 1 <= mapData.GetLength(1) - 1
+            && mapData[pos.y, pos.x + 1] == validChipNo &&
+            mapCostData[pos.y, pos.x + 1] != -1 && mapCostData[pos.y, pos.x + 1] <= cost)
         {
-            GetRoute(pos + Vector2.up, cost);
+            GetRoute(pos + Vector2Int.right, cost);
         }
         else
-        if (pos.x - 1 >= 0 && mapData[(int)pos.x - 1, (int)pos.y] == validChipNo
-            && mapCostData[(int)pos.x - 1, (int)pos.y] != -1 && mapCostData[(int)pos.x - 1, (int)pos.y] <= cost)
+        if (pos.y - 1 >= 0 && mapData[pos.y - 1, pos.x] == validChipNo
+            && mapCostData[pos.y - 1, pos.x] != -1 && mapCostData[pos.y - 1, pos.x] <= cost)
         {
-            GetRoute(pos + Vector2.left, cost);
+            GetRoute(pos + Vector2Int.down, cost);
         }
+    }
+
+    Vector2 GetNormalizedUnityPos(Vector2 unityPos)
+    {
+        float nextX = mapData.GetLength(1) % 2 == 0 ? Mathf.Floor(unityPos.x) + 0.5f : Mathf.Round(unityPos.x);
+        float nextY = mapData.GetLength(0) % 2 == 0 ? Mathf.Floor(unityPos.y) + 0.5f : Mathf.Round(unityPos.y);
+
+        return new Vector2(nextX, nextY);
+    }
+
+    Vector2 GetUnityPos(Vector2Int generalPos)
+    {
+        float nextX = generalPos.x - mapData.GetLength(1) / 2;
+        if (mapData.GetLength(1) % 2 == 0)
+        {
+            nextX += 0.5f;
+        }
+
+        float nextY = mapData.GetLength(0) / 2 - generalPos.y;
+        if (mapData.GetLength(0) % 2 == 0)
+        {
+            nextY -= 0.5f;
+        }
+
+        return new Vector2(nextX, nextY);
+    }
+
+    Vector2Int GetGeneralPos(Vector2 unityPos)
+    {
+        int nextX = Mathf.CeilToInt(unityPos.x) + mapData.GetLength(1) / 2;
+        int nextY = mapData.GetLength(0) / 2 - Mathf.CeilToInt(unityPos.y);
+
+        return new Vector2Int(nextX, nextY);
     }
 }

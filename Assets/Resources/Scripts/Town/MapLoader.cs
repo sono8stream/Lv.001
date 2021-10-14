@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MapLoader : MonoBehaviour {
 
@@ -12,6 +13,7 @@ public class MapLoader : MonoBehaviour {
     public Sprite mapchips;
     Sprite map;
     const int MASU = 16;
+
     // Use this for initialization
     void Awake()
     {
@@ -31,7 +33,7 @@ public class MapLoader : MonoBehaviour {
             string sub = "";
             for (int j = 0; j < mapdata.GetLength(0); j++)
             {
-                sub += mapdata[j, i].ToString()+",";
+                sub += mapdata[j, i].ToString() + ",";
             }
             mapdataDebug[i] = sub;
         }
@@ -44,34 +46,42 @@ public class MapLoader : MonoBehaviour {
     /// <returns></returns>
     public Vector2 ReadMap()
     {
-        char[] kugiri = { '\r' };
-        string[] layoutInfo = mp_layout.text.Split(kugiri);
+        var reader = new System.IO.StringReader(mp_layout.text);
+        var mapDataList = new List<int[]>();
 
-        string[] eachInfo;
-        for (int i = 0; i < layoutInfo.Length; i++)//縦方向の分割
+        while (reader.Peek() > -1)
         {
-            //layoutInfo[i]=layoutInfo[i].Remove(layoutInfo[i].Length - 1);
-            eachInfo = layoutInfo[i].Split(',');
-            if (i == 0)//mapdata初期化
-            {
-                mapdata = new int[eachInfo.Length, layoutInfo.Length];
-            }
+            string[] eachInfo = reader.ReadLine().Split(',');
+            int[] row = new int[eachInfo.Length];
+
             for (int j = 0; j < eachInfo.Length; j++)//横方向の分割
             {
                 if (eachInfo[j] != "")
                 {
-                    mapdata[j, i] = int.Parse(eachInfo[j]);
+                    row[j] = int.Parse(eachInfo[j]);
                 }
             }
+
+            mapDataList.Add(row);
         }
-        MapImage = new Texture2D(MASU * MAP_WIDTH, MASU * MAP_HEIGHT, TextureFormat.RGBA32, false);//マップ初期化
-        for (int i = 0; i < MAP_WIDTH; i++)
+        mapdata = new int[mapDataList.Count, mapDataList[0].Length];
+        for(int i = 0; i < mapDataList.Count; i++)
         {
-            for (int j = 0; j < MAP_HEIGHT; j++)
+            for(int j = 0; j < mapDataList[0].Length; j++)
             {
+                mapdata[i, j] = mapDataList[i][j];
+            }
+        }
+
+        MapImage = new Texture2D(MASU * MAP_WIDTH, MASU * MAP_HEIGHT, TextureFormat.RGBA32, false);//マップ初期化
+        for (int i = 0; i < MAP_HEIGHT; i++)
+        {
+            for (int j = 0; j < MAP_WIDTH; j++)
+            {
+                Debug.Log(mapdata[i, j]);
                 Color[] c = mapchips.texture.GetPixels(MASU * (mapdata[i, j] % 8),
                     mapchips.texture.height - MASU * (1 + mapdata[i, j] / 8), MASU, MASU);
-                MapImage.SetPixels(MASU * i, MapImage.height - MASU * (j + 1), MASU, MASU, c);
+                MapImage.SetPixels(MASU * j, MapImage.height - MASU * (i + 1), MASU, MASU, c);
             }
         }
         MapImage.Apply();
