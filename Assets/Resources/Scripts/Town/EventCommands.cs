@@ -241,7 +241,7 @@ public class EventCommands : MonoBehaviour
         }
         CloseChoices();
         CloseMessage(true);
-        WriteMessage(PlayerData.Instance.money.ToString() + "G", -100, 860, 400, 150);
+        WriteMessage(PlayerData.Instance.money.ToString() + "G", 220, 860, 400, 150);
         string status;
         int unitNo = int.Parse(choiceName);
         int pow = PlayerData.Instance.party[unitNo].weapon.name.Equals("--") ? 0 :
@@ -253,8 +253,8 @@ public class EventCommands : MonoBehaviour
         status += "\r\nLv:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.Lv]+pow).ToString()
                 + " HP:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.HP]+pow/2).ToString()
             + "\r\n" + (SkillType)(jobNo);
-        WriteMessage(status, 150, 550, 750, 350);
-        WriteMessage("装備:  " + PlayerData.Instance.party[unitNo].weapon.name, 150, 300, 600, 150);
+        WriteMessage(status, 150, 200, 750, 350);
+        WriteMessage("装備:  " + PlayerData.Instance.party[unitNo].weapon.name, 150, 200, 600, 150);
         WriteMessage(PlayerData.Instance.party[unitNo].weapon.exp);
         ChoiceHaveItem(false, (int)ItemType.武器);
         /*GameObject[] choices = new GameObject[PlayerData.Instance.party.Count];
@@ -520,7 +520,7 @@ public class EventCommands : MonoBehaviour
         {
             CloseChoices();
             CloseMessage(true);
-            WriteMessage(PlayerData.Instance.money.ToString() + "G", -100, 860, 600, 150);            
+            WriteMessage(PlayerData.Instance.money.ToString() + "G", 220, 860, 600, 150);            
             JumpAction(2, false);
         }
         Debug.Log(isMenu);
