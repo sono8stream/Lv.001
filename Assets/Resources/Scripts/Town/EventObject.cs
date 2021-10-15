@@ -27,7 +27,7 @@ public class EventObject : MonoBehaviour
     Sprite[] sprites;
     [SerializeField]
     bool isAnimating;
-    int aniLimit = 20;
+    int aniLimit = 60;
     int aniCount;
     int spriteCount;
 
@@ -70,18 +70,19 @@ public class EventObject : MonoBehaviour
                 }
             }
         }
-        if(isAnimating)
+        if (isAnimating)
         {
             aniCount++;
-                if(aniLimit<aniCount)
+            if (aniLimit < aniCount)
             {
                 aniCount = 0;
                 spriteCount++;
-                if(sprites.Length<=spriteCount)
+                if (spriteCount >= sprites.Length * 2 - 2)
                 {
                     spriteCount = 0;
                 }
-                GetComponent<SpriteRenderer>().sprite = sprites[spriteCount];
+                int spriteI = spriteCount >= sprites.Length ? sprites.Length * 2 - 2 - spriteCount : spriteCount;
+                GetComponent<SpriteRenderer>().sprite = sprites[spriteI];
             }
         }
     }
