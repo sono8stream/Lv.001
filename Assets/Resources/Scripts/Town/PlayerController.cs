@@ -11,7 +11,7 @@ public class PlayerController : MonoBehaviour
     int[,] mapData;//レイヤー2のマップデータ、7以外では移動不可
     int[,] mapCostData;
     int direction;
-    Dictionary<Vector2, int> directionDic;//主人公向き
+    Dictionary<Vector2Int, int> directionDic;//主人公向き
     int validChipNo;
     List<Vector2> nodePos;
     float corPosY;//y座標位置の補正
@@ -43,12 +43,12 @@ public class PlayerController : MonoBehaviour
                 mapCostData[i, j] = -1;
             }
         }
-        directionDic = new Dictionary<Vector2, int>();
-        directionDic.Add(Vector2.up, 3);
-        directionDic.Add(Vector2.right, 2);
-        directionDic.Add(Vector2.down, 0);
-        directionDic.Add(Vector2.left, 1);
-        direction = directionDic[Vector2.down];
+        directionDic = new Dictionary<Vector2Int, int>();
+        directionDic.Add(Vector2Int.up, 3);
+        directionDic.Add(Vector2Int.right, 2);
+        directionDic.Add(Vector2Int.down, 0);
+        directionDic.Add(Vector2Int.left, 1);
+        direction = directionDic[Vector2Int.down];
         validChipNo = 7;
         nodePos = new List<Vector2>();
         corPosY = 0.5f;
@@ -111,7 +111,16 @@ public class PlayerController : MonoBehaviour
             }
             else if (nodePos.Count > 0)//移動情報がある場合、移動
             {
-                if (count >= inter)
+                if (count == 0)
+                {
+                    Vector2Int d
+                        = new Vector2Int((int)(nodePos[0].x - transform.position.x), (int)(nodePos[0].y - transform.position.y));
+                    direction = directionDic[d];
+                    spriteAniCor *= -1;
+                    GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
+                    count++;
+                }
+                else if (count >= inter)
                 {
                     count = 0;
                     transform.position = nodePos[0];
@@ -120,14 +129,6 @@ public class PlayerController : MonoBehaviour
                     if (nodePos.Count == 0)
                     {
                         selectPos.SetActive(false);
-                    }
-                    else
-                    {
-                        Vector2 d
-                            = new Vector2((int)(nodePos[0].x - transform.position.x), (int)(nodePos[0].y - transform.position.y));
-                        direction = directionDic[d];
-                        spriteAniCor *= -1;
-                        GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
                     }
                 }
                 else /*if (count < inter)*/
@@ -139,8 +140,8 @@ public class PlayerController : MonoBehaviour
             }
             else if (eventObject != null)//イベント実行
             {
-                Vector2 d
-                    = new Vector2((int)(eventObject.transform.position.x - transform.position.x),
+                Vector2Int d
+                    = new Vector2Int((int)(eventObject.transform.position.x - transform.position.x),
                     (int)(eventObject.transform.position.y - transform.position.y));
                 try
                 {
