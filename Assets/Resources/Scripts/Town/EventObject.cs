@@ -203,7 +203,7 @@ public class EventObject : MonoBehaviour
                     float.Parse(properties[3]), float.Parse(properties[4]))));
                 break;
             case 4://メニュー
-                branch = new string[4] { "道具", "装備", "中断", "閉じる" };
+                branch = new string[4] { "道具", "装備", "セーブ", "閉じる" };
                 Vector2 v = new Vector2(-380, -400);
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, v, 300, -1, branch));

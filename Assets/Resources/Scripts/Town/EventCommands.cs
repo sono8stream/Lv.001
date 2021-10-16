@@ -107,7 +107,7 @@ public class EventCommands : MonoBehaviour
 
     public void WriteStatus()
     {
-        if (CheckMenuCommand("装備", "道具", "装備", "中断", "閉じる"))
+        if (CheckMenuCommand("装備", "道具", "装備", "セーブ", "閉じる"))
         {
             return;
         }
@@ -235,7 +235,7 @@ public class EventCommands : MonoBehaviour
     /// </summary>
     public void SetWeapon()
     {
-        if (CheckMenuCommand("装備", "道具", "装備", "中断", "閉じる"))
+        if (CheckMenuCommand("装備", "道具", "装備", "セーブ", "閉じる"))
         {
             return;
         }
@@ -272,7 +272,7 @@ public class EventCommands : MonoBehaviour
 
     public void EquipWeapon()
     {
-        if(CheckMenuCommand("装備", "道具", "装備", "中断", "閉じる"))
+        if(CheckMenuCommand("装備", "道具", "装備", "セーブ", "閉じる"))
         {
             return;
         }
@@ -642,7 +642,7 @@ public class EventCommands : MonoBehaviour
 
     public void CheckItem()
     {
-        if (CheckMenuCommand("道具", "道具", "装備", "中断", "閉じる"))
+        if (CheckMenuCommand("道具", "道具", "装備", "セーブ", "閉じる"))
         {
             return;
         }
