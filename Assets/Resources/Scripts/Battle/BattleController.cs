@@ -11,7 +11,7 @@ public class BattleController : MonoBehaviour {
         Start = 0, Standby, Battle, End,Last
     }
     int phaseNo;
-    const int INTERVAL = 150;
+    const int INTERVAL = 50;
     int interCount;
     [SerializeField]
     Text message;

@@ -124,7 +124,7 @@ public class EventCommands : MonoBehaviour
             status += "\r\nLv:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.Lv] + pow).ToString()
                 + " HP:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.HP] + pow / 2).ToString()
                 + "\r\nスキル:　" + (SkillType)jobNo;
-            WriteMessage(status, 130, 470 - 370 * i, 750, 350);
+            WriteMessage(status, 130, 450 - 370 * i, 750, 400);
             choices[i] = windows[windows.Count - 1];
         }
         MakeChoicesPlus(false, new Vector2(130, -155), 800, 1480, choices);
@@ -253,7 +253,7 @@ public class EventCommands : MonoBehaviour
         status += "\r\nLv:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.Lv]+pow).ToString()
                 + " HP:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.HP]+pow/2).ToString()
             + "\r\nスキル:　" + (SkillType)(jobNo);
-        WriteMessage(status, 150, 460, 750, 350);
+        WriteMessage(status, 150, 500, 750, 400);
         WriteMessage("装備:  " + PlayerData.Instance.party[unitNo].weapon.name, 150, 200, 600, 150);
         WriteMessage(PlayerData.Instance.party[unitNo].weapon.exp);
         ChoiceHaveItem(false, (int)ItemType.武器);

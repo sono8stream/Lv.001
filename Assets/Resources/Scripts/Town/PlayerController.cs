@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
     int validChipNo;
     List<Vector2> nodePos;
     float corPosY;//y座標位置の補正
-    int inter = 10;
+    int inter = 2;
     int count = 0;
     Sprite[] sprites;//すべてのスプライト
     int spritePat = 3;//スプライトのアニメーションパターン
@@ -65,9 +65,9 @@ public class PlayerController : MonoBehaviour
             {
                 count = 0;
                 Vector2 dest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                Collider2D c = Physics2D.OverlapPoint(dest);
                 Debug.Log(dest);
                 dest = GetNormalizedUnityPos(dest);
+                Collider2D c = Physics2D.OverlapPoint(dest);
                 Vector2Int destGeneral = GetGeneralPos(dest);
                 if (mapData[destGeneral.y, destGeneral.x] != validChipNo)//移動座標が通行不可だったら処理無効
                 {
