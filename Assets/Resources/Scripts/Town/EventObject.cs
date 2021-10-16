@@ -213,7 +213,7 @@ public class EventObject : MonoBehaviour
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[4] { 1, 5, 12, 14 }));
+                events[events.Count - 1].AddListener(() => eventCommands.SetBranch(branch, new int[4] { 1, 5, 12, 13 }));
                 events.Add(new UnityEvent());//以下、"道具"コマンド処理
                 events[events.Count - 1].AddListener(() => eventCommands.ChoiceHaveItem(false));
                 events.Add(new UnityEvent());
@@ -238,8 +238,8 @@ public class EventObject : MonoBehaviour
                 events[events.Count - 1].AddListener(() => eventCommands.JumpAction(-3));
                 events.Add(new UnityEvent());//以下、"中断"処理
                 events[events.Count - 1].AddListener(() => eventCommands.SaveLoadData(true));
-                events.Add(new UnityEvent());
-                events[events.Count - 1].AddListener(() => Application.Quit());
+                //events.Add(new UnityEvent());
+                //events[events.Count - 1].AddListener(() => Application.Quit());
                 events.Add(new UnityEvent());//以下、"閉じる"処理
                 events[events.Count - 1].AddListener(() => eventCommands.CloseChoices(true));
                 events.Add(new UnityEvent());
