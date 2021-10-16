@@ -209,7 +209,7 @@ public class EventObject : MonoBehaviour
                 events[events.Count - 1].AddListener(() => eventCommands.MakeChoices(false, v, 300, -1, branch));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WriteMessage(PlayerData.Instance.money.ToString() + "G",
-                    -100, 860, 600, 150));
+                    220, 860, 600, 150));
                 events.Add(new UnityEvent());
                 events[events.Count - 1].AddListener(() => eventCommands.WaitForChoosing());
                 events.Add(new UnityEvent());

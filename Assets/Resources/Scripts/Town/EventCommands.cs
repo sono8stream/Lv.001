@@ -123,8 +123,8 @@ public class EventCommands : MonoBehaviour
             + (JobType)jobNo;
             status += "\r\nLv:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.Lv] + pow).ToString()
                 + " HP:  " + (PlayerData.Instance.party[i].status[(int)StatusParams.HP] + pow / 2).ToString()
-                + "\r\n" + (SkillType)jobNo;
-            WriteMessage(status, 130, 600 - 370 * i, 750, 350);
+                + "\r\nスキル:　" + (SkillType)jobNo;
+            WriteMessage(status, 130, 470 - 370 * i, 750, 350);
             choices[i] = windows[windows.Count - 1];
         }
         MakeChoicesPlus(false, new Vector2(130, -155), 800, 1480, choices);
@@ -141,8 +141,8 @@ public class EventCommands : MonoBehaviour
         status = PlayerData.Instance.characters[charaNo].name + "  "
             + (JobType)jobNo;
         status += "\r\nLv:  " + (PlayerData.Instance.characters[charaNo].status[(int)StatusParams.Lv]+pow).ToString()
-            + "\r\n" + (SkillType)jobNo;
-        WriteMessage(status, -40, 250, 950, 400);
+            + "\r\nスキル:　" + (SkillType)jobNo;
+        WriteMessage(status, -40, 350, 950, 400);
         if (kanyu)
         {
             int trust = 0;
@@ -241,7 +241,7 @@ public class EventCommands : MonoBehaviour
         }
         CloseChoices();
         CloseMessage(true);
-        WriteMessage(PlayerData.Instance.money.ToString() + "G", 220, 860, 400, 150);
+        WriteMessage(PlayerData.Instance.money.ToString() + "G", 220, 860, 600, 150);
         string status;
         int unitNo = int.Parse(choiceName);
         int pow = PlayerData.Instance.party[unitNo].weapon.name.Equals("--") ? 0 :
@@ -252,8 +252,8 @@ public class EventCommands : MonoBehaviour
             + (JobType)(jobNo);
         status += "\r\nLv:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.Lv]+pow).ToString()
                 + " HP:  " + (PlayerData.Instance.party[unitNo].status[(int)StatusParams.HP]+pow/2).ToString()
-            + "\r\n" + (SkillType)(jobNo);
-        WriteMessage(status, 150, 200, 750, 350);
+            + "\r\nスキル:　" + (SkillType)(jobNo);
+        WriteMessage(status, 150, 460, 750, 350);
         WriteMessage("装備:  " + PlayerData.Instance.party[unitNo].weapon.name, 150, 200, 600, 150);
         WriteMessage(PlayerData.Instance.party[unitNo].weapon.exp);
         ChoiceHaveItem(false, (int)ItemType.武器);
