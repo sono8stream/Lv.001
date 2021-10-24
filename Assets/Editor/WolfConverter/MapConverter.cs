@@ -20,12 +20,24 @@ namespace WolfConverter
 
         private Texture2D mapchipTexture = null;
 
-        private Texture2D mapTexture = null;
-
-        private byte[] dataBytes = null;
-
         private const int autoTileCount = 16;
         private Texture2D[] autochipTextures = new Texture2D[autoTileCount];
+
+        class MapInfo
+        {
+            public int width;
+            public int height;
+            public Texture2D mapTexture;
+
+            public MapInfo(int width, int height, Texture2D mapTexture)
+            {
+                this.width = width;
+                this.height = height;
+                this.mapTexture = mapTexture;
+            }
+        }
+
+        private MapInfo mapInfo;
 
         [UnityEditor.MenuItem("Window/WolfConverter/MapConverter")]
         static void ShowMapConverter()
@@ -53,8 +65,6 @@ namespace WolfConverter
             EditorGUILayout.Space();
 
             ShowMapFilePullDown();
-
-            //ShowMapChipImage();
 
             EditorGUILayout.BeginHorizontal();
 
@@ -102,8 +112,8 @@ namespace WolfConverter
 
             // プルダウンメニューに登録する文字列配列
             string path = AssetDatabase.GetAssetPath(dataDirectory);
-            string[] displayOptions = System.IO.Directory.GetFiles(path, "*.mps");
-            displayOptions = displayOptions.Select(a => a.Replace($"{path}\\", "")).ToArray();
+            string[] filePaths = System.IO.Directory.GetFiles(path, "*.mps");
+            string[] displayOptions = filePaths.Select(a => a.Replace($"{path}\\", "")).ToArray();
 
             // プルダウンメニューの作成
             var curIndex = displayOptions.Length > 0
@@ -116,16 +126,7 @@ namespace WolfConverter
                 if (mapDataIndex != curIndex)
                 {
                     mapDataIndex = curIndex;
-                    string[] names = System.IO.Directory.GetFiles(path, "*.mps");
-                    Debug.Log(names[0]);
-                    Debug.Log("StartLoading");
-
-                    using (var fs = new System.IO.FileStream(names[mapDataIndex], System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    {
-                        dataBytes = new byte[fs.Length];
-                        fs.Read(dataBytes, 0, dataBytes.Length);
-                    }
-                    ReadBinary();
+                    ReadBinary(filePaths[mapDataIndex]);
                 }
             }
         }
@@ -166,10 +167,10 @@ namespace WolfConverter
         private void LoadTexture(string imageName)
         {
             byte[] texBytes;
-            using (var reader = new System.IO.BinaryReader(new System.IO.FileStream(imageName, System.IO.FileMode.Open)))
+            using (var fs = new System.IO.FileStream(imageName, System.IO.FileMode.Open, System.IO.FileAccess.Read))
             {
-                texBytes = reader.ReadBytes(int.MaxValue);
-                Debug.Log(texBytes.Length);
+                texBytes = new byte[fs.Length];
+                fs.Read(texBytes, 0, texBytes.Length);
             }
             Texture2D texture2D = new Texture2D(1, 1);
             texture2D.LoadImage(texBytes);
@@ -185,22 +186,23 @@ namespace WolfConverter
 
             string[] autochipPaths = new string[autoTileCount]{
                 "",
-    "Data/MapChip/[A]Grass1-Dirt1_pipo",
-    "Data/MapChip/[A]Grass1-Grass2_pipo",
-    "Data/MapChip/[A]Grass1-Grass3_pipo",
-    "Data/MapChip/[A]Water2_pipo",
-    "Data/MapChip/[A]Water5_pipo",
-    "Data/MapChip/[A]Water7_pipo",
-    "Data/MapChip/[A]WaterFall2_pipo",
-    "Data/MapChip/[A]Flower_pipo",
-    "Data/MapChip/[A]Snow_pipo",
-"Data/MapChip/[A]Snow_Grass4_pipo",
-"Data/MapChip/[A]Snow_Dirt2_pipo",
-"Data/MapChip/[A]Ice2_pipo",
-"Data/MapChip/[A]Dirt1-Dirt2_pipo",
-"Data/MapChip/[A]Wall-Up1_pipo",
-"Data/MapChip/[A]Wall-Up2_pipo"
-};
+                "Data/MapChip/[A]Grass1-Dirt1_pipo",
+                "Data/MapChip/[A]Grass1-Grass2_pipo",
+                "Data/MapChip/[A]Grass1-Grass3_pipo",
+                "Data/MapChip/[A]Water2_pipo",
+                "Data/MapChip/[A]Water5_pipo",
+                "Data/MapChip/[A]Water7_pipo",
+                "Data/MapChip/[A]WaterFall2_pipo",
+                "Data/MapChip/[A]Flower_pipo",
+                "Data/MapChip/[A]Snow_pipo",
+                "Data/MapChip/[A]Snow_Grass4_pipo",
+                "Data/MapChip/[A]Snow_Dirt2_pipo",
+                "Data/MapChip/[A]Ice2_pipo",
+                "Data/MapChip/[A]Dirt1-Dirt2_pipo",
+                "Data/MapChip/[A]Wall-Up1_pipo",
+                "Data/MapChip/[A]Wall-Up2_pipo"
+            };
+
             for (int i = 1; i < autoTileCount; i++)
             {
                 autochipTextures[i] = Resources.Load(autochipPaths[i]) as Texture2D;
@@ -237,18 +239,31 @@ namespace WolfConverter
 
                 string path = AssetDatabase.GetAssetPath(imgDirectory);
                 string[] names = System.IO.Directory.GetFiles(path, "*.png");
-                GUILayout.Button(mapchipTexture, GUILayout.MaxWidth(maxW), GUILayout.MaxHeight(maxH), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+                GUILayout.Button(mapchipTexture, GUILayout.MaxWidth(maxW), GUILayout.MaxHeight(maxH),
+                GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             }
         }
 
-        private void ReadBinary()
+        private void ReadBinary(string mapFilePath)
         {
-            if (dataBytes == null)
+            byte[] bytes;
+            using (var fs = new System.IO.FileStream(mapFilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
             {
-                return;
+                bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
             }
+            Debug.Log(mapFilePath);
 
-            byte[] bytes = dataBytes;
+            int tileSetId = LoadInt(bytes, 0x22, true);
+            byte[] tileBytes;
+            string tileFilePath = "Assets/Resources/Data/BasicData\\TileSetData.dat";
+            using (var fs = new System.IO.FileStream(tileFilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+            {
+                tileBytes = new byte[fs.Length];
+                fs.Read(tileBytes, 0, tileBytes.Length);
+            }
+            Debug.Log(tileBytes.Length);
+
             int width = LoadInt(bytes, 0x26, true);
             int height = LoadInt(bytes, 0x2A, true);
             int[,] mapData1 = LoadLayer(bytes, width, height, 0x32 + width * height * 4 * 0);
@@ -259,33 +274,28 @@ namespace WolfConverter
             Texture2D layer1Texture = reader.ReadMap(mapData1, mapchipTexture, autochipTextures);
             Texture2D layer2Texture = reader.ReadMap(mapData2, mapchipTexture, autochipTextures);
             Texture2D layer3Texture = reader.ReadMap(mapData3, mapchipTexture, autochipTextures);
-            mapTexture = reader.CombineTexture(layer1Texture, layer2Texture, layer3Texture);
-            //mapTexture = layer1Texture;
+            Texture2D mapTexture = reader.CombineTexture(layer1Texture, layer2Texture, layer3Texture);
+
+            mapInfo = new MapInfo(width, height, mapTexture);
         }
 
         private void ShowBinaryData()
         {
-            if (mapTexture == null)
+            if (mapInfo == null)
             {
                 return;
             }
 
-            byte[] bytes = dataBytes;
-            int width = LoadInt(dataBytes, 0x26, true);
-            int height = LoadInt(dataBytes, 0x2A, true);
-
-            int[,] mapData1 = LoadLayer(dataBytes, width, height, 0x32);
-
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal();
 
-            GUILayout.Label($"Width: {width.ToString()}", GUILayout.Width(110));
-            GUILayout.Label($"Height: {height.ToString()}", GUILayout.Width(110));
-            GUILayout.Label($"Data size: {dataBytes.Length.ToString()} bytes");
+            GUILayout.Label($"Width: {mapInfo.width.ToString()}", GUILayout.Width(110));
+            GUILayout.Label($"Height: {mapInfo.height.ToString()}", GUILayout.Width(110));
 
             EditorGUILayout.EndHorizontal();
 
-            GUILayout.Button(mapTexture, GUILayout.MaxWidth(mapTexture.width), GUILayout.MaxHeight(mapTexture.height), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+            GUILayout.Button(mapInfo.mapTexture, GUILayout.MaxWidth(mapInfo.mapTexture.width),
+             GUILayout.MaxHeight(mapInfo.mapTexture.height), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
 
             EditorGUILayout.EndVertical();
         }
@@ -334,6 +344,7 @@ namespace WolfConverter
             return mapData;
         }
     }
+
 
 }
 
