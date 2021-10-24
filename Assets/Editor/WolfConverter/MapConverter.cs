@@ -22,14 +22,10 @@ namespace WolfConverter
 
         private Texture2D mapTexture = null;
 
-        private TextAsset mapBinData = null;
-
         private byte[] dataBytes = null;
 
         private const int autoTileCount = 16;
         private Texture2D[] autochipTextures = new Texture2D[autoTileCount];
-
-
 
         [UnityEditor.MenuItem("Window/WolfConverter/MapConverter")]
         static void ShowMapConverter()
@@ -62,9 +58,9 @@ namespace WolfConverter
 
             EditorGUILayout.BeginHorizontal();
 
-            DrawImagePart();
+            DrawMapChip();
 
-            DrawBinary();
+            ShowBinaryData();
 
             EditorGUILayout.EndHorizontal();
         }
@@ -122,11 +118,12 @@ namespace WolfConverter
                     mapDataIndex = curIndex;
                     string[] names = System.IO.Directory.GetFiles(path, "*.mps");
                     Debug.Log(names[0]);
-                    mapBinData = Resources.Load("Data/MapData/SampleMapA") as TextAsset;
-                    using (var reader = new System.IO.BinaryReader(new System.IO.FileStream(names[mapDataIndex], System.IO.FileMode.Open)))
+                    Debug.Log("StartLoading");
+
+                    using (var fs = new System.IO.FileStream(names[mapDataIndex], System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     {
-                        dataBytes = reader.ReadBytes(int.MaxValue);
-                        Debug.Log(dataBytes.Length);
+                        dataBytes = new byte[fs.Length];
+                        fs.Read(dataBytes, 0, dataBytes.Length);
                     }
                     ReadBinary();
                 }
@@ -183,6 +180,7 @@ namespace WolfConverter
 
             string path = AssetDatabase.GetAssetPath(imgDirectory);
             string[] names = System.IO.Directory.GetFiles(path, "*.png");
+            Debug.Log(names[names.Length - 2]);
             mapchipTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(names[names.Length - 2], typeof(Texture2D));
 
             string[] autochipPaths = new string[autoTileCount]{
@@ -230,20 +228,16 @@ namespace WolfConverter
         }
 
         // 画像一覧をボタン選択出来る形にして出力
-        private void DrawImagePart()
+        private void DrawMapChip()
         {
             if (imgDirectory != null && mapchipTexture != null)
             {
-                float x = 0.0f;
-                float y = 0.0f;
-                float w = 50.0f;
-                float h = 50.0f;
-                float maxW = 300.0f;
-                float maxH = 300.0f;
+                float maxW = 100.0f;
+                float maxH = 500.0f;
 
                 string path = AssetDatabase.GetAssetPath(imgDirectory);
                 string[] names = System.IO.Directory.GetFiles(path, "*.png");
-                GUILayout.Button(mapchipTexture, GUILayout.MaxWidth(w), GUILayout.MaxHeight(maxH), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+                GUILayout.Button(mapchipTexture, GUILayout.MaxWidth(maxW), GUILayout.MaxHeight(maxH), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             }
         }
 
@@ -257,8 +251,8 @@ namespace WolfConverter
             byte[] bytes = dataBytes;
             int width = LoadInt(bytes, 0x26, true);
             int height = LoadInt(bytes, 0x2A, true);
-            int[,] mapData1 = LoadLayer(bytes, width, height, 0x32);
-            int[,] mapData2 = LoadLayer(bytes, width, height, 0x32 + width * height * 4);
+            int[,] mapData1 = LoadLayer(bytes, width, height, 0x32 + width * height * 4 * 0);
+            int[,] mapData2 = LoadLayer(bytes, width, height, 0x32 + width * height * 4 * 1);
             int[,] mapData3 = LoadLayer(bytes, width, height, 0x32 + width * height * 4 * 2);
 
             Utils.MapReader reader = new Utils.MapReader();
@@ -266,41 +260,31 @@ namespace WolfConverter
             Texture2D layer2Texture = reader.ReadMap(mapData2, mapchipTexture, autochipTextures);
             Texture2D layer3Texture = reader.ReadMap(mapData3, mapchipTexture, autochipTextures);
             mapTexture = reader.CombineTexture(layer1Texture, layer2Texture, layer3Texture);
+            //mapTexture = layer1Texture;
         }
 
-        private void DrawBinary()
+        private void ShowBinaryData()
         {
-            if (mapBinData == null || mapTexture == null)
+            if (mapTexture == null)
             {
                 return;
             }
 
-            byte[] bytes = mapBinData.bytes;
-            int width = LoadInt(bytes, 0x26, true);
-            int height = LoadInt(bytes, 0x2A, true);
+            byte[] bytes = dataBytes;
+            int width = LoadInt(dataBytes, 0x26, true);
+            int height = LoadInt(dataBytes, 0x2A, true);
 
-            int[,] mapData1 = LoadLayer(bytes, width, height, 0x32);
-
-            string data = "";
-            for (int i = 0; i < height; i++)
-            {
-                for (int j = 0; j < width; j++)
-                {
-                    data += $"{mapData1[i, j]},";
-                }
-                data += "\n";
-            }
+            int[,] mapData1 = LoadLayer(dataBytes, width, height, 0x32);
 
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal();
 
             GUILayout.Label($"Width: {width.ToString()}", GUILayout.Width(110));
             GUILayout.Label($"Height: {height.ToString()}", GUILayout.Width(110));
-            GUILayout.Label($"Data size: {bytes.Length.ToString()} bytes");
+            GUILayout.Label($"Data size: {dataBytes.Length.ToString()} bytes");
 
             EditorGUILayout.EndHorizontal();
 
-            //data = GUILayout.TextArea(data);
             GUILayout.Button(mapTexture, GUILayout.MaxWidth(mapTexture.width), GUILayout.MaxHeight(mapTexture.height), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
 
             EditorGUILayout.EndVertical();

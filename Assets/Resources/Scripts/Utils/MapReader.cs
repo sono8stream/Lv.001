@@ -16,14 +16,39 @@ namespace Utils
             {
                 for (int j = 0; j < width; j++)
                 {
+                    // オートチップ判定
                     if (mapData[i, j] >= 100000)
                     {
                         int id = mapData[i, j] / 100000;
                         id--;
                         if (id > 0)
                         {
-                            Color[] c = autochipTextures[id].GetPixels(0, 0, masu, masu);
-                            mapTexture.SetPixels(masu * j, mapTexture.height - masu * (i + 1), masu, masu, c);
+                            int leftUp = mapData[i, j] / 1000 % 10;
+
+                            Color[] c = autochipTextures[id].GetPixels(0,
+                                autochipTextures[id].height - leftUp * masu - masu / 2, masu / 2, masu / 2);
+                            mapTexture.SetPixels(masu * j, mapTexture.height - masu * (i + 1) + masu / 2, masu / 2, masu / 2, c);
+
+                            int rightUp = mapData[i, j] / 100 % 10;
+
+                            c = autochipTextures[id].GetPixels(masu / 2,
+                                autochipTextures[id].height - rightUp * masu - masu / 2, masu / 2, masu / 2);
+                            mapTexture.SetPixels(masu * j + masu / 2,
+                                mapTexture.height - masu * (i + 1) + masu / 2, masu / 2, masu / 2, c);
+
+                            int leftDown = mapData[i, j] / 10 % 10;
+
+                            c = autochipTextures[id].GetPixels(0,
+                                autochipTextures[id].height - leftDown * masu - masu, masu / 2, masu / 2);
+                            mapTexture.SetPixels(masu * j,
+                                mapTexture.height - masu * (i + 1), masu / 2, masu / 2, c);
+
+                            int rightDown = mapData[i, j] / 1 % 10;
+
+                            c = autochipTextures[id].GetPixels(masu / 2,
+                                autochipTextures[id].height - rightDown * masu - masu, masu / 2, masu / 2);
+                            mapTexture.SetPixels(masu * j + masu / 2,
+                                mapTexture.height - masu * (i + 1), masu / 2, masu / 2, c);
                         }
                     }
                     else
