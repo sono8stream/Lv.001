@@ -10,7 +10,9 @@ namespace WolfConverter
     public class MapConverter : EditorWindow
     {
         private Object folder;
-        private int index;
+        private int mapchipIndex;
+
+        private int mapDataIndex;
 
         private Object imgDirectory;
 
@@ -76,20 +78,21 @@ namespace WolfConverter
 
             // プルダウンメニューに登録する文字列配列
             string path = AssetDatabase.GetAssetPath(imgDirectory);
-            string[] displayOptions = System.IO.Directory.GetFiles(path, "*.png");
+            string[] paths = System.IO.Directory.GetFiles(path, "*.png");
+            string[] displayOptions = paths.Select(a => a.Replace($"{path}\\", "")).ToArray();
 
             // プルダウンメニューの作成
             var curIndex = displayOptions.Length > 0
-            ? EditorGUILayout.Popup("MapChip", index, displayOptions)
+            ? EditorGUILayout.Popup("MapChip", mapchipIndex, displayOptions)
                 : -1;
 
             if (EditorGUI.EndChangeCheck())
             {
-                if (index != curIndex)
+                if (mapchipIndex != curIndex)
                 {
-                    index = curIndex;
+                    mapchipIndex = curIndex;
                     //string imagePath = $"file://{Application.streamingAssetsPath}/MapChip/{displayOptions[index]}";
-                    LoadTexture(displayOptions[index]);
+                    LoadTexture(paths[mapchipIndex]);
                 }
             }
         }
@@ -108,19 +111,19 @@ namespace WolfConverter
 
             // プルダウンメニューの作成
             var curIndex = displayOptions.Length > 0
-            ? EditorGUILayout.Popup("MapData", index, displayOptions)
+            ? EditorGUILayout.Popup("MapData", mapDataIndex, displayOptions)
                 : -1;
 
             // チェック終了時
             if (EditorGUI.EndChangeCheck())
             {
-                if (index != curIndex)
+                if (mapDataIndex != curIndex)
                 {
-                    index = curIndex;
+                    mapDataIndex = curIndex;
                     string[] names = System.IO.Directory.GetFiles(path, "*.mps");
                     Debug.Log(names[0]);
                     mapBinData = Resources.Load("Data/MapData/SampleMapA") as TextAsset;
-                    using (var reader = new System.IO.BinaryReader(new System.IO.FileStream(names[index], System.IO.FileMode.Open)))
+                    using (var reader = new System.IO.BinaryReader(new System.IO.FileStream(names[mapDataIndex], System.IO.FileMode.Open)))
                     {
                         dataBytes = reader.ReadBytes(int.MaxValue);
                         Debug.Log(dataBytes.Length);
@@ -165,6 +168,19 @@ namespace WolfConverter
 
         private void LoadTexture(string imageName)
         {
+            byte[] texBytes;
+            using (var reader = new System.IO.BinaryReader(new System.IO.FileStream(imageName, System.IO.FileMode.Open)))
+            {
+                texBytes = reader.ReadBytes(int.MaxValue);
+                Debug.Log(texBytes.Length);
+            }
+            Texture2D texture2D = new Texture2D(1, 1);
+            texture2D.LoadImage(texBytes);
+            Debug.Log(texture2D.height);
+            texture2D.Apply();
+            Rect rect = GUILayoutUtility.GetLastRect();
+            EditorGUI.DrawPreviewTexture(new Rect(rect.x, rect.y + rect.height + 10, texture2D.width, texture2D.height), texture2D);
+
             string path = AssetDatabase.GetAssetPath(imgDirectory);
             string[] names = System.IO.Directory.GetFiles(path, "*.png");
             mapchipTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(names[names.Length - 2], typeof(Texture2D));
@@ -213,38 +229,6 @@ namespace WolfConverter
             */
         }
 
-        private void ShowMapChipImage()
-        {
-            if (mapchipTexture == null)
-            {
-                return;
-            }
-
-            //画像のサイズ
-            var textureWidth = (float)mapchipTexture.width;
-            var textureHeight = (float)mapchipTexture.height;
-
-            // ウィンドウサイズより大きければ縮小
-            if (this.position.width < textureWidth
-                    || this.position.height < textureHeight)
-            {
-                //縮小率を計算(縦横でより小さい方)
-                float shrinkRate = Mathf.Min(
-                    this.position.width / textureWidth, this.position.height / textureHeight);
-
-                textureWidth *= shrinkRate;
-                textureHeight *= shrinkRate;
-            }
-
-            //Windowの中央に表示するための位置決定
-            var posX = (this.position.width - textureWidth) / 2;
-            var posY = (this.position.height - textureHeight) / 2;
-
-            //画像の表示
-            EditorGUI.DrawPreviewTexture(new Rect(posX, posY, textureWidth, textureHeight), mapchipTexture);
-
-        }
-
         // 画像一覧をボタン選択出来る形にして出力
         private void DrawImagePart()
         {
@@ -260,7 +244,6 @@ namespace WolfConverter
                 string path = AssetDatabase.GetAssetPath(imgDirectory);
                 string[] names = System.IO.Directory.GetFiles(path, "*.png");
                 GUILayout.Button(mapchipTexture, GUILayout.MaxWidth(w), GUILayout.MaxHeight(maxH), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
             }
         }
 
