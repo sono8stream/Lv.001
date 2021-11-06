@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Utils
 {
-    public class MapReader
+    public class WolfMapReader
     {
         public Texture2D ReadMap(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures)
         {

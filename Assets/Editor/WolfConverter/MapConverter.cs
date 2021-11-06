@@ -1,22 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.Networking;
-using System.Linq;
 
 namespace WolfConverter
 {
     public class MapConverter : EditorWindow
     {
-        private Object folder;
+        private UnityEngine.Object folder;
         private int mapchipIndex;
 
         private int mapDataIndex;
 
-        private Object imgDirectory;
+        private UnityEngine.Object imgDirectory;
 
-        private Object dataDirectory;
+        private UnityEngine.Object dataDirectory;
 
         private Texture2D mapchipTexture = null;
 
@@ -255,14 +253,12 @@ namespace WolfConverter
             Debug.Log(mapFilePath);
 
             int tileSetId = LoadInt(bytes, 0x22, true);
-            byte[] tileBytes;
-            string tileFilePath = "Assets/Resources/Data/BasicData\\TileSetData.dat";
-            using (var fs = new System.IO.FileStream(tileFilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+            MapTile.Loader loader = new MapTile.Loader();
+            MapTile.Data[] tileData = loader.LoadAllMapTilesFromDataBinary();
+            for (int i = 0; i < tileData.Length; i++)
             {
-                tileBytes = new byte[fs.Length];
-                fs.Read(tileBytes, 0, tileBytes.Length);
+                Debug.Log(tileData[i].SettingName);
             }
-            Debug.Log(tileBytes.Length);
 
             int width = LoadInt(bytes, 0x26, true);
             int height = LoadInt(bytes, 0x2A, true);
@@ -270,7 +266,7 @@ namespace WolfConverter
             int[,] mapData2 = LoadLayer(bytes, width, height, 0x32 + width * height * 4 * 1);
             int[,] mapData3 = LoadLayer(bytes, width, height, 0x32 + width * height * 4 * 2);
 
-            Utils.MapReader reader = new Utils.MapReader();
+            Utils.WolfMapReader reader = new Utils.WolfMapReader();
             Texture2D layer1Texture = reader.ReadMap(mapData1, mapchipTexture, autochipTextures);
             Texture2D layer2Texture = reader.ReadMap(mapData2, mapchipTexture, autochipTextures);
             Texture2D layer3Texture = reader.ReadMap(mapData3, mapchipTexture, autochipTextures);
@@ -343,8 +339,13 @@ namespace WolfConverter
 
             return mapData;
         }
+
+        private string LoadString(byte[] bytes, int offset)
+        {
+            int strLength = LoadInt(bytes, offset, true);
+            byte[] strBytes = new byte[strLength];
+            Array.Copy(bytes, offset + 4, strBytes, 0, strLength);
+            return System.Text.Encoding.GetEncoding("shift_jis").GetString(strBytes);
+        }
     }
-
-
 }
-
