@@ -76,6 +76,7 @@ namespace WolfConverter
 
             nextOffset = offset + byteLength;
             string res = System.Text.Encoding.GetEncoding("shift_jis").GetString(strBytes);
+            res = res.Substring(0, res.Length - 1);// 末尾のスペースを削除
             return res;
         }
     }

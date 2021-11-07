@@ -1,18 +1,37 @@
 using System;
+using UnityEngine.Assertions;
 
 namespace WolfConverter
 {
     namespace MapTile
     {
-        class Loader
+        class Repository
         {
             private string dataPath = "Assets/Resources/Data/BasicData/TileSetData.dat";
 
-            public Data[] LoadAllMapTilesFromDataBinary()
+            private static Data[] dataArray;
+
+            public Data Find(int index)
+            {
+                if (dataArray == null)
+                {
+                    LoadAllMapTilesFromDataBinary();
+                }
+
+                if (index < 0 && index >= dataArray.Length)
+                {
+                    Assert.IsTrue(false);
+                    return null;
+                }
+
+                return dataArray[index];
+            }
+
+            private void LoadAllMapTilesFromDataBinary()
             {
                 WolfDataReader reader = new WolfDataReader(dataPath);
                 int settingCount = reader.ReadInt(0x0b, true, out int tmpOffset);
-                Data[] dataArray = new Data[settingCount];
+                dataArray = new Data[settingCount];
 
                 int autoTileCount = 15;
                 int offset = 0x0f;
@@ -48,8 +67,6 @@ namespace WolfConverter
 
                     dataArray[i] = new Data(settingName, baseTileFilePath, autoTileFilePaths, unitTileConfigs);
                 }
-
-                return dataArray;
             }
 
             private UnitTile ReadUnitTile(WolfDataReader reader, int tagNumber, int offset, out int nextOffset)

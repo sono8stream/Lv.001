@@ -165,6 +165,7 @@ namespace WolfConverter
         private void LoadTexture(string imageName)
         {
             byte[] texBytes;
+            Debug.Log(imageName);
             using (var fs = new System.IO.FileStream(imageName, System.IO.FileMode.Open, System.IO.FileAccess.Read))
             {
                 texBytes = new byte[fs.Length];
@@ -244,6 +245,7 @@ namespace WolfConverter
 
         private void ReadBinary(string mapFilePath)
         {
+            Debug.Log(mapFilePath);
             byte[] bytes;
             using (var fs = new System.IO.FileStream(mapFilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
             {
@@ -253,12 +255,46 @@ namespace WolfConverter
             Debug.Log(mapFilePath);
 
             int tileSetId = LoadInt(bytes, 0x22, true);
-            MapTile.Loader loader = new MapTile.Loader();
-            MapTile.Data[] tileData = loader.LoadAllMapTilesFromDataBinary();
-            for (int i = 0; i < tileData.Length; i++)
+            MapTile.Repository repository = new MapTile.Repository();
+            MapTile.Data tileData = repository.Find(tileSetId);
+            Debug.Log(tileData.SettingName);
+
             {
-                Debug.Log(tileData[i].SettingName);
+                int invalidId = tileData.BaseTileFilePath.IndexOfAny(System.IO.Path.GetInvalidFileNameChars());
+                Debug.Log(tileData.BaseTileFilePath);
+                Debug.Log(tileData.BaseTileFilePath[invalidId]);
+
+                string imagePath = "Assets/Resources/Data/" + tileData.BaseTileFilePath.Replace("/", "\\");
+                imagePath = "Assets/Resources/Data/MapChip/[Base]BaseChip_pipo.png";
+                Debug.Log(imagePath);
+                Debug.Log(tileData.BaseTileFilePath);
+                Debug.Log(imagePath.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()));
+                mapchipTexture = new Texture2D(1, 1);
+                using (var fs = new System.IO.FileStream(imagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                {
+                    byte[] texBytes = new byte[fs.Length];
+                    fs.Read(texBytes, 0, texBytes.Length);
+                    mapchipTexture.LoadImage(texBytes);
+                    mapchipTexture.Apply();
+                }
+
+                for (int i = 1; i < autoTileCount; i++)
+                {
+                    string autochipImagePath = "Assets/Resources/Data/" + tileData.AutoTileFilePaths[i - 1];
+                    Debug.Log(autochipImagePath);
+                    invalidId = autochipImagePath.IndexOfAny(System.IO.Path.GetInvalidFileNameChars());
+                    Debug.Log(invalidId);
+                    autochipTextures[i] = new Texture2D(1, 1);
+                    using (var fs = new System.IO.FileStream(autochipImagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                    {
+                        byte[] texBytes = new byte[fs.Length];
+                        fs.Read(texBytes, 0, texBytes.Length);
+                        autochipTextures[i].LoadImage(texBytes);
+                        autochipTextures[i].Apply();
+                    }
+                }
             }
+
 
             int width = LoadInt(bytes, 0x26, true);
             int height = LoadInt(bytes, 0x2A, true);
@@ -272,6 +308,7 @@ namespace WolfConverter
             Texture2D layer3Texture = reader.ReadMap(mapData3, mapchipTexture, autochipTextures);
             Texture2D mapTexture = reader.CombineTexture(layer1Texture, layer2Texture, layer3Texture);
 
+            //mapInfo = new MapInfo(width, height, mapTexture);
             mapInfo = new MapInfo(width, height, mapTexture);
         }
 
