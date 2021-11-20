@@ -1,14 +1,25 @@
 
 namespace Expression
 {
-    public class DependencyInjector
+    public class WolfDependencyInjector
     {
+        private static WolfDependencyInjector instance;
 
         public Map.IMapDataRepository MapDataRepository { get; private set; }
 
-        public DependencyInjector(Map.IMapDataRepository mapDataRepository)
+        private WolfDependencyInjector(Map.IMapDataRepository mapDataRepository)
         {
             MapDataRepository = mapDataRepository;
+        }
+
+        public static WolfDependencyInjector It()
+        {
+            if (instance == null)
+            {
+                instance = new WolfDependencyInjector(new Map.WolfMapDataRepository());
+            }
+
+            return instance;
         }
     }
 }

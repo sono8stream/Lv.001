@@ -17,9 +17,9 @@ namespace Expression.Map
 
         public int Height { get; private set; }
 
-        public int[,] MovableGrid { get; private set; }
+        public MovableInfo[,] MovableGrid { get; private set; }
 
-        public MapData(Texture2D underTexture, Texture2D upperTexture, int width, int height, int[,] movableGrid)
+        public MapData(Texture2D underTexture, Texture2D upperTexture, int width, int height, MovableInfo[,] movableGrid)
         {
             // テクスチャサイズの整合性チェック
             Assert.IsTrue(underTexture.width / width == underTexture.height / height

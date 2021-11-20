@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Assertions;
 using Util.Wolf;
+using UnityEngine;
 
 namespace Expression.Map.MapTile
 {
@@ -18,9 +20,9 @@ namespace Expression.Map.MapTile
                 LoadAllMapTilesFromDataBinary();
             }
 
-            if (index < 0 && index >= dataArray.Length)
+            if (index < 0 || index >= dataArray.Length)
             {
-                Assert.IsTrue(false);
+                Assert.IsTrue(false, "タイル設定のIDが無効です");
                 return null;
             }
 
@@ -72,8 +74,19 @@ namespace Expression.Map.MapTile
         private UnitTile ReadUnitTile(WolfDataReader reader, int tagNumber, int offset, out int nextOffset)
         {
             int val = reader.ReadInt(offset, true, out nextOffset);
+            Debug.Log($"{offset}: {val}");
 
-            return new UnitTile(0, null, false, tagNumber);
+            // 【暫定】移動可能判定を厳密にやる
+            var movable = (val & 0xF) == 0 ? MovableType.Movable : MovableType.Immovable;
+
+            var crossDict = new Dictionary<DirectionType, bool>();
+            crossDict.Add(DirectionType.Down, (val & 1) == 0);
+            crossDict.Add(DirectionType.Left, (val & 2) == 0);
+            crossDict.Add(DirectionType.Right, (val & 4) == 0);
+            crossDict.Add(DirectionType.Up, (val & 8) == 0);
+            bool isCounter = (val & 0x80) > 0;
+
+            return new UnitTile(movable, crossDict, isCounter, tagNumber);
         }
     }
 }

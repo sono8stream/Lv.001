@@ -10,27 +10,18 @@ namespace Expression.Map
             // タイル情報からテクスチャ読み込み
             // テクスチャとマップファイルからマップ生成
 
-            Debug.Log(mapFilePath);
             Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(mapFilePath);
 
             int tileSetId = reader.ReadInt(0x22, true, out int tmp);
             MapTile.WolfRepository repository = new MapTile.WolfRepository();
             MapTile.TileData tileData = repository.Find(tileSetId);
-            Debug.Log(tileData.SettingName);
 
             Texture2D mapchipTexture = new Texture2D(1, 1);
             int autoTileCount = 16;
             Texture2D[] autochipTextures = new Texture2D[autoTileCount];
             {
-                int invalidId = tileData.BaseTileFilePath.IndexOfAny(System.IO.Path.GetInvalidFileNameChars());
-                Debug.Log(tileData.BaseTileFilePath);
-                Debug.Log(tileData.BaseTileFilePath[invalidId]);
-
                 string imagePath = "Assets/Resources/Data/" + tileData.BaseTileFilePath.Replace("/", "\\");
                 imagePath = "Assets/Resources/Data/MapChip/[Base]BaseChip_pipo.png";
-                Debug.Log(imagePath);
-                Debug.Log(tileData.BaseTileFilePath);
-                Debug.Log(imagePath.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()));
                 using (var fs = new System.IO.FileStream(imagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                 {
                     byte[] texBytes = new byte[fs.Length];
@@ -42,9 +33,6 @@ namespace Expression.Map
                 for (int i = 1; i < autoTileCount; i++)
                 {
                     string autochipImagePath = "Assets/Resources/Data/" + tileData.AutoTileFilePaths[i - 1];
-                    Debug.Log(autochipImagePath);
-                    invalidId = autochipImagePath.IndexOfAny(System.IO.Path.GetInvalidFileNameChars());
-                    Debug.Log(invalidId);
                     autochipTextures[i] = new Texture2D(1, 1);
                     using (var fs = new System.IO.FileStream(autochipImagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     {
@@ -55,7 +43,6 @@ namespace Expression.Map
                     }
                 }
             }
-
 
             int width = reader.ReadInt(0x26, true, out tmp);
             int height = reader.ReadInt(0x2A, true, out tmp);
@@ -69,17 +56,23 @@ namespace Expression.Map
             Texture2D layer3Texture = ReadMap(mapData3, mapchipTexture, autochipTextures);
             Texture2D underMapTexture = CombineTexture(layer1Texture, layer2Texture, layer3Texture);
 
+            MapData mapDataX1 = ReadMap2(mapData1, mapchipTexture, autochipTextures, tileData);
+            MapData mapDataX2 = ReadMap2(mapData2, mapchipTexture, autochipTextures, tileData);
+            MapData mapDataX3 = ReadMap2(mapData3, mapchipTexture, autochipTextures, tileData);
+
             Texture2D upperMapTexture = new Texture2D(underMapTexture.width, underMapTexture.height);
 
-            int[,] movableGrid = new int[height, width];
+            MovableInfo[,] tileGrid = new MovableInfo[height, width];
 
-            MapData mapData = new MapData(underMapTexture, upperMapTexture, width, height, movableGrid);
+            MapData mapData = new MapData(underMapTexture, upperMapTexture, width, height, tileGrid);
 
-            return mapData;
+            //return mapData;
+            return CombineMapData(mapDataX1, mapDataX2, mapDataX3);
         }
 
         public Texture2D ReadMap(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures)
         {
+            // 【暫定】マップチップのピクセル数は16で固定とする　
             int masu = 16;
             int width = mapData.GetLength(1);
             int height = mapData.GetLength(0);
@@ -135,6 +128,82 @@ namespace Expression.Map
             return mapTexture;
         }
 
+
+        private MapData ReadMap2(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures, MapTile.TileData tileData)
+        {
+            // 【暫定】マップチップのピクセル数は16で固定とする　
+            int masu = 16;
+            int width = mapData.GetLength(1);
+            int height = mapData.GetLength(0);
+            Texture2D underTexture = new Texture2D(masu * width, masu * height, TextureFormat.RGBA32, false);//マップ初期化
+            Texture2D upperTexture = new Texture2D(masu * width, masu * height, TextureFormat.RGBA32, false);//マップ初期化
+            MovableInfo[,] movableGrid = new MovableInfo[height, width];
+
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    // オートチップ判定
+                    if (mapData[i, j] >= 100000)
+                    {
+                        int id = mapData[i, j] / 100000;
+                        id--;
+                        MapTile.UnitTile tile = tileData.UnitTileConfigs[id];
+                        movableGrid[i, j] = GetTileInfoFrom(tile);
+                        // ID 0はテクスチャ情報無し
+                        if (id == 0)
+                        {
+                            continue;
+                        }
+
+                        Texture2D targetTexture = tile.MovableTypeValue == MapTile.MovableType.AlwaysUpper ? upperTexture : underTexture;
+
+                        int leftUp = mapData[i, j] / 1000 % 10;
+
+                        Color[] c = autochipTextures[id].GetPixels(0,
+                            autochipTextures[id].height - leftUp * masu - masu / 2, masu / 2, masu / 2);
+                        targetTexture.SetPixels(masu * j, targetTexture.height - masu * (i + 1) + masu / 2, masu / 2, masu / 2, c);
+
+                        int rightUp = mapData[i, j] / 100 % 10;
+
+                        c = autochipTextures[id].GetPixels(masu / 2,
+                            autochipTextures[id].height - rightUp * masu - masu / 2, masu / 2, masu / 2);
+                        targetTexture.SetPixels(masu * j + masu / 2,
+                            targetTexture.height - masu * (i + 1) + masu / 2, masu / 2, masu / 2, c);
+
+                        int leftDown = mapData[i, j] / 10 % 10;
+
+                        c = autochipTextures[id].GetPixels(0,
+                            autochipTextures[id].height - leftDown * masu - masu, masu / 2, masu / 2);
+                        targetTexture.SetPixels(masu * j,
+                            targetTexture.height - masu * (i + 1), masu / 2, masu / 2, c);
+
+                        int rightDown = mapData[i, j] / 1 % 10;
+
+                        c = autochipTextures[id].GetPixels(masu / 2,
+                            autochipTextures[id].height - rightDown * masu - masu, masu / 2, masu / 2);
+                        targetTexture.SetPixels(masu * j + masu / 2,
+                            targetTexture.height - masu * (i + 1), masu / 2, masu / 2, c);
+                    }
+                    else
+                    {
+                        MapTile.UnitTile tile = tileData.UnitTileConfigs[mapData[i, j] + 16];
+                        movableGrid[i, j] = GetTileInfoFrom(tile);
+
+                        Texture2D targetTexture = tile.MovableTypeValue == MapTile.MovableType.AlwaysUpper ? upperTexture : underTexture;
+
+                        Color[] c = mapchipTexture.GetPixels(masu * (mapData[i, j] % 8),
+                            mapchipTexture.height - masu * (1 + mapData[i, j] / 8), masu, masu);
+                        targetTexture.SetPixels(masu * j, targetTexture.height - masu * (i + 1), masu, masu, c);
+                    }
+                }
+            }
+            upperTexture.Apply();
+            underTexture.Apply();
+
+            return new MapData(underTexture, upperTexture, width, height, movableGrid);
+        }
+
         public Texture2D CombineTexture(params Texture2D[] textures)
         {
             if (textures.Length == 0)
@@ -178,6 +247,67 @@ namespace Expression.Map
             return resTexture;
         }
 
+        private MapData CombineMapData(params MapData[] mapDataArray)
+        {
+            if (mapDataArray.Length == 0)
+            {
+                return null;
+            }
+
+            // サイズの違いをフィルタ
+            int width = mapDataArray[0].UnderTexture.width;
+            int height = mapDataArray[0].UnderTexture.height;
+            for (int i = 1; i < mapDataArray.Length; i++)
+            {
+                if (width != mapDataArray[i].UnderTexture.width || height != mapDataArray[i].UnderTexture.height)
+                {
+                    return null;
+                }
+            }
+
+            Texture2D underTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            Texture2D upperTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    for (int k = 0; k < mapDataArray.Length; k++)
+                    {
+                        Color c = mapDataArray[k].UnderTexture.GetPixel(j, i);
+                        if (c.a > 0.9f)
+                        {
+                            underTexture.SetPixel(j, i, c);
+                        }
+
+                        c = mapDataArray[k].UpperTexture.GetPixel(j, i);
+                        if (c.a > 0.9f)
+                        {
+                            upperTexture.SetPixel(j, i, c);
+                        }
+                    }
+                }
+            }
+            underTexture.Apply();
+            upperTexture.Apply();
+
+            MovableInfo[,] movableGrid = new MovableInfo[mapDataArray[0].Height, mapDataArray[0].Width];
+            for (int i = 0; i < mapDataArray[0].Height; i++)
+            {
+                for (int j = 0; j < mapDataArray[0].Width; j++)
+                {
+                    bool movable = true;
+                    for (int k = 0; k < mapDataArray.Length; k++)
+                    {
+                        movable &= mapDataArray[k].MovableGrid[i, j].IsMovable;
+                    }
+                    movableGrid[i, j] = new MovableInfo(movable);
+                }
+            }
+
+            MapData data = new MapData(underTexture, upperTexture, mapDataArray[0].Width, mapDataArray[0].Height, movableGrid);
+            return data;
+        }
+
         private int[,] ReadLayer(Util.Wolf.WolfDataReader reader, int width, int height, int offset)
         {
             int[,] mapData = new int[height, width];
@@ -191,6 +321,13 @@ namespace Expression.Map
             }
 
             return mapData;
+        }
+
+        private MovableInfo GetTileInfoFrom(MapTile.UnitTile unitTile)
+        {
+            bool isMovable = unitTile.MovableTypeValue != MapTile.MovableType.Immovable;
+
+            return new MovableInfo(isMovable);
         }
     }
 

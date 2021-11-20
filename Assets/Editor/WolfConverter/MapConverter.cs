@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
+using Expression;
 using Expression.Map;
 
 namespace WolfConverter
@@ -9,8 +10,6 @@ namespace WolfConverter
     public class MapConverter : EditorWindow
     {
         private int mapDataIndex = -1;
-        private Expression.DependencyInjector injector
-        = new Expression.DependencyInjector(new WolfMapDataRepository());
 
         class MapInfo
         {
@@ -67,7 +66,7 @@ namespace WolfConverter
                     mapDataIndex = curIndex;
                     MapId id = new MapId(mapDataIndex);
 
-                    MapData data = injector.MapDataRepository.Find(id);
+                    MapData data = WolfDependencyInjector.It().MapDataRepository.Find(id);
                     mapInfo = new MapInfo(data.Width, data.Height, data.UnderTexture);
                 }
             }

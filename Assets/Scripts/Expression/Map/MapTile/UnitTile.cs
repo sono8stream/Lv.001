@@ -25,7 +25,12 @@ namespace Expression.Map.MapTile
     // 通行許可設定
     enum MovableType
     {
-
+        Movable,
+        Immovable,
+        PartialImmovable,
+        AlwaysUpper,
+        Hide,
+        DependUnder
     }
 
     enum DirectionType
