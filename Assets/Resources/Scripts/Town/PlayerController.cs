@@ -5,11 +5,9 @@ using System.Collections.Generic;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
-    MapLoader layer;
+    Map map;
     [SerializeField]
     string spriteName;
-    int[,] mapData;//レイヤー2のマップデータ、7以外では移動不可
-    int[,] mapCostData;
     int direction;
     Dictionary<Vector2Int, int> directionDic;//主人公向き
     int validChipNo;
@@ -24,6 +22,9 @@ public class PlayerController : MonoBehaviour
     GameObject selectPos;
     GameObject eventObject;
 
+    Expression.Map.MovableInfo[,] movableGrid;
+    int[,] mapCostData;
+
     // Use this for initialization
     void Awake()
     {
@@ -33,16 +34,16 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         transform.position = PlayerData.Instance.pos;
-        mapData = new int[layer.mapdata.GetLength(0), layer.mapdata.GetLength(1)];
-        mapCostData = new int[mapData.GetLength(0), mapData.GetLength(1)];
+        movableGrid = map.GetMovableInfo();
+        mapCostData = new int[movableGrid.GetLength(0), movableGrid.GetLength(1)];
         for (int i = 0; i < mapCostData.GetLength(0); i++)
         {
             for (int j = 0; j < mapCostData.GetLength(1); j++)
             {
-                mapData[i, j] = layer.mapdata[i, j];
                 mapCostData[i, j] = -1;
             }
         }
+
         directionDic = new Dictionary<Vector2Int, int>();
         directionDic.Add(Vector2Int.up, 3);
         directionDic.Add(Vector2Int.right, 2);
@@ -69,7 +70,7 @@ public class PlayerController : MonoBehaviour
                 dest = GetNormalizedUnityPos(dest);
                 Collider2D c = Physics2D.OverlapPoint(dest);
                 Vector2Int destGeneral = GetGeneralPos(dest);
-                if (mapData[destGeneral.y, destGeneral.x] != validChipNo)//移動座標が通行不可だったら処理無効
+                if (!movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
                 {
                     return;
                 }
@@ -113,8 +114,13 @@ public class PlayerController : MonoBehaviour
             {
                 if (count == 0)
                 {
-                    Vector2Int d
-                        = new Vector2Int((int)(nodePos[0].x - transform.position.x), (int)(nodePos[0].y - transform.position.y));
+                    Vector2Int d = Vector2Int.zero;
+                    // 【暫定】なぜか今いる座標が登録されることがあるので除外する
+                    while (nodePos.Count > 0 && d == Vector2Int.zero)
+                    {
+                        d = new Vector2Int((int)(nodePos[0].x - transform.position.x), (int)(nodePos[0].y - transform.position.y));
+                        nodePos.RemoveAt(0);
+                    }
                     direction = directionDic[d];
                     spriteAniCor *= -1;
                     GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
@@ -124,7 +130,6 @@ public class PlayerController : MonoBehaviour
                 {
                     count = 0;
                     transform.position = nodePos[0];
-                    nodePos.RemoveAt(0);
                     GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
                     if (nodePos.Count == 0)
                     {
@@ -192,21 +197,21 @@ public class PlayerController : MonoBehaviour
                 return;
             }
             cost++;
-            if (checkPos.x - 1 >= 0 && mapData[checkPos.y, checkPos.x - 1] == validChipNo)
+            if (checkPos.x - 1 >= 0 && movableGrid[checkPos.y, checkPos.x - 1].IsMovable)
             {
                 SearchRoute(destPos, checkPos + Vector2Int.left, cost);
             }
-            if (checkPos.y + 1 <= mapData.GetLength(0) - 1
-                && mapData[checkPos.y + 1, checkPos.x] == validChipNo)
+            if (checkPos.y + 1 <= movableGrid.GetLength(0) - 1
+                && movableGrid[checkPos.y + 1, checkPos.x].IsMovable)
             {
                 SearchRoute(destPos, checkPos + Vector2Int.up, cost);
             }
-            if (checkPos.x + 1 <= mapData.GetLength(1) - 1
-                && mapData[checkPos.y, checkPos.x + 1] == validChipNo)
+            if (checkPos.x + 1 <= movableGrid.GetLength(1) - 1
+                && movableGrid[checkPos.y, checkPos.x + 1].IsMovable)
             {
                 SearchRoute(destPos, checkPos + Vector2Int.right, cost);
             }
-            if (checkPos.y - 1 >= 0 && mapData[checkPos.y - 1, checkPos.x] == validChipNo)
+            if (checkPos.y - 1 >= 0 && movableGrid[checkPos.y - 1, checkPos.x].IsMovable)
             {
                 SearchRoute(destPos, checkPos + Vector2Int.down, cost);
             }
@@ -224,27 +229,27 @@ public class PlayerController : MonoBehaviour
         {
             nodePos.Add(GetUnityPos(pos));
         }
-        if (pos.x - 1 >= 0 && mapData[pos.y, pos.x - 1] == validChipNo
+        if (pos.x - 1 >= 0 && movableGrid[pos.y, pos.x - 1].IsMovable
             && mapCostData[pos.y, pos.x - 1] != -1 && mapCostData[pos.y, pos.x - 1] <= cost)
         {
             GetRoute(pos + Vector2Int.left, cost);
         }
         else
-        if (pos.y + 1 <= mapData.GetLength(0) - 1
-            && mapData[pos.y + 1, pos.x] == validChipNo &&
-            mapCostData[pos.y + 1, pos.x] != -1 && mapCostData[pos.y + 1, pos.x] <= cost)
+        if (pos.y + 1 <= movableGrid.GetLength(0) - 1
+            && movableGrid[pos.y + 1, pos.x].IsMovable
+            && mapCostData[pos.y + 1, pos.x] != -1 && mapCostData[pos.y + 1, pos.x] <= cost)
         {
             GetRoute(pos + Vector2Int.up, cost);
         }
         else
-        if (pos.x + 1 <= mapData.GetLength(1) - 1
-            && mapData[pos.y, pos.x + 1] == validChipNo &&
+        if (pos.x + 1 <= movableGrid.GetLength(1) - 1
+            && movableGrid[pos.y, pos.x + 1].IsMovable &&
             mapCostData[pos.y, pos.x + 1] != -1 && mapCostData[pos.y, pos.x + 1] <= cost)
         {
             GetRoute(pos + Vector2Int.right, cost);
         }
         else
-        if (pos.y - 1 >= 0 && mapData[pos.y - 1, pos.x] == validChipNo
+        if (pos.y - 1 >= 0 && movableGrid[pos.y - 1, pos.x].IsMovable
             && mapCostData[pos.y - 1, pos.x] != -1 && mapCostData[pos.y - 1, pos.x] <= cost)
         {
             GetRoute(pos + Vector2Int.down, cost);
@@ -253,22 +258,22 @@ public class PlayerController : MonoBehaviour
 
     Vector2 GetNormalizedUnityPos(Vector2 unityPos)
     {
-        float nextX = mapData.GetLength(1) % 2 == 0 ? Mathf.Floor(unityPos.x) + 0.5f : Mathf.Round(unityPos.x);
-        float nextY = mapData.GetLength(0) % 2 == 0 ? Mathf.Floor(unityPos.y) + 0.5f : Mathf.Round(unityPos.y);
+        float nextX = movableGrid.GetLength(1) % 2 == 0 ? Mathf.Floor(unityPos.x) + 0.5f : Mathf.Round(unityPos.x);
+        float nextY = movableGrid.GetLength(0) % 2 == 0 ? Mathf.Floor(unityPos.y) + 0.5f : Mathf.Round(unityPos.y);
 
         return new Vector2(nextX, nextY);
     }
 
     Vector2 GetUnityPos(Vector2Int generalPos)
     {
-        float nextX = generalPos.x - mapData.GetLength(1) / 2;
-        if (mapData.GetLength(1) % 2 == 0)
+        float nextX = generalPos.x - movableGrid.GetLength(1) / 2;
+        if (movableGrid.GetLength(1) % 2 == 0)
         {
             nextX += 0.5f;
         }
 
-        float nextY = mapData.GetLength(0) / 2 - generalPos.y;
-        if (mapData.GetLength(0) % 2 == 0)
+        float nextY = movableGrid.GetLength(0) / 2 - generalPos.y;
+        if (movableGrid.GetLength(0) % 2 == 0)
         {
             nextY -= 0.5f;
         }
@@ -278,8 +283,8 @@ public class PlayerController : MonoBehaviour
 
     Vector2Int GetGeneralPos(Vector2 unityPos)
     {
-        int nextX = Mathf.CeilToInt(unityPos.x) + mapData.GetLength(1) / 2;
-        int nextY = mapData.GetLength(0) / 2 - Mathf.CeilToInt(unityPos.y);
+        int nextX = Mathf.CeilToInt(unityPos.x) + movableGrid.GetLength(1) / 2;
+        int nextY = movableGrid.GetLength(0) / 2 - Mathf.CeilToInt(unityPos.y);
 
         return new Vector2Int(nextX, nextY);
     }
