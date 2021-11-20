@@ -1,6 +1,6 @@
 using System;
 
-namespace Infrastructure.Map.Util
+namespace Util.Wolf
 {
     class WolfDataReader
     {

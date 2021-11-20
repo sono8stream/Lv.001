@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Expression
+namespace Expression.Map
 {
     public class MapData
     {
@@ -22,9 +22,9 @@ namespace Expression
         public MapData(Texture2D underTexture, Texture2D upperTexture, int width, int height, int[,] movableGrid)
         {
             // テクスチャサイズの整合性チェック
-            Assert.IsTrue(UnderTexture.width / width == UnderTexture.height / height
-        && UpperTexture.width / width == UpperTexture.height / height
-        && UnderTexture.width == UpperTexture.width);
+            Assert.IsTrue(underTexture.width / width == underTexture.height / height
+        && upperTexture.width / width == upperTexture.height / height
+        && underTexture.width == upperTexture.width);
 
             UnderTexture = underTexture;
             UpperTexture = upperTexture;

@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace Expression
+namespace Util.Wolf
 {
-    public class WolfMapCreator
+    public class WolfMapReader
     {
         public Texture2D ReadMap(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures)
         {

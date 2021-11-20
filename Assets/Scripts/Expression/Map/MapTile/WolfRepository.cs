@@ -1,15 +1,17 @@
 using System;
 using UnityEngine.Assertions;
+using Util.Wolf;
 
-namespace Infrastructure.Map.Util.MapTile
+namespace Expression.Map.MapTile
 {
-    class Repository
+    class WolfRepository
     {
+        // 【暫定】ファイルパスをDIで指定
         private string dataPath = "Assets/Resources/Data/BasicData/TileSetData.dat";
 
-        private static Data[] dataArray;
+        private static TileData[] dataArray;
 
-        public Data Find(int index)
+        public TileData Find(int index)
         {
             if (dataArray == null)
             {
@@ -29,7 +31,7 @@ namespace Infrastructure.Map.Util.MapTile
         {
             WolfDataReader reader = new WolfDataReader(dataPath);
             int settingCount = reader.ReadInt(0x0b, true, out int tmpOffset);
-            dataArray = new Data[settingCount];
+            dataArray = new TileData[settingCount];
 
             int autoTileCount = 15;
             int offset = 0x0f;
@@ -63,7 +65,7 @@ namespace Infrastructure.Map.Util.MapTile
                     unitTileConfigs[j] = ReadUnitTile(reader, unitTagNums[j], offset, out offset);
                 }
 
-                dataArray[i] = new Data(settingName, baseTileFilePath, autoTileFilePaths, unitTileConfigs);
+                dataArray[i] = new TileData(settingName, baseTileFilePath, autoTileFilePaths, unitTileConfigs);
             }
         }
 

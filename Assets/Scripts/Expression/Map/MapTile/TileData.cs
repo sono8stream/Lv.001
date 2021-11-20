@@ -1,8 +1,8 @@
 using System;
 
-namespace Infrastructure.Map.Util.MapTile
+namespace Expression.Map.MapTile
 {
-    class Data
+    class TileData
     {
         public string SettingName { get; private set; }
 
@@ -12,7 +12,7 @@ namespace Infrastructure.Map.Util.MapTile
 
         public UnitTile[] UnitTileConfigs { get; private set; }
 
-        public Data(string settingName, string baseTileFilePath, string[] autoTileFilePaths, UnitTile[] unitTileConfigs)
+        public TileData(string settingName, string baseTileFilePath, string[] autoTileFilePaths, UnitTile[] unitTileConfigs)
         {
             SettingName = settingName;
             BaseTileFilePath = baseTileFilePath;

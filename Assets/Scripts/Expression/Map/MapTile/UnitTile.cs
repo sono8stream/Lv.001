@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Infrastructure.Map.Util.MapTile
+namespace Expression.Map.MapTile
 {
     class UnitTile
     {
