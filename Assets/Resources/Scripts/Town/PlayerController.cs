@@ -76,7 +76,8 @@ public class PlayerController : MonoBehaviour
                     Collider2D c = Physics2D.OverlapPoint(dest);
                     Vector2Int destGeneral = GetGeneralPos(dest);
                     Debug.Log($"destGeneral:{destGeneral}");
-                    if (!movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
+                    if (destGeneral.x < 0 || destGeneral.y < 0 || destGeneral.x >= movableGrid.GetLength(1) || destGeneral.y >= movableGrid.GetLength(0)
+                    || !movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
                     {
                         return;
                     }
@@ -123,7 +124,8 @@ public class PlayerController : MonoBehaviour
                 else if (Input.GetKey(KeyCode.RightArrow))
                 {
                     Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
-                    if (curGeneral.x + 1 < movableGrid.GetLength(1))
+                    if (curGeneral.x + 1 < movableGrid.GetLength(1)
+                    && movableGrid[curGeneral.y, curGeneral.x + 1].IsMovable)
                     {
                         nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.right);
                     }
@@ -131,7 +133,8 @@ public class PlayerController : MonoBehaviour
                 else if (Input.GetKey(KeyCode.UpArrow))
                 {
                     Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
-                    if (curGeneral.y - 1 >= 0)
+                    if (curGeneral.y - 1 >= 0
+                    && movableGrid[curGeneral.y - 1, curGeneral.x].IsMovable)
                     {
                         nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.up);
                     }
@@ -139,7 +142,8 @@ public class PlayerController : MonoBehaviour
                 else if (Input.GetKey(KeyCode.LeftArrow))
                 {
                     Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
-                    if (curGeneral.x - 1 >= 0)
+                    if (curGeneral.x - 1 >= 0
+                    && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
                     {
                         nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.left);
                     }
@@ -147,10 +151,17 @@ public class PlayerController : MonoBehaviour
                 else if (Input.GetKey(KeyCode.DownArrow))
                 {
                     Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
-                    if (curGeneral.y + 1 < movableGrid.GetLength(0))
+                    if (curGeneral.y + 1 < movableGrid.GetLength(0)
+                    && movableGrid[curGeneral.y + 1, curGeneral.x].IsMovable)
                     {
                         nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.down);
                     }
+                }
+                else if (Input.GetKey(KeyCode.X))
+                {
+                    GetComponent<EventObject>().ReadScript();
+                    EventCommands.isProcessing = true;
+                    return;
                 }
             }
             else if (nodePos.Count > 0)//移動情報がある場合、移動
