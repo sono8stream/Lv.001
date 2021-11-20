@@ -18,15 +18,16 @@ public class Map : MonoBehaviour
 
         SpriteRenderer underRenderer = transform.Find("UnderSprite").GetComponent<SpriteRenderer>();
 
-        Sprite underSprite = Sprite.Create(mapData.UnderTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), new Vector2(0.5f, 0.5f), mapData.PixelPerUnit);
+        Sprite underSprite = Sprite.Create(mapData.UnderTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), Vector2.zero, mapData.PixelPerUnit);
         underSprite.texture.filterMode = FilterMode.Point;
         underRenderer.sprite = underSprite;
 
         SpriteRenderer upperRenderer = transform.Find("UpperSprite").GetComponent<SpriteRenderer>();
 
-        Sprite upperSprite = Sprite.Create(mapData.UnderTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), new Vector2(0.5f, 0.5f), mapData.PixelPerUnit);
+        Sprite upperSprite = Sprite.Create(mapData.UpperTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), Vector2.zero, mapData.PixelPerUnit);
         upperSprite.texture.filterMode = FilterMode.Point;
         upperRenderer.sprite = upperSprite;
+
     }
 
     void Start()

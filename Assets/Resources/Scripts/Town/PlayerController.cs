@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
+
     [SerializeField]
     Map map;
     [SerializeField]
@@ -13,7 +14,7 @@ public class PlayerController : MonoBehaviour
     int validChipNo;
     List<Vector2> nodePos;
     float corPosY;//y座標位置の補正
-    int inter = 2;
+    int inter = 5;
     int count = 0;
     Sprite[] sprites;//すべてのスプライト
     int spritePat = 3;//スプライトのアニメーションパターン
@@ -43,6 +44,7 @@ public class PlayerController : MonoBehaviour
                 mapCostData[i, j] = -1;
             }
         }
+        transform.position = new Vector2(movableGrid.GetLength(1) / 2 + 0.5f, movableGrid.GetLength(0) / 2 + 0.5f);
 
         directionDic = new Dictionary<Vector2Int, int>();
         directionDic.Add(Vector2Int.up, 3);
@@ -62,51 +64,92 @@ public class PlayerController : MonoBehaviour
     {
         if (!EventCommands.isProcessing)
         {
-            if (Input.GetMouseButtonDown(0))//クリックされたとき、その座標まで主人公を移動
+            if (nodePos.Count == 0)
             {
-                count = 0;
-                Vector2 dest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                Debug.Log(dest);
-                dest = GetNormalizedUnityPos(dest);
-                Collider2D c = Physics2D.OverlapPoint(dest);
-                Vector2Int destGeneral = GetGeneralPos(dest);
-                if (!movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
+                if (Input.GetMouseButtonDown(0))//クリックされたとき、その座標まで主人公を移動
                 {
-                    return;
-                }
-                if (nodePos.Count > 0)//移動が残っていたら完了させる
-                {
-                    transform.position = nodePos[0];
-                }
-                selectPos.SetActive(true);
-                selectPos.transform.position = dest;
-                Vector2Int curGeneral = GetGeneralPos(transform.position);//現在位置
-                Debug.Log(dest);
-                Debug.Log(destGeneral);
-                if (destGeneral == curGeneral)//メニュー呼び出し
-                {
-                    GetComponent<EventObject>().ReadScript();
-                    EventCommands.isProcessing = true;
-                    return;
-                }
-                nodePos = new List<Vector2>();
-                SearchRoute(destGeneral, curGeneral, 0);
-                if (c != null && !c.GetComponent<EventObject>().CanThrough && c.GetComponent<EventObject>().enabled)
-                {
-                    eventObject = c.gameObject;
-                    mapCostData[destGeneral.y, destGeneral.x] = 99;
-                }
-                else
-                {
-                    eventObject = null;
-                }
-                GetRoute(destGeneral, mapCostData[destGeneral.y, destGeneral.x]);
-                nodePos.Reverse();
-                for (int i = 0; i < mapCostData.GetLength(0); i++)
-                {
-                    for (int j = 0; j < mapCostData.GetLength(1); j++)
+                    count = 0;
+                    Vector2 rawDest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                    Debug.Log($"rawDest:{rawDest}");
+                    Vector2 dest = GetNormalizedUnityPos(rawDest);
+                    Debug.Log($"dest:{dest}");
+                    Collider2D c = Physics2D.OverlapPoint(dest);
+                    Vector2Int destGeneral = GetGeneralPos(dest);
+                    Debug.Log($"destGeneral:{destGeneral}");
+                    if (!movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
                     {
-                        mapCostData[i, j] = -1;
+                        return;
+                    }
+                    if (nodePos.Count > 0)//移動が残っていたら完了させる
+                    {
+                        transform.position = nodePos[0];
+                    }
+                    selectPos.SetActive(true);
+                    selectPos.transform.position = dest;
+                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    Debug.Log($"curGeneral:{curGeneral}");
+                    Debug.Log($"object detected:{c != null}");
+                    if (destGeneral == curGeneral)//メニュー呼び出し
+                    {
+                        GetComponent<EventObject>().ReadScript();
+                        EventCommands.isProcessing = true;
+                        return;
+                    }
+                    nodePos = new List<Vector2>();
+                    SearchRoute(destGeneral, curGeneral, 0);
+                    if (c != null && !c.GetComponent<EventObject>().CanThrough && c.GetComponent<EventObject>().enabled)
+                    {
+                        eventObject = c.gameObject;
+                        mapCostData[destGeneral.y, destGeneral.x] = 99;
+                    }
+                    else
+                    {
+                        eventObject = null;
+                    }
+                    GetRoute(destGeneral, mapCostData[destGeneral.y, destGeneral.x]);
+                    nodePos.Reverse();
+                    for (int i = 0; i < nodePos.Count; i++)
+                    {
+                        Debug.Log(nodePos[i]);
+                    }
+                    for (int i = 0; i < mapCostData.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < mapCostData.GetLength(1); j++)
+                        {
+                            mapCostData[i, j] = -1;
+                        }
+                    }
+                }
+                else if (Input.GetKey(KeyCode.RightArrow))
+                {
+                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    if (curGeneral.x + 1 < movableGrid.GetLength(1))
+                    {
+                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.right);
+                    }
+                }
+                else if (Input.GetKey(KeyCode.UpArrow))
+                {
+                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    if (curGeneral.y - 1 >= 0)
+                    {
+                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.up);
+                    }
+                }
+                else if (Input.GetKey(KeyCode.LeftArrow))
+                {
+                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    if (curGeneral.x - 1 >= 0)
+                    {
+                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.left);
+                    }
+                }
+                else if (Input.GetKey(KeyCode.DownArrow))
+                {
+                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    if (curGeneral.y + 1 < movableGrid.GetLength(0))
+                    {
+                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.down);
                     }
                 }
             }
@@ -114,23 +157,18 @@ public class PlayerController : MonoBehaviour
             {
                 if (count == 0)
                 {
-                    Vector2Int d = Vector2Int.zero;
-                    // 【暫定】なぜか今いる座標が登録されることがあるので除外する
-                    while (nodePos.Count > 0 && d == Vector2Int.zero)
-                    {
-                        d = new Vector2Int((int)(nodePos[0].x - transform.position.x), (int)(nodePos[0].y - transform.position.y));
-                        nodePos.RemoveAt(0);
-                    }
+                    Vector2Int d = new Vector2Int((int)Mathf.Round(nodePos[0].x - transform.position.x), (int)Mathf.Round(nodePos[0].y - transform.position.y));
                     direction = directionDic[d];
                     spriteAniCor *= -1;
-                    GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
+                    GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
                     count++;
                 }
                 else if (count >= inter)
                 {
                     count = 0;
                     transform.position = nodePos[0];
-                    GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+                    GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+                    nodePos.RemoveAt(0);
                     if (nodePos.Count == 0)
                     {
                         selectPos.SetActive(false);
@@ -159,7 +197,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log(d);
                 }
                 spriteAniCor *= -1;
-                GetComponent<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+                GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
                 eventObject.GetComponent<EventObject>().ReadScript();
                 EventCommands.isProcessing = true;
                 eventObject = null;
@@ -258,33 +296,22 @@ public class PlayerController : MonoBehaviour
 
     Vector2 GetNormalizedUnityPos(Vector2 unityPos)
     {
-        float nextX = movableGrid.GetLength(1) % 2 == 0 ? Mathf.Floor(unityPos.x) + 0.5f : Mathf.Round(unityPos.x);
-        float nextY = movableGrid.GetLength(0) % 2 == 0 ? Mathf.Floor(unityPos.y) + 0.5f : Mathf.Round(unityPos.y);
-
-        return new Vector2(nextX, nextY);
+        return new Vector2(Mathf.Floor(unityPos.x) + 0.5f, Mathf.Floor(unityPos.y) + 0.5f);
     }
 
     Vector2 GetUnityPos(Vector2Int generalPos)
     {
-        float nextX = generalPos.x - movableGrid.GetLength(1) / 2;
-        if (movableGrid.GetLength(1) % 2 == 0)
-        {
-            nextX += 0.5f;
-        }
+        float nextX = generalPos.x + 0.5f;
 
-        float nextY = movableGrid.GetLength(0) / 2 - generalPos.y;
-        if (movableGrid.GetLength(0) % 2 == 0)
-        {
-            nextY -= 0.5f;
-        }
+        float nextY = movableGrid.GetLength(0) - generalPos.y - 0.5f;
 
         return new Vector2(nextX, nextY);
     }
 
     Vector2Int GetGeneralPos(Vector2 unityPos)
     {
-        int nextX = Mathf.CeilToInt(unityPos.x) + movableGrid.GetLength(1) / 2;
-        int nextY = movableGrid.GetLength(0) / 2 - Mathf.CeilToInt(unityPos.y);
+        int nextX = Mathf.FloorToInt(unityPos.x);
+        int nextY = movableGrid.GetLength(0) - Mathf.FloorToInt(unityPos.y) - 1;
 
         return new Vector2Int(nextX, nextY);
     }
