@@ -6,7 +6,7 @@ using Expression;
 
 namespace Expression.Map
 {
-    public interface IMapDataRegistry
+    public interface IMapDataRepository
     {
         public MapData Find(MapId id);
     }

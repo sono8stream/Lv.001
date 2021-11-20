@@ -9,22 +9,21 @@ using Util;
 
 namespace Expression.Map
 {
-    public class WolfMapDataRegistry : IMapDataRegistry
+    public class WolfMapDataRepository : IMapDataRepository
     {
-        // 暫定：mpsをシステム変数DBから読み込めるようになるまでフォルダ全体のmpsを拾ってくる
         private string dirPath = "Assets/Resources/Data/MapData";
         private Dictionary<MapId, string> mapNameDict;
 
         private Dictionary<MapId, MapData> mapDataDict;
 
-        public WolfMapDataRegistry()
+        public WolfMapDataRepository()
         {
+            // 暫定：mpsをシステム変数DBから読み込めるようになるまでフォルダ全体のmpsを拾ってくる
             string[] filePaths = System.IO.Directory.GetFiles(dirPath, "*.mps");
             mapNameDict = new Dictionary<MapId, string>();
             for (int i = 0; i < filePaths.Length; i++)
             {
                 mapNameDict.Add(new MapId(i), filePaths[i]);
-                Debug.Log(filePaths[i]);
             }
             mapDataDict = new Dictionary<MapId, MapData>();
         }

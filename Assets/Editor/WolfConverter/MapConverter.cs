@@ -9,6 +9,8 @@ namespace WolfConverter
     public class MapConverter : EditorWindow
     {
         private int mapDataIndex = -1;
+        private Expression.DependencyInjector injector
+        = new Expression.DependencyInjector(new WolfMapDataRepository());
 
         class MapInfo
         {
@@ -63,10 +65,9 @@ namespace WolfConverter
                 if (mapDataIndex != curIndex)
                 {
                     mapDataIndex = curIndex;
-                    WolfMapDataRegistry reg = new WolfMapDataRegistry();
                     MapId id = new MapId(mapDataIndex);
 
-                    MapData data = reg.Find(id);
+                    MapData data = injector.MapDataRepository.Find(id);
                     mapInfo = new MapInfo(data.Width, data.Height, data.UnderTexture);
                 }
             }
