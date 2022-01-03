@@ -74,7 +74,6 @@ namespace Expression.Map.MapTile
         private UnitTile ReadUnitTile(WolfDataReader reader, int tagNumber, int offset, out int nextOffset)
         {
             int val = reader.ReadInt(offset, true, out nextOffset);
-            Debug.Log($"{offset}: {val}");
 
             // 【暫定】移動可能判定を厳密にやる
             var movable = (val & 0xF) == 0 ? MovableType.Movable : MovableType.Immovable;

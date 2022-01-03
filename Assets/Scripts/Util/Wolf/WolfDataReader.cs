@@ -2,7 +2,7 @@ using System;
 
 namespace Util.Wolf
 {
-    class WolfDataReader
+    public class WolfDataReader
     {
 
         private byte[] bytes;

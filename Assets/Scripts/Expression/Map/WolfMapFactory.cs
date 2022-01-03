@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Expression.Map
@@ -50,14 +51,16 @@ namespace Expression.Map
             int[,] mapData2 = ReadLayer(reader, width, height, 0x32 + width * height * 4 * 1);
             int[,] mapData3 = ReadLayer(reader, width, height, 0x32 + width * height * 4 * 2);
 
-            MapData mapDataX1 = ReadMap2(mapData1, mapchipTexture, autochipTextures, tileData);
-            MapData mapDataX2 = ReadMap2(mapData2, mapchipTexture, autochipTextures, tileData);
-            MapData mapDataX3 = ReadMap2(mapData3, mapchipTexture, autochipTextures, tileData);
+            MapData mapDataX1 = ReadMap(mapData1, mapchipTexture, autochipTextures, tileData);
+            MapData mapDataX2 = ReadMap(mapData2, mapchipTexture, autochipTextures, tileData);
+            MapData mapDataX3 = ReadMap(mapData3, mapchipTexture, autochipTextures, tileData);
+
+            MapEvent.EventData[] events = ReadMapEvents(reader, 0x32 + width * height * 4 * 3);
 
             return CombineMapData(mapDataX1, mapDataX2, mapDataX3);
         }
 
-        private MapData ReadMap2(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures, MapTile.TileData tileData)
+        private MapData ReadMap(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures, MapTile.TileData tileData)
         {
             // 【暫定】マップチップのピクセル数は16で固定とする　
             int masu = 16;
@@ -213,6 +216,127 @@ namespace Expression.Map
             bool isMovable = unitTile.MovableTypeValue != MapTile.MovableType.Immovable;
 
             return new MovableInfo(isMovable);
+        }
+
+        private MapEvent.EventData[] ReadMapEvents(Util.Wolf.WolfDataReader reader, int offset)
+        {
+            List<MapEvent.EventData> list = new List<MapEvent.EventData>();
+            int headerByte = reader.ReadByte(offset, out offset);
+            while (headerByte != 0x66)
+            {
+                // ヘッダーの余り部分をスキップ
+                for (int i = 0; i < 4; i++)
+                {
+                    reader.ReadByte(offset, out offset);
+                }
+                int eventId = reader.ReadInt(offset, true, out offset);
+                Debug.Log(eventId);
+                string eventName = reader.ReadString(offset, out offset);
+                int posX = reader.ReadInt(offset, true, out offset);
+                int posY = reader.ReadInt(offset, true, out offset);
+                int pageCount = reader.ReadInt(offset, true, out offset);
+                Debug.Log(pageCount);
+                // 00 00 00 00のスキップ
+                reader.ReadInt(offset, true, out offset);
+
+                List<MapEvent.EventPageData> eventPages = new List<MapEvent.EventPageData>();
+                for (int i = 0; i < pageCount; i++)
+                {
+                    // イベントページの読み込み
+
+                    // ヘッダースキップ
+                    int hh = reader.ReadByte(offset, out offset);
+                    int tileNo = reader.ReadInt(offset, true, out offset);
+                    string chipImgName = reader.ReadString(offset, out offset);
+                    Debug.Log(chipImgName);
+                    int direction = reader.ReadByte(offset, out offset);
+                    int animNo = reader.ReadByte(offset, out offset);
+                    int charaAlpha = reader.ReadByte(offset, out offset);
+                    int showType = reader.ReadByte(offset, out offset);
+                    int triggerFlagType = reader.ReadByte(offset, out offset);
+                    int triggerFlagOpr1 = reader.ReadByte(offset, out offset);
+                    int triggerFlagOpr2 = reader.ReadByte(offset, out offset);
+                    int triggerFlagOpr3 = reader.ReadByte(offset, out offset);
+                    int triggerFlagOpr4 = reader.ReadByte(offset, out offset);
+                    int triggerFlagLeft1 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagLeft2 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagLeft3 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagLeft4 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagRight1 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagRight2 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagRight3 = reader.ReadInt(offset, true, out offset);
+                    int triggerFlagRight4 = reader.ReadInt(offset, true, out offset);
+
+                    ReadEventMoveRoute(reader, offset, out offset);
+
+                    int eventCommandCount = reader.ReadInt(offset, true, out offset);
+                    Debug.Log(eventCommandCount);
+                    // デバッグここまでOK
+                    ReadEventCommands(reader, eventCommandCount, offset, out offset);
+
+                    // イベントコマンドフッタースキップ　暫定でイベントコマンド読み取りに含める
+                    //reader.ReadInt(offset, true, out offset);
+
+                    int shadowNo = reader.ReadByte(offset, out offset);
+                    Debug.Log(shadowNo);// ここから不適
+                    int rangeExtendX = reader.ReadByte(offset, out offset);
+                    int rangeExtendY = reader.ReadByte(offset, out offset);
+
+                    // フッタースキップ
+                    int ff = reader.ReadByte(offset, out offset);
+                    Debug.Log(ff);
+                }
+
+                // フッタースキップ
+                reader.ReadByte(offset, out offset);
+
+                // 次の計算用にヘッダを更新
+                int nextHeaderByte = reader.ReadByte(offset, out offset);
+                headerByte = nextHeaderByte;
+            }
+            Debug.Log(list.Count);
+
+            return list.ToArray();
+        }
+
+        // 【暫定】モデル定義までデータを空読み
+        private void ReadEventMoveRoute(Util.Wolf.WolfDataReader reader, int offset, out int nextOffset)
+        {
+            int animationSpeed = reader.ReadByte(offset, out offset);
+            int moveSpeed = reader.ReadByte(offset, out offset);
+            int moveFrequency = reader.ReadByte(offset, out offset);
+            int moveType = reader.ReadByte(offset, out offset);
+            int optionType = reader.ReadByte(offset, out offset);
+            int moveFlag = reader.ReadByte(offset, out offset);
+            int commandCount = reader.ReadInt(offset, true, out offset);
+
+            // 動作コマンド
+            for (int i = 0; i < commandCount; i++)
+            {
+                int commandType = reader.ReadByte(offset, out offset);
+                int variableCount = reader.ReadByte(offset, out offset);
+                int variableValue = reader.ReadByte(offset, out offset);
+
+                // 終端
+                int footer1 = reader.ReadByte(offset, out offset);
+                int footer2 = reader.ReadByte(offset, out offset);
+            }
+
+            nextOffset = offset;
+        }
+
+        // 【暫定】詳細定義まで空読み
+        private void ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
+        {
+            int currentOffset = offset;
+            MapEvent.WolfMapEventFactory factory = new MapEvent.WolfMapEventFactory(reader, currentOffset);
+            for (int i = 0; i < eventCommandCount; i++)
+            {
+                // 一つ一つのコマンドを読み取る
+                factory.Create2(out currentOffset);
+            }
+            nextOffset = currentOffset;
+            // factory.Create(out nextOffset);
         }
     }
 

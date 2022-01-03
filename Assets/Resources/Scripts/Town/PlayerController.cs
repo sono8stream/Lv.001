@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     int validChipNo;
     List<Vector2> nodePos;
     float corPosY;//y座標位置の補正
-    int inter = 5;
+    int inter = 3;
     int count = 0;
     Sprite[] sprites;//すべてのスプライト
     int spritePat = 3;//スプライトのアニメーションパターン
@@ -179,6 +179,7 @@ public class PlayerController : MonoBehaviour
                     count = 0;
                     transform.position = nodePos[0];
                     GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+
                     nodePos.RemoveAt(0);
                     if (nodePos.Count == 0)
                     {

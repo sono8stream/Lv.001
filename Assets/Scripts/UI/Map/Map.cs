@@ -28,6 +28,7 @@ public class Map : MonoBehaviour
         upperSprite.texture.filterMode = FilterMode.Point;
         upperRenderer.sprite = upperSprite;
 
+        FpsFixer.FixFrameRate();
     }
 
     void Start()
