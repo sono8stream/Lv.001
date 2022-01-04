@@ -78,9 +78,6 @@ namespace Expression.Map.MapEvent
                 case 0x0000006F:
                     CreateFlagForkByVariableCommand(currentOffset, out currentOffset, variableCount);
                     break;
-                case 0x00000079:
-                    // 変数操作
-                    break;
                 case 0x00000191:
                     CreateForkBeginByVariableCommand(currentOffset, out currentOffset);
                     break;
@@ -88,11 +85,45 @@ namespace Expression.Map.MapEvent
                     CreateCallEventByIdCommand(currentOffset, out currentOffset);
                     break;
                 default:
+                    CreateDefaultCommand(currentOffset, out currentOffset, variableCount);
                     break;
             }
 
             nextOffset = currentOffset;
             startOffset = currentOffset;
+            return null;
+        }
+
+        // すべてのコマンドで共通の設定
+        // ただし動作指定コマンドのみフッタの後に動作指定イベントが連続する
+        private EventData CreateDefaultCommand(int offset, out int nextOffset, int numberVariableCount)
+        {
+            int currentOffset = offset;
+
+            // 番号-1だけ読み取り
+            for (int i = 0; i < numberVariableCount - 1; i++)
+            {
+                int val = reader.ReadInt(currentOffset, true, out currentOffset);
+                Debug.Log($"数値変数{i}：{val}");
+            }
+
+            int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
+
+            int stringVariableCount = reader.ReadByte(currentOffset, out currentOffset);
+            for (int i = 0; i < stringVariableCount; i++)
+            {
+                string text = reader.ReadString(currentOffset, out currentOffset);
+                Debug.Log($"文字列変数{i}：{text}");
+            }
+
+            int footer = reader.ReadByte(currentOffset, out currentOffset);
+            // フッタの値が1の場合、動作指定コマンドなので移動ルート読み取りを行う
+            if (footer == 1)
+            {
+                ReadEventMoveRoute(currentOffset, out currentOffset);
+            }
+
+            nextOffset = currentOffset;
             return null;
         }
 
@@ -188,6 +219,22 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
+        private EventData CreateOperateVariableCommand(int offset, out int nextOffset)
+        {
+            int currentOffset = offset;
+            int forkNumber = reader.ReadInt(currentOffset, true, out currentOffset);
+            int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
+            int stringVariableCount = reader.ReadByte(currentOffset, out currentOffset);
+
+            Debug.Log($"分岐始点{forkNumber}");
+
+            // フッタはスキップ
+            reader.ReadByte(currentOffset, out currentOffset);
+
+            nextOffset = currentOffset;
+            return null;
+        }
+
         // イベントコマンドの取得は未済み
         private EventData CreateCallEventByIdCommand(int offset, out int nextOffset)
         {
@@ -232,6 +279,42 @@ namespace Expression.Map.MapEvent
 
             nextOffset = currentOffset;
             return null;
+        }
+
+
+
+        // 【暫定】モデル定義までデータを空読み
+        private void ReadEventMoveRoute(int offset, out int nextOffset)
+        {
+            int currentOffset = offset;
+            int animationSpeed = reader.ReadByte(currentOffset, out currentOffset);
+            int moveSpeed = reader.ReadByte(currentOffset, out currentOffset);
+            int moveFrequency = reader.ReadByte(currentOffset, out currentOffset);
+            int moveType = reader.ReadByte(currentOffset, out currentOffset);
+            int optionType = reader.ReadByte(currentOffset, out currentOffset);
+            int moveFlag = reader.ReadByte(currentOffset, out currentOffset);
+            int commandCount = reader.ReadInt(currentOffset, true, out currentOffset);
+            Debug.Log($"移動コマンド数：{commandCount}");
+
+            // 動作コマンド
+            for (int i = 0; i < commandCount; i++)
+            {
+                int commandType = reader.ReadByte(currentOffset, out currentOffset);
+                int variableCount = reader.ReadByte(currentOffset, out currentOffset);
+                Debug.Log($"コマンドタイプ：{commandType}、変数の数： {variableCount}");
+                for (int j = 0; j < variableCount; j++)
+                {
+                    int variableValue = reader.ReadInt(currentOffset, true, out currentOffset);
+                    Debug.Log($"変数{j}：{variableValue}");
+                }
+
+                // 終端
+                int footer1 = reader.ReadByte(currentOffset, out currentOffset);
+                int footer2 = reader.ReadByte(currentOffset, out currentOffset);
+                Debug.Log($"移動コマンド　フッタ：{footer1} {footer2}");
+            }
+
+            nextOffset = currentOffset;
         }
     }
 }

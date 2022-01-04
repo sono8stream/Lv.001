@@ -274,8 +274,8 @@ namespace Expression.Map
                     // デバッグここまでOK
                     ReadEventCommands(reader, eventCommandCount, offset, out offset);
 
-                    // イベントコマンドフッタースキップ　暫定でイベントコマンド読み取りに含める
-                    //reader.ReadInt(offset, true, out offset);
+                    // イベントコマンドフッタースキップ
+                    reader.ReadInt(offset, true, out offset);
 
                     int shadowNo = reader.ReadByte(offset, out offset);
                     Debug.Log(shadowNo);// ここから不適
@@ -309,17 +309,24 @@ namespace Expression.Map
             int optionType = reader.ReadByte(offset, out offset);
             int moveFlag = reader.ReadByte(offset, out offset);
             int commandCount = reader.ReadInt(offset, true, out offset);
+            Debug.Log($"移動コマンド数：{commandCount}");
 
             // 動作コマンド
             for (int i = 0; i < commandCount; i++)
             {
                 int commandType = reader.ReadByte(offset, out offset);
                 int variableCount = reader.ReadByte(offset, out offset);
-                int variableValue = reader.ReadByte(offset, out offset);
+                Debug.Log($"コマンドタイプ：{commandType}、変数の数： {variableCount}");
+                for (int j = 0; j < variableCount; j++)
+                {
+                    int variableValue = reader.ReadInt(offset, true, out offset);
+                    Debug.Log($"変数{j}：{variableValue}");
+                }
 
                 // 終端
                 int footer1 = reader.ReadByte(offset, out offset);
                 int footer2 = reader.ReadByte(offset, out offset);
+                Debug.Log($"移動コマンド　フッタ：{footer1} {footer2}");
             }
 
             nextOffset = offset;
