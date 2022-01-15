@@ -26,8 +26,7 @@ namespace Expression.Map
             int autoTileCount = 16;
             Texture2D[] autochipTextures = new Texture2D[autoTileCount];
             {
-                string imagePath = "Assets/Resources/Data/" + tileData.BaseTileFilePath.Replace("/", "\\");
-                imagePath = "Assets/Resources/Data/MapChip/[Base]BaseChip_pipo.png";
+                string imagePath = "Assets/Resources/Data/" + tileData.BaseTileFilePath;
                 using (var fs = new System.IO.FileStream(imagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                 {
                     byte[] texBytes = new byte[fs.Length];

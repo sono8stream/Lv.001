@@ -64,105 +64,107 @@ public class PlayerController : MonoBehaviour
     {
         if (!EventCommands.isProcessing)
         {
-            if (nodePos.Count == 0)
+            if (Input.GetMouseButtonDown(0))//クリックされたとき、その座標まで主人公を移動
             {
-                if (Input.GetMouseButtonDown(0))//クリックされたとき、その座標まで主人公を移動
+                count = 0;
+                Vector2 rawDest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Debug.Log($"rawDest:{rawDest}");
+                Vector2 dest = Util.Map.PositionConverter.GetNormalizedUnityPos(rawDest);
+                Debug.Log($"dest:{dest}");
+                Collider2D c = Physics2D.OverlapPoint(dest);
+                Vector2Int destGeneral = Util.Map.PositionConverter.GetGeneralPos(dest, movableGrid.GetLength(0));
+                Debug.Log($"destGeneral:{destGeneral}");
+                if (destGeneral.x < 0 || destGeneral.y < 0 || destGeneral.x >= movableGrid.GetLength(1) || destGeneral.y >= movableGrid.GetLength(0)
+                || !movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
                 {
-                    count = 0;
-                    Vector2 rawDest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                    Debug.Log($"rawDest:{rawDest}");
-                    Vector2 dest = Util.Map.PositionConverter.GetNormalizedUnityPos(rawDest);
-                    Debug.Log($"dest:{dest}");
-                    Collider2D c = Physics2D.OverlapPoint(dest);
-                    Vector2Int destGeneral = Util.Map.PositionConverter.GetGeneralPos(dest, movableGrid.GetLength(0));
-                    Debug.Log($"destGeneral:{destGeneral}");
-                    if (destGeneral.x < 0 || destGeneral.y < 0 || destGeneral.x >= movableGrid.GetLength(1) || destGeneral.y >= movableGrid.GetLength(0)
-                    || !movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
-                    {
-                        return;
-                    }
-                    if (nodePos.Count > 0)//移動が残っていたら完了させる
-                    {
-                        transform.position = nodePos[0];
-                    }
-                    selectPos.SetActive(true);
-                    selectPos.transform.position = dest;
-                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
-                    Debug.Log($"curGeneral:{curGeneral}");
-                    Debug.Log($"object detected:{c != null}");
-                    if (destGeneral == curGeneral)//メニュー呼び出し
-                    {
-                        GetComponent<EventObject>().ReadScript();
-                        EventCommands.isProcessing = true;
-                        return;
-                    }
-                    nodePos = new List<Vector2>();
-                    SearchRoute(destGeneral, curGeneral, 0);
-                    if (c != null && !c.GetComponent<EventObject>().CanThrough && c.GetComponent<EventObject>().enabled)
-                    {
-                        eventObject = c.gameObject;
-                        mapCostData[destGeneral.y, destGeneral.x] = 99;
-                    }
-                    else
-                    {
-                        eventObject = null;
-                    }
-                    GetRoute(destGeneral, mapCostData[destGeneral.y, destGeneral.x]);
-                    nodePos.Reverse();
-                    for (int i = 0; i < nodePos.Count; i++)
-                    {
-                        Debug.Log(nodePos[i]);
-                    }
-                    for (int i = 0; i < mapCostData.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < mapCostData.GetLength(1); j++)
-                        {
-                            mapCostData[i, j] = -1;
-                        }
-                    }
+                    return;
                 }
-                else if (Input.GetKey(KeyCode.RightArrow))
+                if (nodePos.Count > 0)//移動が残っていたら完了させる
                 {
-                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
-                    if (curGeneral.x + 1 < movableGrid.GetLength(1)
-                    && movableGrid[curGeneral.y, curGeneral.x + 1].IsMovable)
-                    {
-                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.right);
-                    }
+                    transform.position = nodePos[0];
                 }
-                else if (Input.GetKey(KeyCode.UpArrow))
-                {
-                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
-                    if (curGeneral.y - 1 >= 0
-                    && movableGrid[curGeneral.y - 1, curGeneral.x].IsMovable)
-                    {
-                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.up);
-                    }
-                }
-                else if (Input.GetKey(KeyCode.LeftArrow))
-                {
-                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
-                    if (curGeneral.x - 1 >= 0
-                    && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
-                    {
-                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.left);
-                    }
-                }
-                else if (Input.GetKey(KeyCode.DownArrow))
-                {
-                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
-                    if (curGeneral.y + 1 < movableGrid.GetLength(0)
-                    && movableGrid[curGeneral.y + 1, curGeneral.x].IsMovable)
-                    {
-                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.down);
-                    }
-                }
-                else if (Input.GetKey(KeyCode.X))
+                selectPos.SetActive(true);
+                selectPos.transform.position = dest;
+                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
+                Debug.Log($"curGeneral:{curGeneral}");
+                Debug.Log($"object detected:{c != null}");
+                if (destGeneral == curGeneral)//メニュー呼び出し
                 {
                     GetComponent<EventObject>().ReadScript();
                     EventCommands.isProcessing = true;
                     return;
                 }
+
+                nodePos = new List<Vector2>();
+                SearchRoute(destGeneral, curGeneral, 0);
+                GetRoute(destGeneral, mapCostData[destGeneral.y, destGeneral.x]);
+                nodePos.Reverse();
+                for (int i = 0; i < nodePos.Count; i++)
+                {
+                    Debug.Log(nodePos[i]);
+                }
+
+                if (c != null && !c.GetComponent<EventObject>().CanThrough
+                && c.GetComponent<EventObject>().enabled)
+                {
+                    // イベント実行できるなら最後の座標を削除
+                    eventObject = c.gameObject;
+                    nodePos.RemoveAt(nodePos.Count - 1);
+                }
+                else
+                {
+                    eventObject = null;
+                }
+
+                for (int i = 0; i < mapCostData.GetLength(0); i++)
+                {
+                    for (int j = 0; j < mapCostData.GetLength(1); j++)
+                    {
+                        mapCostData[i, j] = -1;
+                    }
+                }
+            }
+            else if (Input.GetKey(KeyCode.RightArrow))
+            {
+                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
+                if (curGeneral.x + 1 < movableGrid.GetLength(1)
+                && movableGrid[curGeneral.y, curGeneral.x + 1].IsMovable)
+                {
+                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.right);
+                }
+            }
+            else if (Input.GetKey(KeyCode.UpArrow))
+            {
+                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
+                if (curGeneral.y - 1 >= 0
+                && movableGrid[curGeneral.y - 1, curGeneral.x].IsMovable)
+                {
+                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.up);
+                }
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
+                if (curGeneral.x - 1 >= 0
+                && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
+                {
+                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.left);
+                }
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
+                if (curGeneral.y + 1 < movableGrid.GetLength(0)
+                && movableGrid[curGeneral.y + 1, curGeneral.x].IsMovable)
+                {
+                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.down);
+                }
+            }
+            else if (Input.GetKey(KeyCode.X))
+            {
+                GetComponent<EventObject>().ReadScript();
+                EventCommands.isProcessing = true;
+                return;
             }
             else if (nodePos.Count > 0)//移動情報がある場合、移動
             {
