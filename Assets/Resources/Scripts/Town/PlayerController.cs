@@ -71,10 +71,10 @@ public class PlayerController : MonoBehaviour
                     count = 0;
                     Vector2 rawDest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                     Debug.Log($"rawDest:{rawDest}");
-                    Vector2 dest = GetNormalizedUnityPos(rawDest);
+                    Vector2 dest = Util.Map.PositionConverter.GetNormalizedUnityPos(rawDest);
                     Debug.Log($"dest:{dest}");
                     Collider2D c = Physics2D.OverlapPoint(dest);
-                    Vector2Int destGeneral = GetGeneralPos(dest);
+                    Vector2Int destGeneral = Util.Map.PositionConverter.GetGeneralPos(dest, movableGrid.GetLength(0));
                     Debug.Log($"destGeneral:{destGeneral}");
                     if (destGeneral.x < 0 || destGeneral.y < 0 || destGeneral.x >= movableGrid.GetLength(1) || destGeneral.y >= movableGrid.GetLength(0)
                     || !movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
@@ -87,7 +87,7 @@ public class PlayerController : MonoBehaviour
                     }
                     selectPos.SetActive(true);
                     selectPos.transform.position = dest;
-                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                     Debug.Log($"curGeneral:{curGeneral}");
                     Debug.Log($"object detected:{c != null}");
                     if (destGeneral == curGeneral)//メニュー呼び出し
@@ -123,38 +123,38 @@ public class PlayerController : MonoBehaviour
                 }
                 else if (Input.GetKey(KeyCode.RightArrow))
                 {
-                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                     if (curGeneral.x + 1 < movableGrid.GetLength(1)
                     && movableGrid[curGeneral.y, curGeneral.x + 1].IsMovable)
                     {
-                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.right);
+                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.right);
                     }
                 }
                 else if (Input.GetKey(KeyCode.UpArrow))
                 {
-                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                     if (curGeneral.y - 1 >= 0
                     && movableGrid[curGeneral.y - 1, curGeneral.x].IsMovable)
                     {
-                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.up);
+                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.up);
                     }
                 }
                 else if (Input.GetKey(KeyCode.LeftArrow))
                 {
-                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                     if (curGeneral.x - 1 >= 0
                     && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
                     {
-                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.left);
+                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.left);
                     }
                 }
                 else if (Input.GetKey(KeyCode.DownArrow))
                 {
-                    Vector2Int curGeneral = GetGeneralPos(GetNormalizedUnityPos(transform.position));//現在位置
+                    Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                     if (curGeneral.y + 1 < movableGrid.GetLength(0)
                     && movableGrid[curGeneral.y + 1, curGeneral.x].IsMovable)
                     {
-                        nodePos.Add(GetNormalizedUnityPos(transform.position) + Vector2.down);
+                        nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.down);
                     }
                 }
                 else if (Input.GetKey(KeyCode.X))
@@ -277,7 +277,7 @@ public class PlayerController : MonoBehaviour
         }
         if (cost != 99)
         {
-            nodePos.Add(GetUnityPos(pos));
+            nodePos.Add(Util.Map.PositionConverter.GetUnityPos(pos, movableGrid.GetLength(0)));
         }
         if (pos.x - 1 >= 0 && movableGrid[pos.y, pos.x - 1].IsMovable
             && mapCostData[pos.y, pos.x - 1] != -1 && mapCostData[pos.y, pos.x - 1] <= cost)
@@ -304,27 +304,5 @@ public class PlayerController : MonoBehaviour
         {
             GetRoute(pos + Vector2Int.down, cost);
         }
-    }
-
-    Vector2 GetNormalizedUnityPos(Vector2 unityPos)
-    {
-        return new Vector2(Mathf.Floor(unityPos.x) + 0.5f, Mathf.Floor(unityPos.y) + 0.5f);
-    }
-
-    Vector2 GetUnityPos(Vector2Int generalPos)
-    {
-        float nextX = generalPos.x + 0.5f;
-
-        float nextY = movableGrid.GetLength(0) - generalPos.y - 0.5f;
-
-        return new Vector2(nextX, nextY);
-    }
-
-    Vector2Int GetGeneralPos(Vector2 unityPos)
-    {
-        int nextX = Mathf.FloorToInt(unityPos.x);
-        int nextY = movableGrid.GetLength(0) - Mathf.FloorToInt(unityPos.y) - 1;
-
-        return new Vector2Int(nextX, nextY);
     }
 }

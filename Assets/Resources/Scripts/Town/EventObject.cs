@@ -41,7 +41,7 @@ public class EventObject : MonoBehaviour
         events = new List<UnityEvent>();
         eventCommands.actNo = 0;
         eventCommands.IsCompleted = false;
-        if(gameObject.name.Contains("Character"))
+        if (gameObject.name.Contains("Character"))
         {
             Debug.Log(gameObject.name[9] - '1');
             sprites = PlayerData.Instance.characters[gameObject.name[9] - '1'].sprite;
@@ -87,6 +87,8 @@ public class EventObject : MonoBehaviour
         }
     }
 
+    // イベントコマンドを1行分読み取り実行イベントキューに入れる
+    // この動きをEventCommandで置き換えればOK
     public void ReadScript()
     {
         events = new List<UnityEvent>();
@@ -94,7 +96,7 @@ public class EventObject : MonoBehaviour
         {
             line = 0;
             EventCommands.isProcessing = false;
-            if(eventCommands.SelfVar[0]==1)
+            if (eventCommands.SelfVar[0] == 1)
             {
                 GetComponent<EventObject>().enabled = false;
                 GetComponent<SpriteRenderer>().enabled = false;
@@ -333,6 +335,7 @@ public class EventObject : MonoBehaviour
         //EventCommands.isProcessing = true;
     }
 
+    // 特定のラベルに至るまでコマンドをスキップ
     void JumpCommand(string labelS = null)
     {
         string label;

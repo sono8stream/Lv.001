@@ -17,52 +17,10 @@ namespace Expression.Map.MapEvent
 
         public EventData Create(out int nextOffset)
         {
-            int offset = startOffset;
-            const int footerLength = 4;
-            int[] footer = new int[footerLength] { 0x03, 0x00, 0x00, 0x00 };
-            // フッターまで空読み
-            // これで乗り切れると乗り切れないときがある
-            // Dungeon.mpsでイベントID1が乗り切れなかった
-            while (true)
-            {
-                if (footer[0] != reader.ReadByte(offset, out offset))
-                {
-                    continue;
-                }
-
-                Debug.Log(reader.ReadByte(offset - 1, out offset));
-                bool isFooter = true;
-                int tmpNextOffset = offset;
-                for (int i = 1; i < footerLength; i++)
-                {
-                    if (footer[i] != reader.ReadByte(tmpNextOffset, out tmpNextOffset))
-                    {
-                        isFooter = false;
-                        break;
-                    }
-                }
-
-                if (isFooter)
-                {
-                    offset = tmpNextOffset;
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
-            }
-
-            nextOffset = offset;
-            return null;
-        }
-
-        public EventData Create2(out int nextOffset)
-        {
             int currentOffset = startOffset;
             int variableCount = reader.ReadByte(currentOffset, out currentOffset);
             int commandType = reader.ReadInt(currentOffset, true, out currentOffset);
-            Debug.Log(commandType.ToString("X8"));
+            //Debug.Log(commandType.ToString("X8"));
 
             switch (commandType)
             {
@@ -104,7 +62,7 @@ namespace Expression.Map.MapEvent
             for (int i = 0; i < numberVariableCount - 1; i++)
             {
                 int val = reader.ReadInt(currentOffset, true, out currentOffset);
-                Debug.Log($"数値変数{i}：{val}");
+                //Debug.Log($"数値変数{i}：{val}");
             }
 
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -113,7 +71,7 @@ namespace Expression.Map.MapEvent
             for (int i = 0; i < stringVariableCount; i++)
             {
                 string text = reader.ReadString(currentOffset, out currentOffset);
-                Debug.Log($"文字列変数{i}：{text}");
+                //Debug.Log($"文字列変数{i}：{text}");
             }
 
             int footer = reader.ReadByte(currentOffset, out currentOffset);
@@ -251,13 +209,13 @@ namespace Expression.Map.MapEvent
             for (int i = 0; i < numberArgCount; i++)
             {
                 int numberArg = reader.ReadInt(currentOffset, true, out currentOffset);
-                Debug.Log($"数値引数{i.ToString()}：{numberArg.ToString()}");
+                //Debug.Log($"数値引数{i.ToString()}：{numberArg.ToString()}");
             }
 
             for (int i = 0; i < stringArgCount; i++)
             {
                 int stringArgVariableValue = reader.ReadInt(currentOffset, true, out currentOffset);
-                Debug.Log($"文字列引数呼び出し値{i.ToString()}：{stringArgVariableValue.ToString()}");
+                //Debug.Log($"文字列引数呼び出し値{i.ToString()}：{stringArgVariableValue.ToString()}");
             }
 
             if (acceptReturnValueFlag > 0)
@@ -271,7 +229,7 @@ namespace Expression.Map.MapEvent
             for (int i = 0; i < stringVariableCount; i++)
             {
                 string text = reader.ReadString(currentOffset, out currentOffset);
-                Debug.Log($"文字データ：{text}");
+                //Debug.Log($"文字データ：{text}");
             }
 
             // フッタはスキップ
@@ -294,24 +252,24 @@ namespace Expression.Map.MapEvent
             int optionType = reader.ReadByte(currentOffset, out currentOffset);
             int moveFlag = reader.ReadByte(currentOffset, out currentOffset);
             int commandCount = reader.ReadInt(currentOffset, true, out currentOffset);
-            Debug.Log($"移動コマンド数：{commandCount}");
+            //Debug.Log($"移動コマンド数：{commandCount}");
 
             // 動作コマンド
             for (int i = 0; i < commandCount; i++)
             {
                 int commandType = reader.ReadByte(currentOffset, out currentOffset);
                 int variableCount = reader.ReadByte(currentOffset, out currentOffset);
-                Debug.Log($"コマンドタイプ：{commandType}、変数の数： {variableCount}");
+                //Debug.Log($"コマンドタイプ：{commandType}、変数の数： {variableCount}");
                 for (int j = 0; j < variableCount; j++)
                 {
                     int variableValue = reader.ReadInt(currentOffset, true, out currentOffset);
-                    Debug.Log($"変数{j}：{variableValue}");
+                    //Debug.Log($"変数{j}：{variableValue}");
                 }
 
                 // 終端
                 int footer1 = reader.ReadByte(currentOffset, out currentOffset);
                 int footer2 = reader.ReadByte(currentOffset, out currentOffset);
-                Debug.Log($"移動コマンド　フッタ：{footer1} {footer2}");
+                //Debug.Log($"移動コマンド　フッタ：{footer1} {footer2}");
             }
 
             nextOffset = currentOffset;

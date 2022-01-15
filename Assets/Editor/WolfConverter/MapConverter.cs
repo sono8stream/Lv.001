@@ -67,7 +67,8 @@ namespace WolfConverter
                     MapId id = new MapId(mapDataIndex);
 
                     MapData data = WolfDependencyInjector.It().MapDataRepository.Find(id);
-                    mapInfo = new MapInfo(data.Width, data.Height, data.UnderTexture);
+                    Texture2D texture = RenderMapTexture(data);
+                    mapInfo = new MapInfo(data.Width, data.Height, texture);
                 }
             }
         }
@@ -91,6 +92,65 @@ namespace WolfConverter
              GUILayout.MaxHeight(mapInfo.mapTexture.height), GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
 
             EditorGUILayout.EndVertical();
+        }
+
+        // underTexture, upperTexture, eventTextureを描画
+        private Texture2D RenderMapTexture(MapData mapData)
+        {
+            int textureWidth = mapData.UnderTexture.width;
+            int textureHeight = mapData.UnderTexture.height;
+            Texture2D texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
+            for (int i = 0; i < textureHeight; i++)
+            {
+                for (int j = 0; j < textureWidth; j++)
+                {
+                    Color c = mapData.UnderTexture.GetPixel(j, i);
+                    if (c.a > 0.9f)
+                    {
+                        texture.SetPixel(j, i, c);
+                    }
+
+                    c = mapData.UpperTexture.GetPixel(j, i);
+                    if (c.a > 0.9f)
+                    {
+                        texture.SetPixel(j, i, c);
+                    }
+                }
+            }
+
+            int pixelPerGrid = textureWidth / mapData.Width;
+            for (int i = 0; i < mapData.EventDataArray.Length; i++)
+            {
+                Expression.Map.MapEvent.EventData eventData = mapData.EventDataArray[i];
+                if (eventData.PageData.Length == 0)
+                {
+                    continue;
+                }
+
+                Texture2D eventTexture = eventData.PageData[0].GetCurrentTexture();
+                if (eventTexture == null)
+                {
+                    continue;
+                }
+
+                int x = eventData.PosX;
+                int y = eventData.PosY;
+                for (int j = 0; j < pixelPerGrid; j++)
+                {
+                    for (int k = 0; k < pixelPerGrid; k++)
+                    {
+                        Color c = eventTexture.GetPixel(j, k);
+                        if (c.a > 0.9f)
+                        {
+                            texture.SetPixel(x * pixelPerGrid + j, textureHeight - (y + 1) * pixelPerGrid + k, c);
+                        }
+                    }
+                }
+            }
+
+            texture.Apply();
+
+            return texture;
         }
     }
 }

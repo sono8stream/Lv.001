@@ -5,6 +5,11 @@ namespace Expression.Map
 {
     public class WolfMapCreator
     {
+        // 【暫定】マップチップのピクセル数は16で固定とする
+        //          マップ描画時など至る所で使用するので，どう使いまわすかが課題
+        //          MapDataに含める?
+        private const int PIXEL_PER_GRID = 16;
+
         public MapData Create(string mapFilePath)
         {
             // マップファイルからタイル情報を読み出し
@@ -55,19 +60,20 @@ namespace Expression.Map
             MapData mapDataX2 = ReadMap(mapData2, mapchipTexture, autochipTextures, tileData);
             MapData mapDataX3 = ReadMap(mapData3, mapchipTexture, autochipTextures, tileData);
 
-            MapEvent.EventData[] events = ReadMapEvents(reader, 0x32 + width * height * 4 * 3);
+            MapEvent.EventData[] events = ReadMapEvents(reader, mapchipTexture, 0x32 + width * height * 4 * 3);
 
-            return CombineMapData(mapDataX1, mapDataX2, mapDataX3);
+            return CombineMapData(events, mapDataX1, mapDataX2, mapDataX3);
         }
 
         private MapData ReadMap(int[,] mapData, Texture2D mapchipTexture, Texture2D[] autochipTextures, MapTile.TileData tileData)
         {
-            // 【暫定】マップチップのピクセル数は16で固定とする　
-            int masu = 16;
+            // 【暫定】読み取る情報はイベントデータを含まずテクスチャとタイル情報のみなのでMapDataではなく別のモデルを返すようにする
+            //          各マスの番号をグリッドで返すだけでも良さそう
+
             int width = mapData.GetLength(1);
             int height = mapData.GetLength(0);
-            Texture2D underTexture = new Texture2D(masu * width, masu * height, TextureFormat.RGBA32, false);//マップ初期化
-            Texture2D upperTexture = new Texture2D(masu * width, masu * height, TextureFormat.RGBA32, false);//マップ初期化
+            Texture2D underTexture = new Texture2D(PIXEL_PER_GRID * width, PIXEL_PER_GRID * height, TextureFormat.RGBA32, false);
+            Texture2D upperTexture = new Texture2D(PIXEL_PER_GRID * width, PIXEL_PER_GRID * height, TextureFormat.RGBA32, false);
             MovableInfo[,] movableGrid = new MovableInfo[height, width];
 
             for (int i = 0; i < height; i++)
@@ -92,29 +98,29 @@ namespace Expression.Map
                         int leftUp = mapData[i, j] / 1000 % 10;
 
                         Color[] c = autochipTextures[id].GetPixels(0,
-                            autochipTextures[id].height - leftUp * masu - masu / 2, masu / 2, masu / 2);
-                        targetTexture.SetPixels(masu * j, targetTexture.height - masu * (i + 1) + masu / 2, masu / 2, masu / 2, c);
+                            autochipTextures[id].height - leftUp * PIXEL_PER_GRID - PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
+                        targetTexture.SetPixels(PIXEL_PER_GRID * j, targetTexture.height - PIXEL_PER_GRID * (i + 1) + PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
 
                         int rightUp = mapData[i, j] / 100 % 10;
 
-                        c = autochipTextures[id].GetPixels(masu / 2,
-                            autochipTextures[id].height - rightUp * masu - masu / 2, masu / 2, masu / 2);
-                        targetTexture.SetPixels(masu * j + masu / 2,
-                            targetTexture.height - masu * (i + 1) + masu / 2, masu / 2, masu / 2, c);
+                        c = autochipTextures[id].GetPixels(PIXEL_PER_GRID / 2,
+                            autochipTextures[id].height - rightUp * PIXEL_PER_GRID - PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
+                        targetTexture.SetPixels(PIXEL_PER_GRID * j + PIXEL_PER_GRID / 2,
+                            targetTexture.height - PIXEL_PER_GRID * (i + 1) + PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
 
                         int leftDown = mapData[i, j] / 10 % 10;
 
                         c = autochipTextures[id].GetPixels(0,
-                            autochipTextures[id].height - leftDown * masu - masu, masu / 2, masu / 2);
-                        targetTexture.SetPixels(masu * j,
-                            targetTexture.height - masu * (i + 1), masu / 2, masu / 2, c);
+                            autochipTextures[id].height - leftDown * PIXEL_PER_GRID - PIXEL_PER_GRID, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
+                        targetTexture.SetPixels(PIXEL_PER_GRID * j,
+                            targetTexture.height - PIXEL_PER_GRID * (i + 1), PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
 
                         int rightDown = mapData[i, j] / 1 % 10;
 
-                        c = autochipTextures[id].GetPixels(masu / 2,
-                            autochipTextures[id].height - rightDown * masu - masu, masu / 2, masu / 2);
-                        targetTexture.SetPixels(masu * j + masu / 2,
-                            targetTexture.height - masu * (i + 1), masu / 2, masu / 2, c);
+                        c = autochipTextures[id].GetPixels(PIXEL_PER_GRID / 2,
+                            autochipTextures[id].height - rightDown * PIXEL_PER_GRID - PIXEL_PER_GRID, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
+                        targetTexture.SetPixels(PIXEL_PER_GRID * j + PIXEL_PER_GRID / 2,
+                            targetTexture.height - PIXEL_PER_GRID * (i + 1), PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
                     }
                     else
                     {
@@ -123,19 +129,19 @@ namespace Expression.Map
 
                         Texture2D targetTexture = tile.MovableTypeValue == MapTile.MovableType.AlwaysUpper ? upperTexture : underTexture;
 
-                        Color[] c = mapchipTexture.GetPixels(masu * (mapData[i, j] % 8),
-                            mapchipTexture.height - masu * (1 + mapData[i, j] / 8), masu, masu);
-                        targetTexture.SetPixels(masu * j, targetTexture.height - masu * (i + 1), masu, masu, c);
+                        Color[] c = mapchipTexture.GetPixels(PIXEL_PER_GRID * (mapData[i, j] % 8),
+                            mapchipTexture.height - PIXEL_PER_GRID * (1 + mapData[i, j] / 8), PIXEL_PER_GRID, PIXEL_PER_GRID);
+                        targetTexture.SetPixels(PIXEL_PER_GRID * j, targetTexture.height - PIXEL_PER_GRID * (i + 1), PIXEL_PER_GRID, PIXEL_PER_GRID, c);
                     }
                 }
             }
             upperTexture.Apply();
             underTexture.Apply();
 
-            return new MapData(underTexture, upperTexture, width, height, movableGrid);
+            return new MapData(underTexture, upperTexture, width, height, movableGrid, null);
         }
 
-        private MapData CombineMapData(params MapData[] mapDataArray)
+        private MapData CombineMapData(MapEvent.EventData[] eventDataArray, params MapData[] mapDataArray)
         {
             if (mapDataArray.Length == 0)
             {
@@ -192,7 +198,9 @@ namespace Expression.Map
                 }
             }
 
-            MapData data = new MapData(underTexture, upperTexture, mapDataArray[0].Width, mapDataArray[0].Height, movableGrid);
+            MapData data = new MapData(underTexture, upperTexture,
+            mapDataArray[0].Width, mapDataArray[0].Height,
+             movableGrid, eventDataArray);
             return data;
         }
 
@@ -218,7 +226,7 @@ namespace Expression.Map
             return new MovableInfo(isMovable);
         }
 
-        private MapEvent.EventData[] ReadMapEvents(Util.Wolf.WolfDataReader reader, int offset)
+        private MapEvent.EventData[] ReadMapEvents(Util.Wolf.WolfDataReader reader, Texture2D mapTexture, int offset)
         {
             List<MapEvent.EventData> list = new List<MapEvent.EventData>();
             int headerByte = reader.ReadByte(offset, out offset);
@@ -243,52 +251,13 @@ namespace Expression.Map
                 for (int i = 0; i < pageCount; i++)
                 {
                     // イベントページの読み込み
-
-                    // ヘッダースキップ
-                    int hh = reader.ReadByte(offset, out offset);
-                    int tileNo = reader.ReadInt(offset, true, out offset);
-                    string chipImgName = reader.ReadString(offset, out offset);
-                    Debug.Log(chipImgName);
-                    int direction = reader.ReadByte(offset, out offset);
-                    int animNo = reader.ReadByte(offset, out offset);
-                    int charaAlpha = reader.ReadByte(offset, out offset);
-                    int showType = reader.ReadByte(offset, out offset);
-                    int triggerFlagType = reader.ReadByte(offset, out offset);
-                    int triggerFlagOpr1 = reader.ReadByte(offset, out offset);
-                    int triggerFlagOpr2 = reader.ReadByte(offset, out offset);
-                    int triggerFlagOpr3 = reader.ReadByte(offset, out offset);
-                    int triggerFlagOpr4 = reader.ReadByte(offset, out offset);
-                    int triggerFlagLeft1 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagLeft2 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagLeft3 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagLeft4 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagRight1 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagRight2 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagRight3 = reader.ReadInt(offset, true, out offset);
-                    int triggerFlagRight4 = reader.ReadInt(offset, true, out offset);
-
-                    ReadEventMoveRoute(reader, offset, out offset);
-
-                    int eventCommandCount = reader.ReadInt(offset, true, out offset);
-                    Debug.Log(eventCommandCount);
-                    // デバッグここまでOK
-                    ReadEventCommands(reader, eventCommandCount, offset, out offset);
-
-                    // イベントコマンドフッタースキップ
-                    reader.ReadInt(offset, true, out offset);
-
-                    int shadowNo = reader.ReadByte(offset, out offset);
-                    Debug.Log(shadowNo);// ここから不適
-                    int rangeExtendX = reader.ReadByte(offset, out offset);
-                    int rangeExtendY = reader.ReadByte(offset, out offset);
-
-                    // フッタースキップ
-                    int ff = reader.ReadByte(offset, out offset);
-                    Debug.Log(ff);
+                    eventPages.Add(ReadEventPageData(reader, mapTexture, offset, out offset));
                 }
 
                 // フッタースキップ
                 reader.ReadByte(offset, out offset);
+
+                list.Add(new MapEvent.EventData(eventId, posX, posY, eventPages.ToArray()));
 
                 // 次の計算用にヘッダを更新
                 int nextHeaderByte = reader.ReadByte(offset, out offset);
@@ -297,6 +266,115 @@ namespace Expression.Map
             Debug.Log(list.Count);
 
             return list.ToArray();
+        }
+
+        private MapEvent.EventPageData ReadEventPageData(Util.Wolf.WolfDataReader reader, Texture2D mapTexture, int offset, out int nextOffset)
+        {
+            // ヘッダースキップ
+            int hh = reader.ReadByte(offset, out offset);
+            int tileNo = reader.ReadInt(offset, true, out offset);
+            string chipImgName = reader.ReadString(offset, out offset);
+            Debug.Log(chipImgName);
+            int directionVal = reader.ReadByte(offset, out offset);
+            int animNo = reader.ReadByte(offset, out offset);
+            int charaAlpha = reader.ReadByte(offset, out offset);
+            int showType = reader.ReadByte(offset, out offset);// 通常/加算/減算/乗算
+            int triggerFlagType = reader.ReadByte(offset, out offset);
+            int triggerFlagOpr1 = reader.ReadByte(offset, out offset);
+            int triggerFlagOpr2 = reader.ReadByte(offset, out offset);
+            int triggerFlagOpr3 = reader.ReadByte(offset, out offset);
+            int triggerFlagOpr4 = reader.ReadByte(offset, out offset);
+            int triggerFlagLeft1 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagLeft2 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagLeft3 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagLeft4 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagRight1 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagRight2 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagRight3 = reader.ReadInt(offset, true, out offset);
+            int triggerFlagRight4 = reader.ReadInt(offset, true, out offset);
+
+            ReadEventMoveRoute(reader, offset, out offset);
+
+            int eventCommandCount = reader.ReadInt(offset, true, out offset);
+            Debug.Log(eventCommandCount);
+            // デバッグここまでOK
+            ReadEventCommands(reader, eventCommandCount, offset, out offset);
+
+            // イベントコマンドフッタースキップ
+            reader.ReadInt(offset, true, out offset);
+
+            int shadowNo = reader.ReadByte(offset, out offset);
+            int rangeExtendX = reader.ReadByte(offset, out offset);
+            int rangeExtendY = reader.ReadByte(offset, out offset);
+
+            // フッタースキップ
+            int ff = reader.ReadByte(offset, out offset);
+
+            nextOffset = offset;
+            Direction direction = ConvertDirectionValueToDirection(directionVal);
+
+            Texture2D texture = null;
+            bool haveDirection = false;
+            if (tileNo == -1)
+            {
+                if (string.IsNullOrEmpty(chipImgName))
+                {
+                    haveDirection = false;
+                }
+                else
+                {
+                    // キャラチップから画像を取得する
+                    texture = new Texture2D(1, 1);
+                    string imagePath = "Assets/Resources/Data/" + chipImgName;
+                    using (var fs = new System.IO.FileStream(imagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                    {
+                        byte[] texBytes = new byte[fs.Length];
+                        fs.Read(texBytes, 0, texBytes.Length);
+                        texture.LoadImage(texBytes);
+                        texture.Apply();
+                    }
+                    haveDirection = true;
+                }
+            }
+            else
+            {
+                // マップタイルから画像を取得する
+                texture = new Texture2D(PIXEL_PER_GRID, PIXEL_PER_GRID);
+                Color[] c = mapTexture.GetPixels(PIXEL_PER_GRID * (tileNo % 8),
+                    mapTexture.height - PIXEL_PER_GRID * (tileNo / 8 + 1), PIXEL_PER_GRID, PIXEL_PER_GRID);
+                texture.SetPixels(0, 0, PIXEL_PER_GRID, PIXEL_PER_GRID, c);
+                haveDirection = false;
+            }
+            Debug.Log(haveDirection);
+
+            return new MapEvent.EventPageData(texture, direction, haveDirection, null);
+        }
+
+        private Direction ConvertDirectionValueToDirection(int directionVal)
+        {
+            switch (directionVal)
+            {
+                case 1:
+                    return Direction.DownLeft;
+                case 2:
+                    return Direction.Down;
+                case 3:
+                    return Direction.DownRight;
+                case 4:
+                    return Direction.Left;
+                case 5:
+                    return Direction.Down;
+                case 6:
+                    return Direction.Right;
+                case 7:
+                    return Direction.UpLeft;
+                case 8:
+                    return Direction.Up;
+                case 9:
+                    return Direction.UpRight;
+                default:
+                    return Direction.Down;
+            }
         }
 
         // 【暫定】モデル定義までデータを空読み
@@ -340,7 +418,7 @@ namespace Expression.Map
             for (int i = 0; i < eventCommandCount; i++)
             {
                 // 一つ一つのコマンドを読み取る
-                factory.Create2(out currentOffset);
+                factory.Create(out currentOffset);
             }
             nextOffset = currentOffset;
             // factory.Create(out nextOffset);

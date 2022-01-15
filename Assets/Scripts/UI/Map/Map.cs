@@ -8,6 +8,9 @@ public class Map : MonoBehaviour
     [SerializeField]
     private int mapIndex;
 
+    [SerializeField]
+    private GameObject eventObjectOrigin;
+
     private Expression.Map.MapData mapData;
 
     // Use this for initialization
@@ -27,6 +30,8 @@ public class Map : MonoBehaviour
         Sprite upperSprite = Sprite.Create(mapData.UpperTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), Vector2.zero, mapData.PixelPerUnit);
         upperSprite.texture.filterMode = FilterMode.Point;
         upperRenderer.sprite = upperSprite;
+
+        GenerateEventObjects(mapData);
 
         FpsFixer.FixFrameRate();
     }
@@ -49,6 +54,16 @@ public class Map : MonoBehaviour
         else
         {
             return mapData.MovableGrid;
+        }
+    }
+
+    private void GenerateEventObjects(Expression.Map.MapData mapData)
+    {
+        for (int i = 0; i < mapData.EventDataArray.Length; i++)
+        {
+            GameObject gameObject = Instantiate(eventObjectOrigin);
+            Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
+            gameObject.transform.position = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
         }
     }
 }

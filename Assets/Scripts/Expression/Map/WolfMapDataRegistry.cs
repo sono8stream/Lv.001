@@ -30,6 +30,12 @@ namespace Expression.Map
 
         public MapData Find(MapId id)
         {
+            // 【暫定】デバッグのために毎回読み出す
+            if (mapDataDict.ContainsKey(id))
+            {
+                mapDataDict.Remove(id);
+            }
+
             if (mapDataDict.ContainsKey(id))
             {
                 return mapDataDict[id];

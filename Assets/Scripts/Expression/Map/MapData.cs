@@ -19,8 +19,10 @@ namespace Expression.Map
 
         public MovableInfo[,] MovableGrid { get; private set; }
 
+        public MapEvent.EventData[] EventDataArray { get; private set; }
+
         public MapData(Texture2D underTexture, Texture2D upperTexture, int width, int height,
-         MovableInfo[,] movableGrid)
+         MovableInfo[,] movableGrid, MapEvent.EventData[] eventDataArray)
         {
             // テクスチャサイズの整合性チェック
             Assert.IsTrue(underTexture.width / width == underTexture.height / height
@@ -33,6 +35,7 @@ namespace Expression.Map
             Width = width;
             Height = height;
             MovableGrid = movableGrid;
+            EventDataArray = eventDataArray;
         }
     }
 }
