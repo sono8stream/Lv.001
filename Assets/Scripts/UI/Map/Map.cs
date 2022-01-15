@@ -64,6 +64,19 @@ public class Map : MonoBehaviour
             GameObject gameObject = Instantiate(eventObjectOrigin);
             Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
             gameObject.transform.position = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
+
+            Texture2D currentTexture = mapData.EventDataArray[i].PageData[0].GetCurrentTexture();
+            SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+            if (currentTexture == null)
+            {
+                spriteRenderer.sprite = null;
+            }
+            else
+            {
+                Sprite sprite = Sprite.Create(currentTexture, new Rect(0, 0, currentTexture.width, currentTexture.height), new Vector2(0.5f, 0.5f), mapData.PixelPerUnit);
+                sprite.texture.filterMode = FilterMode.Point;
+                spriteRenderer.sprite = sprite;
+            }
         }
     }
 }

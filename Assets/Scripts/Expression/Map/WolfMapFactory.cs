@@ -343,6 +343,7 @@ namespace Expression.Map
                 Color[] c = mapTexture.GetPixels(PIXEL_PER_GRID * (tileNo % 8),
                     mapTexture.height - PIXEL_PER_GRID * (tileNo / 8 + 1), PIXEL_PER_GRID, PIXEL_PER_GRID);
                 texture.SetPixels(0, 0, PIXEL_PER_GRID, PIXEL_PER_GRID, c);
+                texture.Apply();
                 haveDirection = false;
             }
             Debug.Log(haveDirection);
