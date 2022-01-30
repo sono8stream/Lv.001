@@ -88,7 +88,8 @@ public class EventObject : MonoBehaviour
     }
 
     // イベントコマンドを1行分読み取り実行イベントキューに入れる
-    // この動きをEventCommandで置き換えればOK
+    // 一旦この関数をExpression.Map.MapEvent.EventCommandDataから読み取る関数で置き換える
+    // 最終的にはEventCommandDataが持つ処理を呼び出すのみにする
     public void ReadScript()
     {
         events = new List<UnityEvent>();

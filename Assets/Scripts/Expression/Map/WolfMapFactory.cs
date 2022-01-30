@@ -411,17 +411,19 @@ namespace Expression.Map
         }
 
         // 【暫定】詳細定義まで空読み
-        private void ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
+        private MapEvent.EventCommandData[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
         {
             int currentOffset = offset;
             MapEvent.WolfMapEventFactory factory = new MapEvent.WolfMapEventFactory(reader, currentOffset);
+            List<MapEvent.EventCommandData> commands = new List<MapEvent.EventCommandData>();
             for (int i = 0; i < eventCommandCount; i++)
             {
                 // 一つ一つのコマンドを読み取る
-                factory.Create(out currentOffset);
+                commands.Add(factory.Create(out currentOffset));
             }
             nextOffset = currentOffset;
-            // factory.Create(out nextOffset);
+
+            return commands.ToArray();
         }
     }
 

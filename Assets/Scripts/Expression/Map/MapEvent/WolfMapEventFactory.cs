@@ -15,7 +15,7 @@ namespace Expression.Map.MapEvent
             this.startOffset = startOffset;
         }
 
-        public EventData Create(out int nextOffset)
+        public EventCommandData Create(out int nextOffset)
         {
             int currentOffset = startOffset;
             int variableCount = reader.ReadByte(currentOffset, out currentOffset);

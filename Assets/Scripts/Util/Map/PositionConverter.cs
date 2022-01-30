@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Util.Map
 {
-    class PositionConverter
+    public class PositionConverter
     {
         public PositionConverter()
         {
