@@ -87,6 +87,19 @@ public class EventObject : MonoBehaviour
         }
     }
 
+    // テスト用のset関数、一時的
+
+    public void SetScriptText(TextAsset text)
+    {
+        scriptText = text;
+    }
+
+    public void FetchEventCommands()
+    {
+        eventCommands = GetComponent<EventCommands>();
+        eventCommands.Invoke("Start", 0);
+    }
+
     // イベントコマンドを1行分読み取り実行イベントキューに入れる
     // 一旦この関数をExpression.Map.MapEvent.EventCommandDataから読み取る関数で置き換える
     // 最終的にはEventCommandDataが持つ処理を呼び出すのみにする
@@ -109,14 +122,16 @@ public class EventObject : MonoBehaviour
         string command = scripts[line].Substring(scripts[line].IndexOf("{") + 1,
             scripts[line].IndexOf("}") - scripts[line].IndexOf("{") - 1);//コマンド名を取得
         string param1 = "";
+
         if (scripts[line].Contains("("))
         {
             param1 = scripts[line].Substring(scripts[line].IndexOf("(") + 1,
                 scripts[line].IndexOf(")") - scripts[line].IndexOf("(") - 1);//引数を取得
         }
+
         string[] properties;
         string[] branch;
-        Debug.Log(command);
+        //Debug.Log(command);
         switch (eventCommands.eventDic[command])
         {
             case 0://メッセージ描画
