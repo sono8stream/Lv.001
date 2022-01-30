@@ -11,6 +11,6 @@ public class MapEventTest
     public void RaadEventTest()
     {
         GameObject gameObject = new GameObject();
-        gameObject.addComponent<EventObject>();
+        gameObject.AddComponent<EventObject>();
     }
 }
