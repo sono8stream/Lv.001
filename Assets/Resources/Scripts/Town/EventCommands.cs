@@ -805,5 +805,10 @@ public class EventCommands : MonoBehaviour
         isCompleted = true;
     }
 
+    public void NoOperation()
+    {
+        isCompleted = true;
+    }
+
 
 }
