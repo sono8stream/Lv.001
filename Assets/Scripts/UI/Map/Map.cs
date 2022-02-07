@@ -65,6 +65,13 @@ public class Map : MonoBehaviour
             Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
             gameObject.transform.position = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
 
+            EventObject eventObject = gameObject.GetComponent<EventObject>();
+            if (eventObject)
+            {
+                eventObject.SetEventData(mapData.EventDataArray[i]);
+            }
+
+            // この処理はカプセル化できるのでEventObjectクラスに委譲したほうがよさそう
             Texture2D currentTexture = mapData.EventDataArray[i].PageData[0].GetCurrentTexture();
             SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
             if (currentTexture == null)

@@ -14,7 +14,7 @@ public class EventObject : MonoBehaviour
     [SerializeField]
     string[] scripts;
     int line;//現在読んでいるスクリプトの行数
-    EventCommands eventCommands;
+    EventCommands eventCommands;// イベントを実行するためのコマンドを保持
     List<UnityEvent> events;
     [SerializeField]
     bool canThrough;
@@ -30,6 +30,8 @@ public class EventObject : MonoBehaviour
     int aniLimit = 60;
     int aniCount;
     int spriteCount;
+
+    Expression.Map.MapEvent.EventData eventData;
 
     // Use this for initialization
     void Start()
@@ -66,7 +68,7 @@ public class EventObject : MonoBehaviour
                 if (eventCommands.actNo == events.Count)
                 {
                     line++;
-                    ReadScript();
+                    ReadScript2();
                 }
             }
         }
@@ -351,6 +353,22 @@ public class EventObject : MonoBehaviour
         //EventCommands.isProcessing = true;
     }
 
+    public void ReadScript2()
+    {
+        events = new List<UnityEvent>();
+        if (line == eventData.PageData[0].CommandDataArray.Length)
+        {
+            line = 0;
+            EventCommands.isProcessing = false;
+            return;
+        }
+
+        eventCommands.actNo = 0;// 処理中のコマンド内での実行中イベントの番号
+
+        Expression.Map.MapEvent.EventCommand command = eventData.PageData[0].CommandDataArray[line];
+        command.StackEventsTo(events, eventCommands);
+    }
+
     // 特定のラベルに至るまでコマンドをスキップ
     void JumpCommand(string labelS = null)
     {
@@ -372,5 +390,10 @@ public class EventObject : MonoBehaviour
                 break;
             }
         }
+    }
+
+    public void SetEventData(Expression.Map.MapEvent.EventData eventData)
+    {
+        this.eventData = eventData;
     }
 }

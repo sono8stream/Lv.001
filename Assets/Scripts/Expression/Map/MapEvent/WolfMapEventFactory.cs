@@ -15,17 +15,18 @@ namespace Expression.Map.MapEvent
             this.startOffset = startOffset;
         }
 
-        public EventCommandData Create(out int nextOffset)
+        public EventCommand Create(out int nextOffset)
         {
             int currentOffset = startOffset;
             int variableCount = reader.ReadByte(currentOffset, out currentOffset);
             int commandType = reader.ReadInt(currentOffset, true, out currentOffset);
             //Debug.Log(commandType.ToString("X8"));
+            EventCommand command = new EventCommand();
 
             switch (commandType)
             {
                 case 0x00000065:
-                    CreateShowTextCommand(currentOffset, out currentOffset);
+                    command = CreateShowTextCommand(currentOffset, out currentOffset);
                     break;
                 case 0x00000067:
                     CreateDebugTextCommand(currentOffset, out currentOffset);
@@ -49,12 +50,12 @@ namespace Expression.Map.MapEvent
 
             nextOffset = currentOffset;
             startOffset = currentOffset;
-            return null;
+            return command;
         }
 
         // すべてのコマンドで共通の設定
         // ただし動作指定コマンドのみフッタの後に動作指定イベントが連続する
-        private EventData CreateDefaultCommand(int offset, out int nextOffset, int numberVariableCount)
+        private EventCommand CreateDefaultCommand(int offset, out int nextOffset, int numberVariableCount)
         {
             int currentOffset = offset;
 
@@ -85,7 +86,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventData CreateShowTextCommand(int offset, out int nextOffset)
+        private EventCommand CreateShowTextCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -96,10 +97,10 @@ namespace Expression.Map.MapEvent
             reader.ReadByte(currentOffset, out currentOffset);
 
             nextOffset = currentOffset;
-            return null;
+            return new MessageCommand(text);
         }
 
-        private EventData CreateDebugTextCommand(int offset, out int nextOffset)
+        private EventCommand CreateDebugTextCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -113,7 +114,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventData CreateChoiceForkCommand(int offset, out int nextOffset)
+        private EventCommand CreateChoiceForkCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
 
@@ -136,7 +137,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventData CreateFlagForkByVariableCommand(int offset, out int nextOffset, int numberVariableCount)
+        private EventCommand CreateFlagForkByVariableCommand(int offset, out int nextOffset, int numberVariableCount)
         {
             int currentOffset = offset;
 
@@ -161,7 +162,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventData CreateForkBeginByVariableCommand(int offset, out int nextOffset)
+        private EventCommand CreateForkBeginByVariableCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int forkNumber = reader.ReadInt(currentOffset, true, out currentOffset);
@@ -177,7 +178,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventData CreateOperateVariableCommand(int offset, out int nextOffset)
+        private EventCommand CreateOperateVariableCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int forkNumber = reader.ReadInt(currentOffset, true, out currentOffset);
@@ -194,7 +195,7 @@ namespace Expression.Map.MapEvent
         }
 
         // イベントコマンドの取得は未済み
-        private EventData CreateCallEventByIdCommand(int offset, out int nextOffset)
+        private EventCommand CreateCallEventByIdCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int eventId = reader.ReadInt(currentOffset, true, out currentOffset);

@@ -164,7 +164,7 @@ public class PlayerController : MonoBehaviour
                 }
                 else if (Input.GetKey(KeyCode.X))
                 {
-                    GetComponent<EventObject>().ReadScript();
+                    GetComponent<EventObject>().ReadScript2();
                     EventCommands.isProcessing = true;
                     return;
                 }
@@ -185,7 +185,7 @@ public class PlayerController : MonoBehaviour
                     }
                     spriteAniCor *= -1;
                     GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
-                    eventObject.GetComponent<EventObject>().ReadScript();
+                    eventObject.GetComponent<EventObject>().ReadScript2();
                     EventCommands.isProcessing = true;
                     eventObject = null;
                     selectPos.SetActive(false);
@@ -197,7 +197,7 @@ public class PlayerController : MonoBehaviour
                     {
                         EventCommands.isProcessing = true;
                         eventObject = c.gameObject;
-                        eventObject.GetComponent<EventObject>().ReadScript();
+                        eventObject.GetComponent<EventObject>().ReadScript2();
                         eventObject = null;
                     }
                 }

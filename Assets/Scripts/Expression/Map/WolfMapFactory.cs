@@ -297,7 +297,7 @@ namespace Expression.Map
             int eventCommandCount = reader.ReadInt(offset, true, out offset);
             Debug.Log(eventCommandCount);
             // デバッグここまでOK
-            ReadEventCommands(reader, eventCommandCount, offset, out offset);
+            MapEvent.EventCommand[] commands = ReadEventCommands(reader, eventCommandCount, offset, out offset);
 
             // イベントコマンドフッタースキップ
             reader.ReadInt(offset, true, out offset);
@@ -347,7 +347,7 @@ namespace Expression.Map
             }
             Debug.Log(haveDirection);
 
-            return new MapEvent.EventPageData(texture, direction, haveDirection, null);
+            return new MapEvent.EventPageData(texture, direction, haveDirection, commands);
         }
 
         private Direction ConvertDirectionValueToDirection(int directionVal)
@@ -411,11 +411,11 @@ namespace Expression.Map
         }
 
         // 【暫定】詳細定義まで空読み
-        private MapEvent.EventCommandData[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
+        private MapEvent.EventCommand[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
         {
             int currentOffset = offset;
             MapEvent.WolfMapEventFactory factory = new MapEvent.WolfMapEventFactory(reader, currentOffset);
-            List<MapEvent.EventCommandData> commands = new List<MapEvent.EventCommandData>();
+            List<MapEvent.EventCommand> commands = new List<MapEvent.EventCommand>();
             for (int i = 0; i < eventCommandCount; i++)
             {
                 // 一つ一つのコマンドを読み取る

@@ -81,8 +81,13 @@ public class EventCommands : MonoBehaviour
     }
 
     /// <summary>
-    /// メッセージ描画
+    /// メッセージを描画
     /// </summary>
+    /// <param name="message"></param>
+    /// <param name="x">表示位置x座標</param>
+    /// <param name="y">表示位置y座標</param>
+    /// <param name="width">メッセージウィンドウ横幅</param>
+    /// <param name="height">メッセージウィンドウ縦幅</param>
     public void WriteMessage(string message, float x = 0, float y = -690, float width = 1060, float height = 500)
     {
         isCompleted = true;
