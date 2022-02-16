@@ -10,13 +10,14 @@ using UnityEngine.UI;
 /// <summary>
 /// 各種イベントコマンドとなるメソッドを定義します
 /// 各種イベントは、他のイベントオブジェクトクラスのメンバにセットして利用します
+/// 【暫定】イベントコマンドをクラスに切り出し中。切り出し終えたらActionEnvironmentみたいな名前に変更する
 /// </summary>
 public class EventCommands : MonoBehaviour
 {
-    GameObject canvas;
+    public GameObject canvas;
     List<GameObject> choiceBoxes;
     List<GameObject> choiceButtons;//選択肢リスト
-    List<GameObject> windows;//メッセージボックスリスト
+    public List<GameObject> windows;//メッセージボックスリスト
     List<GameObject> images;//画像リスト
     string choiceName;//選択した選択肢名
     public string ChoiceName

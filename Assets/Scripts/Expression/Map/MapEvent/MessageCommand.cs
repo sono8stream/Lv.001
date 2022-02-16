@@ -4,9 +4,9 @@ using UnityEngine.Events;
 
 namespace Expression.Map.MapEvent
 {
-    public class MessageCommand:EventCommand
+    public class MessageCommand:EventCommandBase
     {
-        private string MessageText { get; set; }
+        public string MessageText { get; set; }
 
         public MessageCommand(string messageText)
         {
@@ -15,12 +15,11 @@ namespace Expression.Map.MapEvent
 
         public override void StackEventsTo(List<UnityEvent> events, EventCommands commands)
         {
-            events.Add(new UnityEvent());
-            events[events.Count - 1].AddListener(() => commands.WriteMessage(MessageText));
-            events.Add(new UnityEvent());
-            events[events.Count - 1].AddListener(() => commands.WaitForInput());
-            events.Add(new UnityEvent());
-            events[events.Count - 1].AddListener(() => commands.CloseMessage());
+        }
+
+        public override void Visit(ICommandVisitor visitor)
+        {
+            visitor.OnVisitMessageCommand(this);
         }
     }
 }

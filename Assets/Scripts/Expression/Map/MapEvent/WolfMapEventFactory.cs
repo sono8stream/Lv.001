@@ -15,13 +15,13 @@ namespace Expression.Map.MapEvent
             this.startOffset = startOffset;
         }
 
-        public EventCommand Create(out int nextOffset)
+        public EventCommandBase Create(out int nextOffset)
         {
             int currentOffset = startOffset;
             int variableCount = reader.ReadByte(currentOffset, out currentOffset);
             int commandType = reader.ReadInt(currentOffset, true, out currentOffset);
             //Debug.Log(commandType.ToString("X8"));
-            EventCommand command = new EventCommand();
+            EventCommandBase command = new EventCommandBase();
 
             switch (commandType)
             {
@@ -55,7 +55,7 @@ namespace Expression.Map.MapEvent
 
         // すべてのコマンドで共通の設定
         // ただし動作指定コマンドのみフッタの後に動作指定イベントが連続する
-        private EventCommand CreateDefaultCommand(int offset, out int nextOffset, int numberVariableCount)
+        private EventCommandBase CreateDefaultCommand(int offset, out int nextOffset, int numberVariableCount)
         {
             int currentOffset = offset;
 
@@ -86,7 +86,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventCommand CreateShowTextCommand(int offset, out int nextOffset)
+        private EventCommandBase CreateShowTextCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -100,7 +100,7 @@ namespace Expression.Map.MapEvent
             return new MessageCommand(text);
         }
 
-        private EventCommand CreateDebugTextCommand(int offset, out int nextOffset)
+        private EventCommandBase CreateDebugTextCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -114,7 +114,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventCommand CreateChoiceForkCommand(int offset, out int nextOffset)
+        private EventCommandBase CreateChoiceForkCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
 
@@ -137,7 +137,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventCommand CreateFlagForkByVariableCommand(int offset, out int nextOffset, int numberVariableCount)
+        private EventCommandBase CreateFlagForkByVariableCommand(int offset, out int nextOffset, int numberVariableCount)
         {
             int currentOffset = offset;
 
@@ -162,7 +162,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventCommand CreateForkBeginByVariableCommand(int offset, out int nextOffset)
+        private EventCommandBase CreateForkBeginByVariableCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int forkNumber = reader.ReadInt(currentOffset, true, out currentOffset);
@@ -178,7 +178,7 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventCommand CreateOperateVariableCommand(int offset, out int nextOffset)
+        private EventCommandBase CreateOperateVariableCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int forkNumber = reader.ReadInt(currentOffset, true, out currentOffset);
@@ -195,7 +195,7 @@ namespace Expression.Map.MapEvent
         }
 
         // イベントコマンドの取得は未済み
-        private EventCommand CreateCallEventByIdCommand(int offset, out int nextOffset)
+        private EventCommandBase CreateCallEventByIdCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int eventId = reader.ReadInt(currentOffset, true, out currentOffset);

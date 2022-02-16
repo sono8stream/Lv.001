@@ -10,7 +10,7 @@ namespace Expression.Map.MapEvent
         {
         }
 
-        public EventCommand Create()
+        public EventCommandBase Create()
         {
             return null;
         }

@@ -297,7 +297,7 @@ namespace Expression.Map
             int eventCommandCount = reader.ReadInt(offset, true, out offset);
             Debug.Log(eventCommandCount);
             // デバッグここまでOK
-            MapEvent.EventCommand[] commands = ReadEventCommands(reader, eventCommandCount, offset, out offset);
+            MapEvent.EventCommandBase[] commands = ReadEventCommands(reader, eventCommandCount, offset, out offset);
 
             // イベントコマンドフッタースキップ
             reader.ReadInt(offset, true, out offset);
@@ -411,11 +411,11 @@ namespace Expression.Map
         }
 
         // 【暫定】詳細定義まで空読み
-        private MapEvent.EventCommand[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
+        private MapEvent.EventCommandBase[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
         {
             int currentOffset = offset;
             MapEvent.WolfMapEventFactory factory = new MapEvent.WolfMapEventFactory(reader, currentOffset);
-            List<MapEvent.EventCommand> commands = new List<MapEvent.EventCommand>();
+            List<MapEvent.EventCommandBase> commands = new List<MapEvent.EventCommandBase>();
             for (int i = 0; i < eventCommandCount; i++)
             {
                 // 一つ一つのコマンドを読み取る

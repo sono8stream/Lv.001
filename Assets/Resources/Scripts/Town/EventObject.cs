@@ -16,6 +16,7 @@ public class EventObject : MonoBehaviour
     int line;//現在読んでいるスクリプトの行数
     EventCommands eventCommands;// イベントを実行するためのコマンドを保持
     List<UnityEvent> events;
+    UI.Action.ActionBase currentAction;
     [SerializeField]
     bool canThrough;
     public bool CanThrough
@@ -57,6 +58,17 @@ public class EventObject : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // どう実行させようかな
+        if (currentAction != null)
+        {
+            if (currentAction.Run())
+            {
+                line++;
+                ReadScript2();
+            }
+        }
+
+        /*
         if (events.Count > 0)
         {
             events[eventCommands.actNo].Invoke();
@@ -72,6 +84,7 @@ public class EventObject : MonoBehaviour
                 }
             }
         }
+        */
         if (isAnimating)
         {
             aniCount++;
@@ -365,8 +378,10 @@ public class EventObject : MonoBehaviour
 
         eventCommands.actNo = 0;// 処理中のコマンド内での実行中イベントの番号
 
-        Expression.Map.MapEvent.EventCommand command = eventData.PageData[0].CommandDataArray[line];
+        Expression.Map.MapEvent.EventCommandBase command = eventData.PageData[0].CommandDataArray[line];
         command.StackEventsTo(events, eventCommands);
+        UI.Map.MapActionFactory factory = new UI.Map.MapActionFactory(eventCommands);
+        currentAction = factory.CreateActionFrom(command);
     }
 
     // 特定のラベルに至るまでコマンドをスキップ
