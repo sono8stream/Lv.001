@@ -23,6 +23,7 @@ namespace Expression.Map.MapEvent
         public virtual void Visit(ICommandVisitor visitor)
         {
             // Šî’ê‚Í‰½‚à‚µ‚È‚¢
+            visitor.OnVisitBaseCommand(this);
         }
     }
 }

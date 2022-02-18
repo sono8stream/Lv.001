@@ -7,7 +7,7 @@ using Expression.Map.MapEvent;
 
 namespace UI.Map
 {
-    public class MapActionFactory:Expression.Map.MapEvent.ICommandVisitor
+    public class MapActionFactory : Expression.Map.MapEvent.ICommandVisitor
     {
         // ¶¬Œ‹‰Ê‚ğ•Û‚·‚é‚½‚ß‚Éƒƒ“ƒo‚Æ‚µ‚Ä‚ÂB”r‘¼‚É’ˆÓ
         private ActionBase generatedAction;
@@ -23,6 +23,11 @@ namespace UI.Map
         {
             command.Visit(this);
             return generatedAction;
+        }
+
+        public void OnVisitBaseCommand(EventCommandBase command)
+        {
+            generatedAction = new ActionBase();
         }
 
         public void OnVisitMessageCommand(MessageCommand command)

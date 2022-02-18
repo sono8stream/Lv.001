@@ -25,14 +25,19 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            while (currentActNo < actions.Count)
+            if (actions[currentActNo].Run())
             {
-                if (actions[currentActNo].Run())
-                {
-                    currentActNo++;
-                }
+                currentActNo++;
             }
-            return true;
+
+            if (currentActNo < actions.Count)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }

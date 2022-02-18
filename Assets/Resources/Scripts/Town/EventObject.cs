@@ -373,6 +373,7 @@ public class EventObject : MonoBehaviour
         {
             line = 0;
             EventCommands.isProcessing = false;
+            currentAction = null;
             return;
         }
 
