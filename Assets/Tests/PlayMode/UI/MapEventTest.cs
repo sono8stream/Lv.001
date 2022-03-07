@@ -20,6 +20,6 @@ public class MapEventTest
         // Start()‘Ò‚¿
         yield return null;
 
-        eventObject.ReadScript2();
+        eventObject.StartActions();
     }
 }

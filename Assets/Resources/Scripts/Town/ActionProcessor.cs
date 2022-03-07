@@ -67,18 +67,6 @@ public class ActionProcessor : MonoBehaviour
             }
         }
 
-        // 【暫定】どう実行させようかな
-        /*
-        if (currentAction != null)
-        {
-            if (currentAction.Run())
-            {
-                line++;
-                ReadScript2();
-            }
-        }
-        */
-
         if (isAnimating)
         {
             aniCount++;
@@ -351,25 +339,6 @@ public class ActionProcessor : MonoBehaviour
                 break;
         }
         //EventCommands.isProcessing = true;
-    }
-
-    public void ReadScript2()
-    {
-        events = new List<UnityEvent>();
-        if (line == eventData.PageData[0].CommandDataArray.Length)
-        {
-            line = 0;
-            isProcessing = false;
-            currentAction = null;
-            return;
-        }
-
-        actionEnvironment.actNo = 0;// 処理中のコマンド内での実行中イベントの番号
-
-        Expression.Map.MapEvent.EventCommandBase command = eventData.PageData[0].CommandDataArray[line];
-        command.StackEventsTo(events, actionEnvironment);
-        UI.Map.MapActionFactory factory = new UI.Map.MapActionFactory(actionEnvironment);
-        currentAction = factory.CreateActionFrom(command);
     }
 
     public void StartActions()
