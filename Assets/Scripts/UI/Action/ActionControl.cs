@@ -48,14 +48,26 @@ namespace UI.Action
             if (IsSkipMode)
             {
                 // スキップ要求があるのでラベルまでスキップさせる
-                for (int i = 0; i < actions.Count; i++)
+                // 基本は次以降のアクションを優先するが、存在しない場合は通常通り進める
+                int nextActNo = CurrentActNo;
+                for (int i = 1; i < actions.Count; i++)
                 {
-                    if (actions[i].VerifyLabel(SkipLabel))
+                    int now = (CurrentActNo + i) % actions.Count;
+                    if (actions[now].VerifyLabel(SkipLabel))
                     {
-                        CurrentActNo = i;
+                        nextActNo = now;
                         break;
                     }
                 }
+                if (nextActNo == CurrentActNo)
+                {
+                    CurrentActNo++;
+                }
+                else
+                {
+                    CurrentActNo = nextActNo;
+                }
+
                 IsSkipMode = false;
                 SkipLabel = null;
             }

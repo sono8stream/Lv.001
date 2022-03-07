@@ -38,7 +38,7 @@ namespace Expression.Map.MapEvent
                     CreateFlagForkByVariableCommand(currentOffset, out currentOffset, variableCount);
                     break;
                 case 0x00000191:
-                    CreateForkBeginCommand(currentOffset, out currentOffset);
+                    command = CreateForkBeginCommand(currentOffset, out currentOffset);
                     break;
                 case 0x000000D2:
                     CreateCallEventByIdCommand(currentOffset, out currentOffset);
@@ -135,7 +135,7 @@ namespace Expression.Map.MapEvent
             reader.ReadByte(currentOffset, out currentOffset);
 
             nextOffset = currentOffset;
-            return new ChoiceForkCommand(choiceStrings);
+            return new ChoiceForkCommand(indentDepth,choiceStrings);
         }
 
         private EventCommandBase CreateFlagForkByVariableCommand(int offset, out int nextOffset, int numberVariableCount)
@@ -183,7 +183,7 @@ namespace Expression.Map.MapEvent
             reader.ReadByte(currentOffset, out currentOffset);
 
             nextOffset = currentOffset;
-            return null;
+            return new ForkBeginCommand(indentDepth, forkNumber);
         }
 
         private EventCommandBase CreateOperateVariableCommand(int offset, out int nextOffset)

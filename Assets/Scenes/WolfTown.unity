@@ -273,6 +273,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &130859863
@@ -315,9 +319,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: bf48c21f9e6cc5842967238e11e5ed36, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 1
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &130859865
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -416,6 +426,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &209076899
@@ -458,9 +472,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: a760dc5ace553974382248bf581a064a, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 1
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &209076901
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -582,6 +602,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &452604448
@@ -624,9 +648,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: b3e53e5ac6af2c1459e5fd0837b6b0e0, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 0
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &452604450
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -720,14 +750,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 556639196}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: efa3b26754efcb64abb4c3defa691045, type: 3}
+  m_Script: {fileID: 0}
   m_Name: 
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: ffd31a7367ade1a47b82cc00dc9a0668, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 0
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!114 &556639198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -740,6 +776,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!114 &556639199
@@ -985,6 +1025,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &722703611
@@ -1027,9 +1071,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: c7caeec79fc82a947b29b64397d973fb, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 0
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &722703613
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1277,6 +1327,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &966364733
@@ -1319,9 +1373,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: 2821425946719694b8ff03a88a67622e, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 1
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &966364735
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1439,6 +1499,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &1149722311
@@ -1481,9 +1545,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: 2821425946719694b8ff03a88a67622e, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 1
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &1149722313
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1600,6 +1670,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &1152904757
@@ -1642,9 +1716,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: 5a30be67541928244991e0565b986d76, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 0
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &1152904759
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -2242,6 +2322,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!1 &1959709731
@@ -2277,6 +2361,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  choiceBoxes: []
+  choiceButtons: []
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!61 &1959709733
@@ -2319,9 +2407,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scriptText: {fileID: 4900000, guid: a760dc5ace553974382248bf581a064a, type: 3}
   scripts: []
+  line: 0
+  eventCommands: {fileID: 0}
+  events: []
   canThrough: 1
   sprites: []
   isAnimating: 0
+  aniLimit: 60
+  aniCount: 0
+  spriteCount: 0
 --- !u!212 &1959709735
 SpriteRenderer:
   m_ObjectHideFlags: 0

@@ -8,6 +8,7 @@ namespace Expression.Map.MapEvent
     {
         public void OnVisitMessageCommand(MessageCommand command);
         public void OnVisitChoiceForkCommand(ChoiceForkCommand command);
+        public void OnVisitForkBeginCommand(ForkBeginCommand command);
 
         public void OnVisitBaseCommand(EventCommandBase command);
     }

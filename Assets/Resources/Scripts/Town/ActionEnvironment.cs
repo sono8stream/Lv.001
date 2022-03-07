@@ -20,6 +20,7 @@ public class ActionEnvironment : MonoBehaviour
     List<GameObject> images;//画像リスト
     public string ChoiceName { get; set; }
     public string ChoiceNameSub { get; set; }
+
     string subParam;//選択肢利用時の一時保持用
     bool isCompleted;//イベントが終了したか
     public bool IsCompleted

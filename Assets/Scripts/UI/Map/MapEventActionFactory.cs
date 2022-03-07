@@ -63,11 +63,16 @@ namespace UI.Map
         {
             // MultiActionÇ…ÇπÇ∏Ç∆Ç‡onStartÅAonEndÇ≈èàóùÇµÇ´ÇÍÇÈÇÃÇ≈ìùçáâ¬î\
             List<ActionBase> actions = new List<ActionBase>();
-            actions.Add(new ShowChoiceAction(command.ChoiceStrings, actionEnv));
+            actions.Add(new ShowChoiceAction(command.IndentDepth, command.ChoiceStrings, actionEnv));
             actions.Add(new WaitForChoiceAction(actionEnv));
             actions.Add(new CloseChoiceAction(actionEnv, false, controlInfo));
 
             generatedAction = new MultiAction(actions);
+        }
+
+        public void OnVisitForkBeginCommand(ForkBeginCommand command)
+        {
+            generatedAction = new ForkBeginAction(command.LabelString);
         }
     }
 }

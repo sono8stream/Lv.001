@@ -11,15 +11,17 @@ namespace UI.Action
 {
     class ShowChoiceAction : ActionBase
     {
+        int indentDepth;
         string[] choiceStrings;
 
         float x, y, width, height, textSizeY, margin;
 
         ActionEnvironment actionEnv;
 
-        public ShowChoiceAction(string[] choiceStrings, ActionEnvironment actionEnv,
+        public ShowChoiceAction(int indentDepth, string[] choiceStrings, ActionEnvironment actionEnv,
             float x = 0, float y = -420)
         {
+            this.indentDepth = indentDepth;
             this.choiceStrings = choiceStrings;
             this.x = x;
             this.y = y;
@@ -83,7 +85,7 @@ namespace UI.Action
                 // ボタンへのイベント仕込み
                 // 【暫定】本来はWaitForChoiceの責務か？そちらに分離する可能性あり
                 int no = i;// ローカル変数に代入してインデックスをバインド
-                choiceButton.GetComponent<Button>().onClick.AddListener(() => SetChoice(choiceStrings[no]));
+                choiceButton.GetComponent<Button>().onClick.AddListener(() => SetChoice(no));
                 
                 EventTrigger trigger = choiceButton.GetComponent<EventTrigger>();
                 trigger.triggers = new List<EventTrigger.Entry>();
@@ -99,9 +101,10 @@ namespace UI.Action
             return true;
         }
 
-        private void SetChoice(string choiceName)
+        private void SetChoice(int choiceId)
         {
-            actionEnv.ChoiceName = choiceName;
+            // 選択肢番号1~10は分岐始点では2~11でナンバリングされる
+            actionEnv.ChoiceName = $"{indentDepth}.{choiceId + 2}";
         }
 
         private void SetSelectBranch(Vector2 pos, GameObject branch)
