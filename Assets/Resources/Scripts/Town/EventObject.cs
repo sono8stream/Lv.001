@@ -14,7 +14,7 @@ public class EventObject : MonoBehaviour
     [SerializeField]
     string[] scripts;
     int line;//現在読んでいるスクリプトの行数
-    EventCommands eventCommands;// イベントを実行するためのコマンドを保持
+    ActionEnvironment eventCommands;// イベントを実行するためのコマンドを保持
     List<UnityEvent> events;
     UI.Action.ActionBase currentAction;
     [SerializeField]
@@ -40,7 +40,7 @@ public class EventObject : MonoBehaviour
         line = 0;
         char[] kugiri = { '\n' };
         scripts = scriptText.text.Split(kugiri);
-        eventCommands = GetComponent<EventCommands>();
+        eventCommands = GetComponent<ActionEnvironment>();
         events = new List<UnityEvent>();
         eventCommands.actNo = 0;
         eventCommands.IsCompleted = false;
@@ -68,23 +68,6 @@ public class EventObject : MonoBehaviour
             }
         }
 
-        /*
-        if (events.Count > 0)
-        {
-            events[eventCommands.actNo].Invoke();
-            if (eventCommands.IsCompleted)
-            {
-                eventCommands.IsCompleted = false;
-                eventCommands.actNo++;
-                Debug.Log(eventCommands.actNo);
-                if (eventCommands.actNo == events.Count)
-                {
-                    line++;
-                    ReadScript2();
-                }
-            }
-        }
-        */
         if (isAnimating)
         {
             aniCount++;
@@ -111,7 +94,7 @@ public class EventObject : MonoBehaviour
 
     public void FetchEventCommands()
     {
-        eventCommands = GetComponent<EventCommands>();
+        eventCommands = GetComponent<ActionEnvironment>();
         eventCommands.Invoke("Start", 0);
     }
 
@@ -124,7 +107,7 @@ public class EventObject : MonoBehaviour
         if (line == scripts.GetLength(0))
         {
             line = 0;
-            EventCommands.isProcessing = false;
+            ActionEnvironment.isProcessing = false;
             if (eventCommands.SelfVar[0] == 1)
             {
                 GetComponent<EventObject>().enabled = false;
@@ -372,7 +355,7 @@ public class EventObject : MonoBehaviour
         if (line == eventData.PageData[0].CommandDataArray.Length)
         {
             line = 0;
-            EventCommands.isProcessing = false;
+            ActionEnvironment.isProcessing = false;
             currentAction = null;
             return;
         }

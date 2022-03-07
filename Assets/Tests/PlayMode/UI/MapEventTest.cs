@@ -12,7 +12,7 @@ public class MapEventTest
     public IEnumerator RaadEventTest()
     {
         GameObject gameObject = new GameObject("Test");
-        gameObject.AddComponent<EventCommands>();
+        gameObject.AddComponent<ActionEnvironment>();
         gameObject.AddComponent<SpriteRenderer>();
 
         EventObject eventObject = gameObject.AddComponent<EventObject>();
@@ -21,6 +21,6 @@ public class MapEventTest
         // Start()‘Ò‚¿
         yield return null;
 
-        eventObject.ReadScript();
+        eventObject.ReadScript2();
     }
 }

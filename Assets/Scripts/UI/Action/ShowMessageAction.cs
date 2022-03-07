@@ -15,9 +15,9 @@ namespace UI.Action
 
         float x, y, width, height;
 
-        EventCommands commands;
+        ActionEnvironment commands;
 
-        public ShowMessageAction(string message, EventCommands commands,
+        public ShowMessageAction(string message, ActionEnvironment commands,
             float x = 0, float y = -690, float width = 1060, float height = 500)
         {
             isCompleted = false;

@@ -12,11 +12,28 @@ namespace UI.Map
         // 生成結果を保持するためにメンバとして持つ。排他に注意
         private ActionBase generatedAction;
 
-        private EventCommands commands;
+        private ActionEnvironment actionEnv;
 
-        public MapActionFactory(EventCommands commands)
+        public MapActionFactory(ActionEnvironment actionEnv)
         {
-            this.commands = commands;
+            this.actionEnv = actionEnv;
+        }
+
+        /// <summary>
+        /// 一連のコマンドからマルチアクションを生成して返します
+        /// 単一ではなく一連のコマンドを用いるのは分岐などを入れ子になったアクションとして生成するため
+        /// </summary>
+        /// <param name="commands">イベントに含まれる一連のコマンド</param>
+        /// <returns></returns>
+        public ActionBase CreateActionFrom(EventCommandBase[] commands)
+        {
+            List<ActionBase> actions = new List<ActionBase>();
+            for (int i = 0; i < commands.Length; i++)
+            {
+                commands[i].Visit(this);
+                actions.Add(generatedAction);
+            }
+            return new MultiAction(actions);
         }
 
         public ActionBase CreateActionFrom(EventCommandBase command)
@@ -33,11 +50,17 @@ namespace UI.Map
         public void OnVisitMessageCommand(MessageCommand command)
         {
             List<ActionBase> actions = new List<ActionBase>();
-            actions.Add(new ShowMessageAction(command.MessageText, commands));
+            actions.Add(new ShowMessageAction(command.MessageText, actionEnv));
             actions.Add(new WaitForInputAction());
-            actions.Add(new CloseMessageAction(commands, false));
+            actions.Add(new CloseMessageAction(actionEnv, false));
 
             generatedAction = new MultiAction(actions);
+        }
+
+        public void OnVisitChoiceCommand(ChoiceCommand command)
+        {
+            // 一連の分岐先アクションも内部に詰めて返す
+
         }
     }
 }

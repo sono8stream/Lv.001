@@ -62,7 +62,7 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!EventCommands.isProcessing)
+        if (!ActionEnvironment.isProcessing)
         {
             if (nodePos.Count == 0)
             {
@@ -93,7 +93,7 @@ public class PlayerController : MonoBehaviour
                     if (destGeneral == curGeneral)//メニュー呼び出し
                     {
                         GetComponent<EventObject>().ReadScript();
-                        EventCommands.isProcessing = true;
+                        ActionEnvironment.isProcessing = true;
                         return;
                     }
 
@@ -165,7 +165,7 @@ public class PlayerController : MonoBehaviour
                 else if (Input.GetKey(KeyCode.X))
                 {
                     GetComponent<EventObject>().ReadScript2();
-                    EventCommands.isProcessing = true;
+                    ActionEnvironment.isProcessing = true;
                     return;
                 }
                 else if (eventObject != null)//イベント実行
@@ -186,7 +186,7 @@ public class PlayerController : MonoBehaviour
                     spriteAniCor *= -1;
                     GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
                     eventObject.GetComponent<EventObject>().ReadScript2();
-                    EventCommands.isProcessing = true;
+                    ActionEnvironment.isProcessing = true;
                     eventObject = null;
                     selectPos.SetActive(false);
                 }
@@ -195,7 +195,7 @@ public class PlayerController : MonoBehaviour
                     Collider2D c = Physics2D.OverlapPoint(transform.position);
                     if (c != null && c.GetComponent<EventObject>().enabled)
                     {
-                        EventCommands.isProcessing = true;
+                        ActionEnvironment.isProcessing = true;
                         eventObject = c.gameObject;
                         eventObject.GetComponent<EventObject>().ReadScript2();
                         eventObject = null;

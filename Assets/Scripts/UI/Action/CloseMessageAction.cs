@@ -7,9 +7,9 @@ namespace UI.Action
     {
         bool isCloseAll;
 
-        EventCommands commands; 
+        ActionEnvironment commands; 
 
-        public CloseMessageAction(EventCommands commands, bool isCloseAll)
+        public CloseMessageAction(ActionEnvironment commands, bool isCloseAll)
         {
             this.commands = commands;
             this.isCloseAll = isCloseAll;

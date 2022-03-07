@@ -8,11 +8,10 @@ using System.Reflection;
 using UnityEngine.UI;
 
 /// <summary>
-/// 各種イベントコマンドとなるメソッドを定義します
-/// 各種イベントは、他のイベントオブジェクトクラスのメンバにセットして利用します
-/// 【暫定】イベントコマンドをクラスに切り出し中。切り出し終えたらActionEnvironmentみたいな名前に変更する
+/// 各種アクションを実行するためのゲーム内のコンポーネントを保持します
+/// 【暫定】アクションをクラスに切り出し中。
 /// </summary>
-public class EventCommands : MonoBehaviour
+public class ActionEnvironment : MonoBehaviour
 {
     public GameObject canvas;
     List<GameObject> choiceBoxes;
@@ -217,7 +216,7 @@ public class EventCommands : MonoBehaviour
                 }
                 PlayerData.Instance.characters[charaNo].onceFriend = true;
                 GameObject g = GameObject.Find("Character" + (motoCNo + 1).ToString());
-                g.GetComponent<EventCommands>().SelfVar[0] = 0;
+                g.GetComponent<ActionEnvironment>().SelfVar[0] = 0;
                 isCompleted = true;
             }
             else

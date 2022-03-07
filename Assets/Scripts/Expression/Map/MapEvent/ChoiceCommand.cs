@@ -4,11 +4,11 @@ using UnityEngine.Events;
 
 namespace Expression.Map.MapEvent
 {
-    public class MessageCommand:EventCommandBase
+    public class ChoiceCommand : EventCommandBase
     {
         public string MessageText { get; set; }
 
-        public MessageCommand(string messageText)
+        public ChoiceCommand(string messageText)
         {
             MessageText = messageText;
         }
@@ -19,7 +19,7 @@ namespace Expression.Map.MapEvent
 
         public override void Visit(ICommandVisitor visitor)
         {
-            visitor.OnVisitMessageCommand(this);
+            visitor.OnVisitChoiceCommand(this);
         }
     }
 }
