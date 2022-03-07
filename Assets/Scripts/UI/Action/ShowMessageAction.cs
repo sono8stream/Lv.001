@@ -15,9 +15,9 @@ namespace UI.Action
 
         float x, y, width, height;
 
-        ActionEnvironment commands;
+        ActionEnvironment actionEnv;
 
-        public ShowMessageAction(string message, ActionEnvironment commands,
+        public ShowMessageAction(string message, ActionEnvironment actionEnv,
             float x = 0, float y = -690, float width = 1060, float height = 500)
         {
             isCompleted = false;
@@ -27,7 +27,7 @@ namespace UI.Action
             this.width = width;
             this.height = height;
 
-            this.commands = commands;
+            this.actionEnv = actionEnv;
         }
 
         /// <inheritdoc/>
@@ -39,8 +39,8 @@ namespace UI.Action
             {
                 return true;
             }
-            GameObject canvas = commands.canvas;
-            List<GameObject> windows = commands.windows;
+            GameObject canvas = actionEnv.canvas;
+            List<GameObject> windows = actionEnv.windows;
 
             GameObject messageBox = canvas.transform.Find("Message Box").gameObject;
             windows.Add(UnityEngine.Object.Instantiate(messageBox));
@@ -56,7 +56,7 @@ namespace UI.Action
             text.SetActive(true);
 
             // 【暫定】isCompletedをEventCommandsから切り離す
-            commands.IsCompleted = true;
+            actionEnv.IsCompleted = true;
             return true;
         }
     }

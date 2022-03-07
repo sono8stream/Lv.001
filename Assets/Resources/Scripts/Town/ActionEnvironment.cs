@@ -14,17 +14,12 @@ using UnityEngine.UI;
 public class ActionEnvironment : MonoBehaviour
 {
     public GameObject canvas;
-    List<GameObject> choiceBoxes;
-    List<GameObject> choiceButtons;//選択肢リスト
+    public List<GameObject> choiceBoxes;
+    public List<GameObject> choiceButtons;//選択肢リスト
     public List<GameObject> windows;//メッセージボックスリスト
     List<GameObject> images;//画像リスト
-    string choiceName;//選択した選択肢名
-    public string ChoiceName
-    {
-        get { return choiceName; }
-        set { choiceName = value; }
-    }
-    string choiceNameSub;
+    public string ChoiceName { get; set; }
+    public string ChoiceNameSub { get; set; }
     string subParam;//選択肢利用時の一時保持用
     bool isCompleted;//イベントが終了したか
     public bool IsCompleted
@@ -177,12 +172,12 @@ public class ActionEnvironment : MonoBehaviour
 
     public void ChangeParty(int charaNo)
     {
-        if (!choiceName.Equals("やめる"))
+        if (!ChoiceName.Equals("やめる"))
         {
             int motoNo = 0;
             for (int i = 0; i < PlayerData.Instance.party.Count; i++)
             {
-                if (PlayerData.Instance.party[i].name.Equals(choiceName))
+                if (PlayerData.Instance.party[i].name.Equals(ChoiceName))
                 {
                     motoNo = i;
                     break;
@@ -197,11 +192,11 @@ public class ActionEnvironment : MonoBehaviour
                     break;
                 }
             }
-            if (!choiceNameSub.Equals(""))
+            if (!ChoiceNameSub.Equals(""))
             {
                 CloseMessage();//説明消す
             }
-            if (choiceName.Equals(choiceNameSub))//2度選択
+            if (ChoiceName.Equals(ChoiceNameSub))//2度選択
             {
                 PlayerData.Instance.party[motoNo] = PlayerData.Instance.characters[charaNo];
                 CloseMessage(true);
@@ -219,8 +214,8 @@ public class ActionEnvironment : MonoBehaviour
             }
             else
             {
-                choiceNameSub = string.Copy(choiceName);
-                choiceName = "";
+                ChoiceNameSub = string.Copy(ChoiceName);
+                ChoiceName = "";
                 WriteStatusOne(motoCNo,false);
                 JumpAction(-1);
             }
@@ -246,7 +241,7 @@ public class ActionEnvironment : MonoBehaviour
         CloseMessage(true);
         WriteMessage(PlayerData.Instance.money.ToString() + "G", 220, 860, 600, 150);
         string status;
-        int unitNo = int.Parse(choiceName);
+        int unitNo = int.Parse(ChoiceName);
         int pow = PlayerData.Instance.party[unitNo].weapon.name.Equals("--") ? 0 :
             PlayerData.Instance.party[unitNo].weapon.param;
         int jobNo = PlayerData.Instance.party[unitNo].weapon.name.Equals("勇者の聖杯") ? (int)JobType.勇者
@@ -286,7 +281,7 @@ public class ActionEnvironment : MonoBehaviour
             int itemNo = 0;
             for (int i = 0; i < Data.Instance.items.Count; i++)
             {
-                if (Data.Instance.items[i].name.Equals(choiceName))
+                if (Data.Instance.items[i].name.Equals(ChoiceName))
                 {
                     itemNo = i;
                     break;
@@ -294,7 +289,7 @@ public class ActionEnvironment : MonoBehaviour
             }
             PlayerData.Instance.party[unitNo].weapon = Data.Instance.items[itemNo];
         }
-        choiceName = subParam;
+        ChoiceName = subParam;
         isCompleted = true;
     }
 
@@ -341,8 +336,8 @@ public class ActionEnvironment : MonoBehaviour
     public void MakeChoices(bool isShopping,Vector2 defaultPos ,float length,float height, params string[] choices)
     {
         choiceButtons = new List<GameObject>();
-        choiceName = "";
-        choiceNameSub = "";
+        ChoiceName = "";
+        ChoiceNameSub = "";
         GameObject choiceBox = canvas.transform.Find("Choice Box").gameObject;//選択肢ウィンドウ
         choiceBoxes.Add(Instantiate(choiceBox));
         int boxNo = choiceBoxes.Count - 1;
@@ -416,7 +411,7 @@ public class ActionEnvironment : MonoBehaviour
             entry.callback.AddListener((x) => SetSelectBranch(pos,selectBranch));
             trigger.triggers.Add(entry);
         }
-        choiceName = "";
+        ChoiceName = "";
         isCompleted = true;
     }
 
@@ -427,8 +422,8 @@ public class ActionEnvironment : MonoBehaviour
     /// <param name="choices">選択肢の名前,isShoppingならばアイテムの番号</param>
     public void MakeChoicesPlus(bool isShopping, Vector2 defaultPos, float length, float height, GameObject[] choices)
     {
-        choiceName = "";
-        choiceNameSub = "";
+        ChoiceName = "";
+        ChoiceNameSub = "";
         GameObject choiceBox = canvas.transform.Find("Choice Box").gameObject;//選択肢ウィンドウ
         choiceBoxes.Add(Instantiate(choiceBox));
         int boxNo = choiceBoxes.Count - 1;
@@ -473,7 +468,7 @@ public class ActionEnvironment : MonoBehaviour
             entry.callback.AddListener((x) => SetChoice(no.ToString()));
         }
         selectBranch.transform.SetSiblingIndex(commandCount);
-        choiceName = "";
+        ChoiceName = "";
         isCompleted = true;
     }
 
@@ -514,10 +509,10 @@ public class ActionEnvironment : MonoBehaviour
     public bool CheckMenuCommand(string nowCommand, params string[] commands)
     {
         bool isMenu = false;
-        Debug.Log(choiceName);
+        Debug.Log(ChoiceName);
         for (int i = 0; i < commands.Length; i++)
         {
-            isMenu |= (choiceName.Equals(commands[i]) /*&& !choiceName.Equals(nowCommand)*/);
+            isMenu |= (ChoiceName.Equals(commands[i]) /*&& !ChoiceName.Equals(nowCommand)*/);
         }
         if (isMenu)
         {
@@ -558,7 +553,7 @@ public class ActionEnvironment : MonoBehaviour
 
     public void WaitForChoosing()//選択肢の選択待ち
     {
-        isCompleted = !choiceName.Equals("");
+        isCompleted = !ChoiceName.Equals("");
     }
 
     /// <summary>
@@ -569,12 +564,12 @@ public class ActionEnvironment : MonoBehaviour
     /// </summary>
     public void SetChoice(string choiceName)
     {
-        this.choiceName = choiceName;
+        this.ChoiceName = choiceName;
     }
 
     public void SaveChoice()
     {
-        subParam = choiceName;
+        subParam = ChoiceName;
         isCompleted = true;
     }
 
@@ -586,30 +581,30 @@ public class ActionEnvironment : MonoBehaviour
     }
 
     /// <summary>
-    /// choiceNameと同名のアイテムを購入
+    /// ChoiceNameと同名のアイテムを購入
     /// </summary>
     public void BuyOrSellItem(bool buy)
     {
-        if (!choiceName.Equals("終了"))
+        if (!ChoiceName.Equals("終了"))
         {
             int itemNo = 0;
             for (int i = 0; i < Data.Instance.items.Count; i++)
             {
-                if (Data.Instance.items[i].name.Equals(choiceName))
+                if (Data.Instance.items[i].name.Equals(ChoiceName))
                 {
                     itemNo = i;
                     break;
                 }
             }
-            if (!choiceName.Equals(choiceNameSub))//何も選択していない
+            if (!ChoiceName.Equals(ChoiceNameSub))//何も選択していない
             {
-                if (!choiceNameSub.Equals(""))
+                if (!ChoiceNameSub.Equals(""))
                 {
                     CloseMessage();//説明消す
                     CloseMessage();//所持数消す
                 }
-                choiceNameSub = string.Copy(choiceName);
-                choiceName = "";
+                ChoiceNameSub = string.Copy(ChoiceName);
+                ChoiceName = "";
                 WriteMessage(Data.Instance.items[itemNo].exp);
                 WriteMessage("所持数:　" + Data.Instance.items[itemNo].possessionCount.ToString(),300,600,700,200);
                 JumpAction(-1);
@@ -652,7 +647,7 @@ public class ActionEnvironment : MonoBehaviour
         int itemNo = 0;
         for (int i = 0; i < Data.Instance.items.Count; i++)
         {
-            if (Data.Instance.items[i].name.Equals(choiceName))
+            if (Data.Instance.items[i].name.Equals(ChoiceName))
             {
                 itemNo = i;
                 break;
@@ -718,19 +713,19 @@ public class ActionEnvironment : MonoBehaviour
         }
         if (conditions[conditions.Length - 1].Equals(">"))
         {
-            choiceName = param[0] > param[1] ? "true" : "false";
+            ChoiceName = param[0] > param[1] ? "true" : "false";
         }
         if (conditions[conditions.Length - 1].Equals("="))
         {
-            choiceName = param[0] == param[1] ? "true" : "false";
+            ChoiceName = param[0] == param[1] ? "true" : "false";
         }
         if (conditions[conditions.Length - 1].Equals("<"))
         {
-            choiceName = param[0] < param[1] ? "true" : "false";
+            ChoiceName = param[0] < param[1] ? "true" : "false";
         }
         Debug.Log(param[0]);
         Debug.Log(param[1]);
-        Debug.Log(choiceName);
+        Debug.Log(ChoiceName);
         isCompleted = true;
     }
 
@@ -749,13 +744,13 @@ public class ActionEnvironment : MonoBehaviour
     {
         for(int i=0;i<destNames.Length;i++)
         {
-            if(choiceName.Equals(destNames[i]))
+            if(ChoiceName.Equals(destNames[i]))
             {
                 JumpAction(destNos[i]);
             }
         }
         isCompleted = true;
-        choiceName = "";
+        ChoiceName = "";
     }
 
     public void Move(int sceneNo,Vector2 pos)

@@ -3,26 +3,28 @@
 namespace UI.Action
 {
     /// <summary>
-    /// アクションを複数個まとめたアクション
+    /// 1つのイベント全体を保持するアクション
+    /// アクションを複数個まとめ、さらに分岐などを制御できる
     /// Compositeパターンのようにふるまう
-    /// 制御機能は持たず、あくまで一連の処理をまとめ、逐次実行するのみ
     /// </summary>
-    public class MultiAction : ActionBase
+    public class EventAction : ActionBase
     {
         List<ActionBase> actions;
-        int currentActionNo;
         // 現在アクションの保持用。制御中にジャンプしても参照を保持できる
         ActionBase currentAction;
 
-        public MultiAction(List<ActionBase> actions)
+        ActionControl control;
+
+        public EventAction(List<ActionBase> actions, ActionControl control)
         {
             this.actions = actions;
+            this.control = control;
         }
 
         /// <inheritdoc/>
         public override void OnStart()
         {
-            currentActionNo = 0;
+            control.Initialize();
             TryToStartCurrentAction();
         }
 
@@ -38,7 +40,7 @@ namespace UI.Action
             {
                 currentAction.OnEnd();
 
-                currentActionNo++;
+                control.TransitToNext(actions);
 
                 TryToStartCurrentAction();
             }
@@ -49,9 +51,9 @@ namespace UI.Action
         private void TryToStartCurrentAction()
         {
             currentAction = null;
-            if (currentActionNo < actions.Count)
+            if (control.CurrentActNo < actions.Count)
             {
-                currentAction = actions[currentActionNo];
+                currentAction = actions[control.CurrentActNo];
                 currentAction.OnStart();
             }
         }

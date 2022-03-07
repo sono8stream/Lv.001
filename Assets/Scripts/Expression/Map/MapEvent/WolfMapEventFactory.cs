@@ -32,13 +32,13 @@ namespace Expression.Map.MapEvent
                     CreateDebugTextCommand(currentOffset, out currentOffset);
                     break;
                 case 0x00000066:
-                    CreateChoiceForkCommand(currentOffset, out currentOffset);
+                    command = CreateChoiceForkCommand(currentOffset, out currentOffset);
                     break;
                 case 0x0000006F:
                     CreateFlagForkByVariableCommand(currentOffset, out currentOffset, variableCount);
                     break;
                 case 0x00000191:
-                    CreateForkBeginByVariableCommand(currentOffset, out currentOffset);
+                    CreateForkBeginCommand(currentOffset, out currentOffset);
                     break;
                 case 0x000000D2:
                     CreateCallEventByIdCommand(currentOffset, out currentOffset);
@@ -124,17 +124,18 @@ namespace Expression.Map.MapEvent
 
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
             int stringVariableCount = reader.ReadByte(currentOffset, out currentOffset);
+            string[] choiceStrings = new string[stringVariableCount];
             for (int i = 0; i < stringVariableCount; i++)
             {
-                string text = reader.ReadString(currentOffset, out currentOffset);
-                Debug.Log($"選択肢{i}：{text}");
+                choiceStrings[i] = reader.ReadString(currentOffset, out currentOffset);
+                Debug.Log($"選択肢{i}：{choiceStrings[i]}");
             }
 
             // フッタはスキップ
             reader.ReadByte(currentOffset, out currentOffset);
 
             nextOffset = currentOffset;
-            return null;
+            return new ChoiceForkCommand(choiceStrings);
         }
 
         private EventCommandBase CreateFlagForkByVariableCommand(int offset, out int nextOffset, int numberVariableCount)
@@ -162,7 +163,14 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private EventCommandBase CreateForkBeginByVariableCommand(int offset, out int nextOffset)
+        /// <summary>
+        /// 分岐始点を示すコマンドを生成
+        /// 選択肢、条件分岐共通
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="nextOffset"></param>
+        /// <returns></returns>
+        private EventCommandBase CreateForkBeginCommand(int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int forkNumber = reader.ReadInt(currentOffset, true, out currentOffset);

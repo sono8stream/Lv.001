@@ -15,7 +15,7 @@ namespace Expression.Map.MapEvent
 
         public override void Visit(ICommandVisitor visitor)
         {
-            visitor.OnVisitChoiceCommand(this);
+            visitor.OnVisitChoiceForkCommand(this);
         }
     }
 }
