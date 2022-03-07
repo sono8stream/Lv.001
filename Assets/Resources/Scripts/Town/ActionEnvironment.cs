@@ -32,7 +32,6 @@ public class ActionEnvironment : MonoBehaviour
         get { return isCompleted; }
         set { isCompleted = value; }
     }
-    public static bool isProcessing;
     public Dictionary<string, int> eventDic;
     public int actNo;//処理中のコマンド内での処理の番号
     bool isSelecting;
@@ -66,7 +65,6 @@ public class ActionEnvironment : MonoBehaviour
         eventDic.Add("セーブロード", 11);
         eventDic.Add("ゲーム終了", 12);
         eventDic.Add("フラグ", 13);
-        isProcessing = false;
         if(selfVar[0]==1)
         {
             GetComponent<ActionProcessor>().enabled = false;

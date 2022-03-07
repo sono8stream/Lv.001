@@ -94,10 +94,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 3442040877567174846}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: efa3b26754efcb64abb4c3defa691045, type: 3}
+  m_Script: {fileID: 11500000, guid: c91c07ef006f0054fa7c4069d6a3f19c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scriptText: {fileID: 4900000, guid: e29dca7d166e47145a42965d3782eee3, type: 3}
+  scriptText: {fileID: 0}
   scripts: []
   canThrough: 0
   sprites: []
@@ -140,5 +140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  windows: []
   actNo: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000

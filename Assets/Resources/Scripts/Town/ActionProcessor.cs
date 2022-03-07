@@ -32,6 +32,8 @@ public class ActionProcessor : MonoBehaviour
     int aniCount;
     int spriteCount;
 
+    public static bool isProcessing = false;
+
     Expression.Map.MapEvent.EventData eventData;
 
     // Use this for initialization
@@ -39,7 +41,6 @@ public class ActionProcessor : MonoBehaviour
     {
         line = 0;
         char[] kugiri = { '\n' };
-        scripts = scriptText.text.Split(kugiri);
         eventCommands = GetComponent<ActionEnvironment>();
         events = new List<UnityEvent>();
         eventCommands.actNo = 0;
@@ -58,7 +59,7 @@ public class ActionProcessor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // どう実行させようかな
+        // 【暫定】どう実行させようかな
         if (currentAction != null)
         {
             if (currentAction.Run())
@@ -107,7 +108,7 @@ public class ActionProcessor : MonoBehaviour
         if (line == scripts.GetLength(0))
         {
             line = 0;
-            ActionEnvironment.isProcessing = false;
+            isProcessing = false;
             if (eventCommands.SelfVar[0] == 1)
             {
                 GetComponent<ActionProcessor>().enabled = false;
@@ -355,7 +356,7 @@ public class ActionProcessor : MonoBehaviour
         if (line == eventData.PageData[0].CommandDataArray.Length)
         {
             line = 0;
-            ActionEnvironment.isProcessing = false;
+            isProcessing = false;
             currentAction = null;
             return;
         }
