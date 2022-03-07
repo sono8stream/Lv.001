@@ -15,7 +15,7 @@ public class MapEventTest
         gameObject.AddComponent<ActionEnvironment>();
         gameObject.AddComponent<SpriteRenderer>();
 
-        EventObject eventObject = gameObject.AddComponent<EventObject>();
+        ActionProcessor eventObject = gameObject.AddComponent<ActionProcessor>();
         eventObject.SetScriptText(new TextAsset("{メッセージ}(うーっす)"));
 
         // Start()待ち

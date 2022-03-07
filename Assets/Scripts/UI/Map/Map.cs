@@ -65,7 +65,7 @@ public class Map : MonoBehaviour
             Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
             gameObject.transform.position = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
 
-            EventObject eventObject = gameObject.GetComponent<EventObject>();
+            ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
             if (eventObject)
             {
                 eventObject.SetEventData(mapData.EventDataArray[i]);

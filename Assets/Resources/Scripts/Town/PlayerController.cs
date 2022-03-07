@@ -92,7 +92,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log($"object detected:{c != null}");
                     if (destGeneral == curGeneral)//メニュー呼び出し
                     {
-                        GetComponent<EventObject>().ReadScript();
+                        GetComponent<ActionProcessor>().ReadScript();
                         ActionEnvironment.isProcessing = true;
                         return;
                     }
@@ -106,8 +106,8 @@ public class PlayerController : MonoBehaviour
                         Debug.Log(nodePos[i]);
                     }
 
-                    if (c != null && !c.GetComponent<EventObject>().CanThrough
-                    && c.GetComponent<EventObject>().enabled)
+                    if (c != null && !c.GetComponent<ActionProcessor>().CanThrough
+                    && c.GetComponent<ActionProcessor>().enabled)
                     {
                         // イベント実行できるなら最後の座標を削除
                         eventObject = c.gameObject;
@@ -164,7 +164,7 @@ public class PlayerController : MonoBehaviour
                 }
                 else if (Input.GetKey(KeyCode.X))
                 {
-                    GetComponent<EventObject>().ReadScript2();
+                    GetComponent<ActionProcessor>().ReadScript2();
                     ActionEnvironment.isProcessing = true;
                     return;
                 }
@@ -185,7 +185,7 @@ public class PlayerController : MonoBehaviour
                     }
                     spriteAniCor *= -1;
                     GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
-                    eventObject.GetComponent<EventObject>().ReadScript2();
+                    eventObject.GetComponent<ActionProcessor>().ReadScript2();
                     ActionEnvironment.isProcessing = true;
                     eventObject = null;
                     selectPos.SetActive(false);
@@ -193,11 +193,11 @@ public class PlayerController : MonoBehaviour
                 else//接触中のイベントを実行
                 {
                     Collider2D c = Physics2D.OverlapPoint(transform.position);
-                    if (c != null && c.GetComponent<EventObject>().enabled)
+                    if (c != null && c.GetComponent<ActionProcessor>().enabled)
                     {
                         ActionEnvironment.isProcessing = true;
                         eventObject = c.gameObject;
-                        eventObject.GetComponent<EventObject>().ReadScript2();
+                        eventObject.GetComponent<ActionProcessor>().ReadScript2();
                         eventObject = null;
                     }
                 }

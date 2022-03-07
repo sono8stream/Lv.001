@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 
-public class EventObject : MonoBehaviour
+public class ActionProcessor : MonoBehaviour
 {
     [SerializeField]
     TextAsset scriptText;//スクリプトファイル
@@ -110,7 +110,7 @@ public class EventObject : MonoBehaviour
             ActionEnvironment.isProcessing = false;
             if (eventCommands.SelfVar[0] == 1)
             {
-                GetComponent<EventObject>().enabled = false;
+                GetComponent<ActionProcessor>().enabled = false;
                 GetComponent<SpriteRenderer>().enabled = false;
                 Debug.Log("breaked");
             }

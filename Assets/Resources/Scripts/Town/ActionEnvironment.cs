@@ -69,7 +69,7 @@ public class ActionEnvironment : MonoBehaviour
         isProcessing = false;
         if(selfVar[0]==1)
         {
-            GetComponent<EventObject>().enabled = false;
+            GetComponent<ActionProcessor>().enabled = false;
             GetComponent<SpriteRenderer>().enabled = false;
         }
     }
