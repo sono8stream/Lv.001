@@ -10,33 +10,75 @@ namespace UI.Action
     {
         List<ActionBase> actions;
         int currentActNo;
+        // 現在アクションの保持用。制御中にジャンプしても参照を保持できる
+        ActionBase currentAction;
+
+        ActionControlInfo controlInfo;
 
         public MultiAction(List<ActionBase> actions)
         {
             this.actions = actions;
+            controlInfo = new ActionControlInfo();
         }
 
         /// <inheritdoc/>
-        public override void onStart()
+        public override void OnStart()
         {
             currentActNo = 0;
+
+            TryToStartCurrentAction();
         }
 
         /// <inheritdoc/>
         public override bool Run()
         {
-            if (actions[currentActNo].Run())
+            if (currentAction == null)
             {
-                currentActNo++;
+                return true;
             }
 
+            if (currentAction.Run())
+            {
+                currentAction.OnEnd();
+
+                TransitToNext();
+
+                TryToStartCurrentAction();
+            }
+
+            return false;
+        }
+
+        private void TryToStartCurrentAction()
+        {
+            currentAction = null;
             if (currentActNo < actions.Count)
             {
-                return false;
+                currentAction = actions[currentActNo];
+                currentAction.OnStart();
+            }
+        }
+
+        /// <summary>
+        /// 次のアクションまで遷移させる
+        /// </summary>
+        void TransitToNext()
+        {
+            if (controlInfo.IsSkipMode)
+            {
+                // スキップ要求があるのでラベルまでスキップさせる
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    if (actions[i].VerifyLabel(controlInfo.SkipLabel))
+                    {
+                        currentActNo = i;
+                        break;
+                    }
+                }
             }
             else
             {
-                return true;
+                currentActNo++;
             }
         }
     }

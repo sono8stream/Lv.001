@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.Events;
 
 namespace Expression.Map.MapEvent
 {
@@ -10,14 +9,6 @@ namespace Expression.Map.MapEvent
 
         public EventCommandBase()
         {
-        }
-
-        // yb’èz‚ ‚­‚Ü‚ÅUnity“à‚Ìˆ—‚ÍUI‘w‚É’u‚«A“Á’è‚ÌƒGƒ“ƒWƒ“‚ÉˆË‘¶‚·‚éˆ—‚Í‚½‚¹‚È‚¢
-        public virtual void StackEventsTo(List<UnityEvent> events, ActionEnvironment commands)
-        {
-            // Šî’ê‚Í‰½‚à‚µ‚È‚¢
-            events.Add(new UnityEvent());
-            events[events.Count - 1].AddListener(() => commands.NoOperation());
         }
 
         public virtual void Visit(ICommandVisitor visitor)

@@ -62,6 +62,7 @@ public class ActionProcessor : MonoBehaviour
         {
             if (currentAction.Run())
             {
+                currentAction.OnEnd();
                 isProcessing = false;
                 currentAction = null;
             }
@@ -346,6 +347,7 @@ public class ActionProcessor : MonoBehaviour
         isProcessing = true;
         UI.Map.MapActionFactory factory = new UI.Map.MapActionFactory(actionEnvironment);
         currentAction = factory.CreateActionFrom(eventData.PageData[0].CommandDataArray);
+        currentAction.OnStart();
     }
 
     // 特定のラベルに至るまでコマンドをスキップ

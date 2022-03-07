@@ -57,7 +57,7 @@ namespace UI.Map
             generatedAction = new MultiAction(actions);
         }
 
-        public void OnVisitChoiceCommand(ChoiceCommand command)
+        public void OnVisitChoiceCommand(ChoiceForkCommand command)
         {
             // 一連の分岐先アクションも内部に詰めて返す
 
