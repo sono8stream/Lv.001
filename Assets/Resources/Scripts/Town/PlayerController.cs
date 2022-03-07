@@ -167,8 +167,7 @@ public class PlayerController : MonoBehaviour
             }
             else if (Input.GetKey(KeyCode.X))
             {
-                GetComponent<ActionProcessor>().ReadScript2();
-                ActionProcessor.isProcessing = true;
+                GetComponent<ActionProcessor>().StartActions();
                 return;
             }
             else if (eventObject != null)//イベント実行
@@ -188,8 +187,7 @@ public class PlayerController : MonoBehaviour
                 }
                 spriteAniCor *= -1;
                 GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
-                eventObject.GetComponent<ActionProcessor>().ReadScript2();
-                ActionProcessor.isProcessing = true;
+                eventObject.GetComponent<ActionProcessor>().StartActions();
                 eventObject = null;
                 selectPos.SetActive(false);
             }
@@ -198,9 +196,8 @@ public class PlayerController : MonoBehaviour
                 Collider2D c = Physics2D.OverlapPoint(transform.position);
                 if (c != null && c.GetComponent<ActionProcessor>().enabled)
                 {
-                    ActionProcessor.isProcessing = true;
                     eventObject = c.gameObject;
-                    eventObject.GetComponent<ActionProcessor>().ReadScript2();
+                    eventObject.GetComponent<ActionProcessor>().StartActions();
                     eventObject = null;
                 }
             }
