@@ -1,4 +1,6 @@
 using System;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Util.Wolf
 {
@@ -9,11 +11,7 @@ namespace Util.Wolf
 
         public WolfDataReader(string filePath)
         {
-            using (var fs = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-            {
-                bytes = new byte[fs.Length];
-                fs.Read(bytes, 0, bytes.Length);
-            }
+            bytes = Util.Common.FileLoader.LoadSync(filePath);
         }
 
         public int ReadByte(int offset, out int nextOffset)

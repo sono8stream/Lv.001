@@ -26,26 +26,19 @@ namespace Expression.Map
             int autoTileCount = 16;
             Texture2D[] autochipTextures = new Texture2D[autoTileCount];
             {
-                string imagePath = "Assets/Resources/Data/" + tileData.BaseTileFilePath;
-                using (var fs = new System.IO.FileStream(imagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                {
-                    byte[] texBytes = new byte[fs.Length];
-                    fs.Read(texBytes, 0, texBytes.Length);
-                    mapchipTexture.LoadImage(texBytes);
-                    mapchipTexture.Apply();
-                }
+                // 【暫定】ファイルを読み込めなかった場合のエラー処理
+                string imagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.BaseTileFilePath;
+                byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
+                mapchipTexture.LoadImage(baseTexBytes);
+                mapchipTexture.Apply();
 
                 for (int i = 1; i < autoTileCount; i++)
                 {
-                    string autochipImagePath = "Assets/Resources/Data/" + tileData.AutoTileFilePaths[i - 1];
+                    string autochipImagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.AutoTileFilePaths[i - 1];
                     autochipTextures[i] = new Texture2D(1, 1);
-                    using (var fs = new System.IO.FileStream(autochipImagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    {
-                        byte[] texBytes = new byte[fs.Length];
-                        fs.Read(texBytes, 0, texBytes.Length);
-                        autochipTextures[i].LoadImage(texBytes);
-                        autochipTextures[i].Apply();
-                    }
+                    byte[] autoTexBytes = Util.Common.FileLoader.LoadSync(autochipImagePath);
+                    autochipTextures[i].LoadImage(autoTexBytes);
+                    autochipTextures[i].Apply();
                 }
             }
 
@@ -323,15 +316,13 @@ namespace Expression.Map
                 else
                 {
                     // キャラチップから画像を取得する
+                    // 【暫定】読み込めなかった場合のエラー処理を追加
                     texture = new Texture2D(1, 1);
-                    string imagePath = "Assets/Resources/Data/" + chipImgName;
-                    using (var fs = new System.IO.FileStream(imagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    {
-                        byte[] texBytes = new byte[fs.Length];
-                        fs.Read(texBytes, 0, texBytes.Length);
-                        texture.LoadImage(texBytes);
-                        texture.Apply();
-                    }
+                    string imagePath = $"{Application.streamingAssetsPath}/Data/" + chipImgName;
+                    byte[] charaTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
+                    texture.LoadImage(charaTexBytes);
+                    texture.Apply();
+
                     haveDirection = true;
                 }
             }

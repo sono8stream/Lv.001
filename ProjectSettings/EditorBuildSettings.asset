@@ -6,21 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Title.unity
-    guid: 959a3690c53e2aa4c8ef9e55e355f608
-  - enabled: 1
-    path: Assets/Scenes/Town.unity
-    guid: 21479cc060c9e9b4cbd0f8980cae040f
-  - enabled: 1
-    path: Assets/Scenes/In.unity
-    guid: a34550d7afe659940bcab163239488b3
-  - enabled: 1
-    path: Assets/Scenes/Bar.unity
-    guid: 8abb0cf27dff2b04a903d3b273cacf72
-  - enabled: 1
-    path: Assets/Scenes/Battle.unity
-    guid: 5560df90f7cd26d46a8946b6af29351c
-  - enabled: 1
-    path: Assets/Scenes/Event.unity
-    guid: 946678f9a2da596439b11a5a16d203a9
+    path: Assets/Scenes/WolfTown.unity
+    guid: a36537c0360afa24ca4915d613c25594
   m_configObjects: {}

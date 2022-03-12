@@ -9,7 +9,7 @@ namespace Expression.Map.MapTile
     class WolfRepository
     {
         // 【暫定】ファイルパスをDIで指定
-        private string dataPath = "Assets/Resources/Data/BasicData/TileSetData.dat";
+        private string dataPath = $"{Application.streamingAssetsPath}/Data/BasicData/TileSetData.dat";
 
         private static TileData[] dataArray;
 
