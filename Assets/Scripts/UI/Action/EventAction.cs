@@ -31,12 +31,7 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            if (currentAction == null)
-            {
-                return true;
-            }
-
-            if (currentAction.Run())
+            while (currentAction != null && currentAction.Run())
             {
                 currentAction.OnEnd();
 
@@ -45,7 +40,16 @@ namespace UI.Action
                 TryToStartCurrentAction();
             }
 
-            return false;
+            if (currentAction == null)
+            {
+                // 実行できるアクションがないので終了とする
+                return true;
+            }
+            else
+            {
+                // 実行できるアクションがあるので終了しない
+                return false;
+            }
         }
 
         private void TryToStartCurrentAction()
