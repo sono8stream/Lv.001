@@ -405,7 +405,7 @@ namespace Expression.Map
         private MapEvent.EventCommandBase[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
         {
             int currentOffset = offset;
-            MapEvent.WolfMapEventFactory factory = new MapEvent.WolfMapEventFactory(reader, currentOffset);
+            MapEvent.WolfEventCommandFactory factory = new MapEvent.WolfEventCommandFactory(reader, currentOffset);
             List<MapEvent.EventCommandBase> commands = new List<MapEvent.EventCommandBase>();
             for (int i = 0; i < eventCommandCount; i++)
             {
