@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Expression;
+using Expression.Map;
 using Util;
 
-namespace Expression.Map
+namespace Infrastructure
 {
-    public class WolfMapDataRepository : Infrastructure.IMapDataRepository
+    public class WolfMapDataRepository : IMapDataRepository
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
         private Dictionary<MapId, string> mapNameDict;

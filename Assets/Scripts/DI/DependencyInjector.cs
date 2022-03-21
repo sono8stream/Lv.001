@@ -1,3 +1,4 @@
+using Infrastructure;
 
 namespace DI
 {
@@ -5,24 +6,27 @@ namespace DI
     {
         private static DependencyInjector instance;
 
-        // ÅyébíËÅzMapDataRepositoryÇInfrastructureÇ…à⁄ìÆÇµÇƒã§í âªÇ∑ÇÈ
-        public Infrastructure.IMapDataRepository MapDataRepository { get; private set; }
+        public ISystemDataRepository SystemDataRepository { get; private set; }
 
-        public Infrastructure.ISystemDataRepository SystemDataRepository { get; private set; }
+        public IMasterDataRepository MasterDataRepository { get; private set; }
 
-        public Infrastructure.IMasterDataRepository MasterDataRepository { get; private set; }
+        public IPlayDataRepository PlayDataRepository { get; private set; }
 
-        public Infrastructure.IPlayDataRepository PlayDataRepository { get; private set; }
+        public IMapDataRepository MapDataRepository { get; private set; }
 
-        private DependencyInjector(Infrastructure.IMapDataRepository mapDataRepository,
-            Infrastructure.ISystemDataRepository systemDataRepository,
-            Infrastructure.IMasterDataRepository masterDataRepository,
-            Infrastructure.IPlayDataRepository playDataRepository)
+        public IExpressionDataRepository ExpressionDataRpository { get; private set; }
+
+        private DependencyInjector(IMapDataRepository mapDataRepository,
+            ISystemDataRepository systemDataRepository,
+            IMasterDataRepository masterDataRepository,
+            IPlayDataRepository playDataRepository,
+            IExpressionDataRepository expressionDataRepository)
         {
             MapDataRepository = mapDataRepository;
             SystemDataRepository = systemDataRepository;
             MasterDataRepository = masterDataRepository;
             PlayDataRepository = playDataRepository;
+            ExpressionDataRpository = expressionDataRepository;
         }
 
         public static DependencyInjector It()
@@ -31,10 +35,11 @@ namespace DI
             {
                 // ä¬ã´Ç…âûÇ∂ÇƒàÀë∂ä÷åWÇíçì¸Ç∑ÇÈ
                 instance = new DependencyInjector(
-                    new Expression.Map.WolfMapDataRepository(),
-                    new Infrastructure.WolfSystemDataRepository(),
-                    new Infrastructure.WolfMasterDataRepository(),
-                    new Infrastructure.WolfPlayDataRepository()
+                    new WolfMapDataRepository(),
+                    new WolfSystemDataRepository(),
+                    new WolfMasterDataRepository(),
+                    new WolfPlayDataRepository(),
+                    new WolfExpressionDataRepository()
                     );
             }
 
