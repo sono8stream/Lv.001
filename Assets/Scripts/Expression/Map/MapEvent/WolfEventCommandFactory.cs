@@ -113,6 +113,7 @@ namespace Expression.Map.MapEvent
 
         private EventCommandBase CreateFlagForkByVariableCommand(MetaEventCommand metaCommand)
         {
+            Debug.Log("変数分岐");
             int forkParams = metaCommand.NumberArgs[1];
             int forkCount = forkParams % (1 << 4);
             int flagCount = (metaCommand.NumberArgs.Length - 2) / 3;
@@ -122,6 +123,100 @@ namespace Expression.Map.MapEvent
                 int flagLeft = metaCommand.NumberArgs[2 + 3 * i];
                 int flagRight = metaCommand.NumberArgs[3 + 3 * i];
                 int rightAndCompareParams = metaCommand.NumberArgs[4 + 3 * i];
+                Debug.Log($"左辺 : {flagLeft}, 右辺 : {flagRight}, 条件ID : {rightAndCompareParams}");
+            }
+
+            return null;
+        }
+
+        private Condition GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
+        {
+            Domain.Data.DataRef leftRef = GenerateDataRef(flagLeft);
+
+            Domain.Data.DataRef rightRef = null;
+            int rightVal = 0;
+            bool isRightConstant = false;
+            if ((rightAndCompareParams>>4)==0)
+            {
+                // データを呼び出さないので定数
+                rightRef = null;
+                rightVal = flagRight;
+                isRightConstant = true;
+            }
+            else
+            {
+                rightRef = GenerateDataRef(flagRight);
+                rightVal = 0;
+                isRightConstant = false;
+            }
+
+            OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
+
+            Condition condition = new Condition(leftRef, rightRef, rightVal, isRightConstant, operatorType);
+            return condition;
+        }
+
+        private Domain.Data.DataRef GenerateDataRef(int val)
+        {
+            if (val >= 1300000000)
+            {
+                // システムDB読み出し
+            }
+            else if (val >= 1100000000)
+            {
+                // 可変DB読み出し
+            }
+            else if (val >= 1000000000)
+            {
+                // ユーザーDB読み出し
+            }
+            else if (val >= 15000000)
+            {
+                // コモンイベントのセルフ変数呼び出し
+            }
+            else if (val >= 9900000)
+            {
+                // システムＤＢ[5:システム文字列]呼び出し
+            }
+            else if (val >= 9190000)
+            {
+                // 実行したマップイベントの情報を呼び出し
+            }
+            else if (val >= 9180000)
+            {
+                // 主人公か仲間の情報を呼び出し
+            }
+            else if (val >= 9100000)
+            {
+                // 指定したマップイベントの情報を呼び出し
+            }
+            else if (val >= 9000000)
+            {
+                // システムＤＢ[6:システム変数名]呼び出し
+            }
+            else if (val >= 8000000)
+            {
+                // 乱数呼び出し
+            }
+            else if (val >= 3000000)
+            {
+                // システムＤＢ[4:文字列変数名]呼び出し
+            }
+            else if (val >= 2000000)
+            {
+                // システムＤＢ[14:通常変数名]もしくはシステムＤＢ[15:予備変数1]～[23:予備変数9]呼び出し
+            }
+            else if (val >= 1600000)
+            {
+                // 実行中のコモンイベントのセルフ変数呼び出し
+            }
+            else if (val >= 1100000)
+            {
+                // 実行中のマップイベントのセルフ変数呼び出し
+            }
+            else if (val >= 1000000)
+            {
+                // 指定したマップイベントのセルフ変数呼び出し
             }
 
             return null;

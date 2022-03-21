@@ -8,7 +8,7 @@ namespace Infrastructure
     /// <summary>
     /// プレイ中のセーブデータに含まれるデータを読み出すためのリポジトリのインターフェース
     /// </summary>
-    public interface IPlayDataRepository : IDataRepository<DataCategory, CategoryId>
+    public interface IPlayDataRepository : IDataRepository
     {
     }
 }

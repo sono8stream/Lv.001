@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Domain.Data;
 
 namespace Infrastructure
 {
     /// <summary>
-    /// ゲームシステムに関する定数を読み出すためのリポジトリのインターフェース
+    /// データを読み出すためのリポジトリのインターフェース
     /// </summary>
-    public interface ISystemDataRepository : IDataRepository
+    public interface IRepository<T, T_ID>
     {
+        public T Find(T_ID id);
     }
 }

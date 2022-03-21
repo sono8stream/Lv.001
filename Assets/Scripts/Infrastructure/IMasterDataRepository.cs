@@ -8,7 +8,7 @@ namespace Infrastructure
     /// <summary>
     /// ゲームの詳細な仕様に関するデータを読み出すためのリポジトリのインターフェース
     /// </summary>
-    public interface IMasterDataRepository : IDataRepository<DataCategory, CategoryId>
+    public interface IMasterDataRepository : IDataRepository
     {
     }
 }

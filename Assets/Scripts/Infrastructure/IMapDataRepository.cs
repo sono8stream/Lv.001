@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Domain.Data;
+using Expression.Map;
 
 namespace Infrastructure
 {
     /// <summary>
-    /// ゲームシステムに関する定数を読み出すためのリポジトリのインターフェース
+    /// マップ情報を読み出すためのインターフェース
     /// </summary>
-    public interface ISystemDataRepository : IDataRepository
+    public interface IMapDataRepository : IRepository<MapData, MapId>
     {
     }
 }

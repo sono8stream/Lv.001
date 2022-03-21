@@ -9,7 +9,7 @@ using Util;
 
 namespace Expression.Map
 {
-    public class WolfMapDataRepository : IMapDataRepository
+    public class WolfMapDataRepository : Infrastructure.IMapDataRepository
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
         private Dictionary<MapId, string> mapNameDict;

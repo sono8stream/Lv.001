@@ -17,7 +17,7 @@ public class Map : MonoBehaviour
     void Awake()
     {
         Expression.Map.MapId mapId = new Expression.Map.MapId(mapIndex);
-        mapData = Expression.WolfDependencyInjector.It().MapDataRepository.Find(mapId);
+        mapData = DI.DependencyInjector.It().MapDataRepository.Find(mapId);
 
         SpriteRenderer underRenderer = transform.Find("UnderSprite").GetComponent<SpriteRenderer>();
 

@@ -69,7 +69,7 @@ namespace WolfConverter
                     mapDataIndex = curIndex;
                     MapId id = new MapId(mapDataIndex);
 
-                    MapData data = WolfDependencyInjector.It().MapDataRepository.Find(id);
+                    MapData data = DI.DependencyInjector.It().MapDataRepository.Find(id);
                     Texture2D texture = RenderMapTexture(data);
                     mapInfo = new MapInfo(data.Width, data.Height, texture);
                 }
