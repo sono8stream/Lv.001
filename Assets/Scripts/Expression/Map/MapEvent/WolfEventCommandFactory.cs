@@ -129,34 +129,27 @@ namespace Expression.Map.MapEvent
             return null;
         }
 
-        private Condition GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
+        private Condition<int> GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
         {
-            Domain.Data.DataRef leftRef = GenerateDataRef(flagLeft);
+            Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(flagLeft);
 
-            Domain.Data.DataRef rightRef = null;
-            int rightVal = 0;
-            bool isRightConstant = false;
+            Common.IDataAccessor<int> rightAccessor;
             if ((rightAndCompareParams >> 4) == 0)
             {
-                // データを呼び出さないので定数
-                rightRef = null;
-                rightVal = flagRight;
-                isRightConstant = true;
+                rightAccessor = new Common.ConstDataAccessor<int>(flagRight);
             }
             else
             {
-                rightRef = GenerateDataRef(flagRight);
-                rightVal = 0;
-                isRightConstant = false;
+                rightAccessor = GenerateIntAccessor(flagLeft);
             }
 
             OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
 
-            Condition condition = new Condition(leftRef, rightRef, rightVal, isRightConstant, operatorType);
+            var condition = new Condition<int>(leftAccessor, rightAccessor, operatorType);
             return condition;
         }
 
-        private Domain.Data.DataRef GenerateDataRef(int val)
+        private Common.IDataAccessor<int> GenerateIntAccessor(int val)
         {
             if (val >= 1300000000)
             {
@@ -219,7 +212,8 @@ namespace Expression.Map.MapEvent
                 // 指定したマップイベントのセルフ変数呼び出し
             }
 
-            return null;
+            // 特殊条件以外の場合、定数を取得
+            return new Common.ConstDataAccessor<int>(val);
         }
 
         private EventCommandBase CreateForkBeginCommand(MetaEventCommand metaCommand)

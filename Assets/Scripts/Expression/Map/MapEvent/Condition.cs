@@ -1,24 +1,20 @@
 ﻿using Domain.Data;
+using Expression.Common;
 
 namespace Expression.Map.MapEvent
 {
-    public class Condition
+    public class Condition<T>
     {
-        public DataRef LeftHandId { get; private set; }
-        public DataRef RightHandId { get; private set; }
-        public int RightHandVal { get; private set; }
-
-        public bool IsRightConstant { get; private set; }
+        public IDataAccessor<T> LeftHandAccessor { get; private set; }
+        public IDataAccessor<T> RightHandAccessor { get; private set; }
 
         public OperatorType OperatorType { get; private set; }
 
-        public Condition(DataRef leftHandId, DataRef rightHandId, int rightHandVal,
-             bool isRightConstant, OperatorType operatorType)
+        public Condition(IDataAccessor<T> leftHandAccessor, IDataAccessor<T> rightHandAccessor,
+             OperatorType operatorType)
         {
-            LeftHandId = leftHandId;
-            RightHandId = rightHandId;
-            RightHandVal = rightHandVal;
-            IsRightConstant = isRightConstant;
+            LeftHandAccessor = leftHandAccessor;
+            RightHandAccessor = rightHandAccessor;
             OperatorType = operatorType;
         }
     }
