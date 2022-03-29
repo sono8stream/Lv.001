@@ -10,16 +10,16 @@ namespace Domain.Data
     /// 特定の変数を格納する
     /// </summary>
     /// <typeparam name="T">変数として管理する型</typeparam>
-    public class DataNode<T>
+    public class DataField<T>
     {
         public T Val { get; private set; }
 
-        public NodeId Id { get; private set; }
+        public FieldId Id { get; private set; }
 
-        public DataNode(T value, NodeId id)
+        public DataField(FieldId id, T value)
         {
-            this.Val = value;
             this.Id = id;
+            this.Val = value;
         }
     }
 

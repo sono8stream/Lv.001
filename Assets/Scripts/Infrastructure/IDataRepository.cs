@@ -8,10 +8,10 @@ namespace Infrastructure
     /// <summary>
     /// ゲームの詳細な仕様に関するデータを読み出すためのリポジトリのインターフェース
     /// </summary>
-    public interface IDataRepository : IRepository<DataCategory, CategoryId>
+    public interface IDataRepository : IRepository<DataRecord, RecordId>
     {
-        public DataNode<int> FindInt(DataRef dataRef);
+        public DataField<int> FindInt(DataRef dataRef);
 
-        public DataNode<string> FindString(DataRef dataRef);
+        public DataField<string> FindString(DataRef dataRef);
     }
 }

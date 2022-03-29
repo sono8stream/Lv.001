@@ -16,16 +16,19 @@ namespace DI
 
         public IExpressionDataRepository ExpressionDataRpository { get; private set; }
 
-        private DependencyInjector(IMapDataRepository mapDataRepository,
+        private DependencyInjector(
             ISystemDataRepository systemDataRepository,
             IMasterDataRepository masterDataRepository,
-            IPlayDataRepository playDataRepository,
-            IExpressionDataRepository expressionDataRepository)
+            IPlayDataRepository playDataRepository, 
+            IMapDataRepository mapDataRepository,
+            IExpressionDataRepository expressionDataRepository
+            )
         {
-            MapDataRepository = mapDataRepository;
             SystemDataRepository = systemDataRepository;
             MasterDataRepository = masterDataRepository;
             PlayDataRepository = playDataRepository;
+
+            MapDataRepository = mapDataRepository;
             ExpressionDataRpository = expressionDataRepository;
         }
 
@@ -35,10 +38,10 @@ namespace DI
             {
                 // ä¬ã´Ç…âûÇ∂ÇƒàÀë∂ä÷åWÇíçì¸Ç∑ÇÈ
                 instance = new DependencyInjector(
-                    new WolfMapDataRepository(),
                     new WolfSystemDataRepository(),
                     new WolfMasterDataRepository(),
                     new WolfPlayDataRepository(),
+                    new WolfMapDataRepository(),
                     new WolfExpressionDataRepository()
                     );
             }

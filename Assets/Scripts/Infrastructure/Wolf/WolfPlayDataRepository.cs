@@ -10,17 +10,17 @@ namespace Infrastructure
     /// </summary>
     public class WolfPlayDataRepository : IPlayDataRepository
     {
-        public DataCategory Find(CategoryId id)
+        public DataRecord Find(RecordId id)
         {
             return null;
         }
 
-        public DataNode<int> FindInt(DataRef dataRef)
+        public DataField<int> FindInt(DataRef dataRef)
         {
             throw new System.NotImplementedException();
         }
 
-        public DataNode<string> FindString(DataRef dataRef)
+        public DataField<string> FindString(DataRef dataRef)
         {
             throw new System.NotImplementedException();
         }

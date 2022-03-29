@@ -136,7 +136,7 @@ namespace Expression.Map.MapEvent
             Domain.Data.DataRef rightRef = null;
             int rightVal = 0;
             bool isRightConstant = false;
-            if ((rightAndCompareParams>>4)==0)
+            if ((rightAndCompareParams >> 4) == 0)
             {
                 // データを呼び出さないので定数
                 rightRef = null;

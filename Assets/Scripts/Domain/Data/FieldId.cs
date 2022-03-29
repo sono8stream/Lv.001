@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Data
 {
-    public class NodeId
+    public class FieldId
     {
         private int value;
 
-        public NodeId(int value)
+        public FieldId(int value)
         {
             this.value = value;
         }
@@ -22,7 +18,7 @@ namespace Domain.Data
 
         public override bool Equals(object obj)
         {
-            var other = obj as NodeId;
+            var other = obj as FieldId;
             if (other == null)
             {
                 return false;

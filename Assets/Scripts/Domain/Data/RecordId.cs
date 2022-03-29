@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Data
 
 
 {
-    public class CategoryId
+    public class RecordId
     {
         private int value;
 
-        public CategoryId(int value)
+        public RecordId(int value)
         {
             this.value = value;
         }
@@ -24,7 +20,7 @@ namespace Domain.Data
 
         public override bool Equals(object obj)
         {
-            var other = obj as CategoryId;
+            var other = obj as RecordId;
             if (other == null)
             {
                 return false;
