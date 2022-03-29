@@ -4,12 +4,12 @@ using UnityEngine.Events;
 
 namespace Expression.Map.MapEvent
 {
-    public class ForkByVariableCommand : EventCommandBase
+    public class ForkByVariableCommand<T> : EventCommandBase
     {
         public int IndentDepth { get; private set; }
-        public Condition[] Conditions { get; private set; }
+        public Condition<T>[] Conditions { get; private set; }
 
-        public ForkByVariableCommand(int indentDepth, Condition[] conditions)
+        public ForkByVariableCommand(int indentDepth, Condition<T>[] conditions)
         {
             IndentDepth = indentDepth;
             Conditions = conditions;

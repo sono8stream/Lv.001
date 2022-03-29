@@ -10,10 +10,10 @@ using Expression;
 
 namespace UI.Action
 {
-    class ForkByVariableAction : ActionBase
+    class ForkByVariableAction<T> : ActionBase
     {
         int indentDepth;
-        Expression.Map.MapEvent.Condition[] conditions;
+        Expression.Map.MapEvent.Condition<T>[] conditions;
         ActionControl controlInfo;
 
         public ForkByVariableAction(int indentDepth,ActionControl controlInfo)
