@@ -247,14 +247,77 @@ namespace Expression.Map.MapEvent
             Debug.Log(operatorType);
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
+            // 【暫定】正式な演算子に対応させる
             Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(leftParamRef);
             Common.IDataAccessor<int> rightAccessor1 = GenerateIntAccessor(rightParamRef1);
             Common.IDataAccessor<int> rightAccessor2 = GenerateIntAccessor(rightParamRef2);
+            OperatorType assignType = GetAssignOperator(operatorType % 0x10);
+            OperatorType rightOperatorType = GetCalculateOperator(operatorType / 0x10);
+
             UpdaterInt[] updaters = new UpdaterInt[1];
             updaters[0] = new UpdaterInt(leftAccessor, rightAccessor1, rightAccessor2,
-                OperatorType.NormalAssign, OperatorType.Plus);
+                assignType, rightOperatorType);
 
             return new ChangeVariableIntCommand(updaters);
+        }
+
+        private OperatorType GetCalculateOperator(int value)
+        {
+            switch (value)
+            {
+                case 0xF0:
+                    return OperatorType.ArcTan;
+                case 0x00:
+                    return OperatorType.Plus;
+                case 0x10:
+                    return OperatorType.Minus;
+                case 0x20:
+                    return OperatorType.Multiply;
+                case 0x30:
+                    return OperatorType.Divide;
+                case 0x40:
+                    return OperatorType.Mod;
+                case 0x50:
+                    return OperatorType.And;
+                case 0x60:
+                    return OperatorType.Not;
+                default:
+                    return OperatorType.Plus;
+            }
+        }
+
+        private OperatorType GetAssignOperator(int value)
+        {
+            switch (value)
+            {
+                case 0x00:
+                    return OperatorType.NormalAssign;
+                case 0x01:
+                    return OperatorType.PlusAssign;
+                case 0x02:
+                    return OperatorType.MinusAssign;
+                case 0x03:
+                    return OperatorType.MultiplyAssign;
+                case 0x04:
+                    return OperatorType.DivideAssign;
+                case 0x05:
+                    return OperatorType.ModAssign;
+                case 0x06:
+                    return OperatorType.MaxAssign;
+                case 0x07:
+                    return OperatorType.MinAssign;
+                case 0x08:
+                    return OperatorType.AbsAssign;
+                case 0x09:
+                    return OperatorType.AngleAssign;
+                case 0x0A:
+                    return OperatorType.SinAssign;
+                case 0x0B:
+                    return OperatorType.CosAssign;
+                default:
+                    return OperatorType.NormalAssign;
+
+            }
         }
 
         private EventCommandBase CreateForkBeginCommand(MetaEventCommand metaCommand)

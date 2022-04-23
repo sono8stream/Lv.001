@@ -66,6 +66,7 @@ namespace Expression.Map.MapEvent
         Divide,
         Mod,
         Not,
+        ArcTan,// 傾きを得る
 
         // 代入演算
         NormalAssign,
