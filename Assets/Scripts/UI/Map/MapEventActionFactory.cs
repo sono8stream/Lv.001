@@ -84,5 +84,10 @@ namespace UI.Map
         {
             generatedAction = new ForkByVariableIntAction(controlInfo, command.IndentDepth, command.Conditions);
         }
+
+        public void OnVisitChangeVariableIntCommand(ChangeVariableIntCommand command)
+        {
+            generatedAction = new ChangeVariableIntAction(command.Updaters);
+        }
     }
 }

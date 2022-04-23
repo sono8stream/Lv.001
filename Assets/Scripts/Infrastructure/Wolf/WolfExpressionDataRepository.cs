@@ -62,7 +62,19 @@ namespace Infrastructure
             return record.IntFields[dataRef.FieldId];
         }
 
+        public void SetInt(DataRef dataRef, int value)
+        {
+            DataTable table = mapVariableDict[dataRef.TableId];
+            DataRecord record = table.Records[dataRef.RecordId];
+            record.IntFields[dataRef.FieldId].Val = value;
+        }
+
         public DataField<string> FindString(DataRef dataRef)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void SetString(DataRef dataRef, string value)
         {
             throw new System.NotImplementedException();
         }

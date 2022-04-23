@@ -8,11 +8,11 @@ namespace Expression.Map.MapEvent
         public IDataAccessor<int> LeftHandAccessor { get; private set; }
         public IDataAccessor<int> RightHandAccessor { get; private set; }
 
-        public IntOperatorType OperatorType { get; private set; }
+        public OperatorType OperatorType { get; private set; }
 
         public ConditionInt(IDataAccessor<int> leftHandAccessor,
             IDataAccessor<int> rightHandAccessor,
-             IntOperatorType operatorType)
+             OperatorType operatorType)
         {
             LeftHandAccessor = leftHandAccessor;
             RightHandAccessor = rightHandAccessor;
@@ -26,19 +26,19 @@ namespace Expression.Map.MapEvent
 
             switch (OperatorType)
             {
-                case IntOperatorType.GreaterThan:
+                case OperatorType.GreaterThan:
                     return leftValue > rightValue;
-                case IntOperatorType.GreaterEqual:
+                case OperatorType.GreaterEqual:
                     return leftValue >= rightValue;
-                case IntOperatorType.Equal:
+                case OperatorType.Equal:
                     return leftValue == rightValue;
-                case IntOperatorType.LessEqual:
+                case OperatorType.LessEqual:
                     return leftValue < rightValue;
-                case IntOperatorType.LessThan:
+                case OperatorType.LessThan:
                     return leftValue < rightValue;
-                case IntOperatorType.NotEqual:
+                case OperatorType.NotEqual:
                     return leftValue != rightValue;
-                case IntOperatorType.And:
+                case OperatorType.And:
                     return (leftValue & rightValue) == rightValue;
                 default:
                     break;
@@ -48,14 +48,37 @@ namespace Expression.Map.MapEvent
         }
     }
 
-    public enum IntOperatorType
+    public enum OperatorType
     {
+        // 条件演算
         GreaterThan = 0,
         GreaterEqual,
         Equal,
         LessEqual,
         LessThan,
         NotEqual,
-        And// ~のビットを満たす条件に対応
+        And,// ~のビットを満たす条件に対応
+
+        // 通常演算
+        Plus,
+        Minus,
+        Multiply,
+        Divide,
+        Mod,
+        Not,
+
+        // 代入演算
+        NormalAssign,
+        PlusAssign,
+        MinusAssign,
+        MultiplyAssign,
+        DivideAssign,
+        ModAssign,
+        MaxAssign,
+        MinAssign,
+        AbsAssign,
+        AngleAssign,// 角度
+        SinAssign,// Sin値の割り当て
+        CosAssign,// Cos値の割り当て
     }
 }

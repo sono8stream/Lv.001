@@ -12,7 +12,7 @@ namespace Domain.Data
     /// <typeparam name="T">変数として管理する型</typeparam>
     public class DataField<T>
     {
-        public T Val { get; private set; }
+        public T Val { get; set; }
 
         public FieldId Id { get; private set; }
 

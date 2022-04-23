@@ -18,6 +18,6 @@ namespace Infrastructure
 
         public DataField<string> FindString(DataRef dataRef);
 
-        public void SetString(DataRef dataRef,int value);
+        public void SetString(DataRef dataRef, string value);
     }
 }

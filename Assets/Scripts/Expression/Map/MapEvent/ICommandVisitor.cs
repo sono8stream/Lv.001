@@ -11,6 +11,7 @@ namespace Expression.Map.MapEvent
         public void OnVisitForkBeginCommand(ForkBeginCommand command);
         public void OnVisitForkEndCommand(ForkEndCommand command);
         public void OnVisitForkByVariableIntCommand(ForkByVariableIntCommand command);
+        public void OnVisitChangeVariableIntCommand(ChangeVariableIntCommand command);
 
         public void OnVisitBaseCommand(EventCommandBase command);
     }

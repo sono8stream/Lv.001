@@ -21,7 +21,17 @@ namespace Infrastructure
             throw new System.NotImplementedException();
         }
 
+        public void SetInt(DataRef dataRef, int value)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public DataField<string> FindString(DataRef dataRef)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void SetString(DataRef dataRef, string value)
         {
             throw new System.NotImplementedException();
         }

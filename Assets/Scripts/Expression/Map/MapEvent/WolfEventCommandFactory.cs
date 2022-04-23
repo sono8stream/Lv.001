@@ -41,7 +41,7 @@ namespace Expression.Map.MapEvent
                     command = CreateFlagForkByVariableCommand(metaCommand);
                     break;
                 case 0x00000079:
-                    CreateChangeVariableCommand(metaCommand);
+                    command = CreateChangeVariableCommand(metaCommand);
                     break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
@@ -156,7 +156,7 @@ namespace Expression.Map.MapEvent
                 rightAccessor = GenerateIntAccessor(flagLeft);
             }
 
-            IntOperatorType operatorType = (IntOperatorType)Enum.ToObject(typeof(IntOperatorType), rightAndCompareParams % (1 << 4));
+            OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
 
             var condition = new ConditionInt(leftAccessor, rightAccessor, operatorType);
             return condition;
@@ -239,14 +239,22 @@ namespace Expression.Map.MapEvent
         private EventCommandBase CreateChangeVariableCommand(MetaEventCommand metaCommand)
         {
             Debug.Log("変数操作");
-            int assignedParamRef = metaCommand.NumberArgs[1];
+            int leftParamRef = metaCommand.NumberArgs[1];
             int rightParamRef1 = metaCommand.NumberArgs[2];
             int rightParamRef2 = metaCommand.NumberArgs[3];
             int valueCondition = metaCommand.NumberArgs[4] % 0x100;
-            int assignType = (metaCommand.NumberArgs[4] / 0x100) % 0x100;
+            int operatorType = (metaCommand.NumberArgs[4] / 0x100) % 0x100;
+            Debug.Log(operatorType);
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
-            return null;
+            Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(leftParamRef);
+            Common.IDataAccessor<int> rightAccessor1 = GenerateIntAccessor(rightParamRef1);
+            Common.IDataAccessor<int> rightAccessor2 = GenerateIntAccessor(rightParamRef2);
+            UpdaterInt[] updaters = new UpdaterInt[1];
+            updaters[0] = new UpdaterInt(leftAccessor, rightAccessor1, rightAccessor2,
+                OperatorType.NormalAssign, OperatorType.Plus);
+
+            return new ChangeVariableIntCommand(updaters);
         }
 
         private EventCommandBase CreateForkBeginCommand(MetaEventCommand metaCommand)
