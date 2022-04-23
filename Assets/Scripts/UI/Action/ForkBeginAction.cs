@@ -6,10 +6,15 @@ namespace UI.Action
     /// </summary>
     public class ForkBeginAction : ActionBase
     {
+        ActionControl controlInfo;
+        int indentDepth;
         string labelString;
 
-        public ForkBeginAction(string labelString)
+        public ForkBeginAction(ActionControl controlInfo, int indentDepth, 
+            string labelString)
         {
+            this.controlInfo = controlInfo;
+            this.indentDepth = indentDepth;
             this.labelString = labelString;
         }
 
@@ -21,6 +26,16 @@ namespace UI.Action
         public override bool VerifyLabel(ActionLabel label)
         {
             return labelString == label.LabelName;
+        }
+
+        /// <inheritdoc/>
+        public override bool Run()
+        {
+            // 前段の分岐ブロックから遷移してきたので，分岐終端までスキップする
+            ActionLabel label = new ActionLabel($"{indentDepth}.{0}");
+            controlInfo.ReserveSkip(label);
+
+            return base.Run();
         }
     }
 }

@@ -66,7 +66,8 @@ namespace UI.Action
                 }
                 else
                 {
-                    CurrentActNo = nextActNo;
+                    // ラベルの次のアクションを実行
+                    CurrentActNo = nextActNo + 1;
                 }
 
                 IsSkipMode = false;

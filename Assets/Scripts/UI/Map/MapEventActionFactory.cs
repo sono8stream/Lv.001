@@ -72,7 +72,12 @@ namespace UI.Map
 
         public void OnVisitForkBeginCommand(ForkBeginCommand command)
         {
-            generatedAction = new ForkBeginAction(command.LabelString);
+            generatedAction = new ForkBeginAction(controlInfo, command.IndentDepth, command.LabelString);
+        }
+
+        public void OnVisitForkEndCommand(ForkEndCommand command)
+        {
+            generatedAction = new ForkEndAction(command.LabelString);
         }
 
         public void OnVisitForkByVariableIntCommand(ForkByVariableIntCommand command)

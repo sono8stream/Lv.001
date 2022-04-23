@@ -43,6 +43,9 @@ namespace Expression.Map.MapEvent
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
                     break;
+                case 0x000001F3:
+                    command = CreateForkEndCommand(metaCommand);
+                    break;
                 case 0x000000D2:
                     CreateCallEventByIdCommand(currentOffset, out currentOffset);
                     break;
@@ -237,6 +240,13 @@ namespace Expression.Map.MapEvent
             Debug.Log($"分岐始点{forkNumber}");
 
             return new ForkBeginCommand(metaCommand.IndentDepth, forkNumber);
+        }
+
+        private EventCommandBase CreateForkEndCommand(MetaEventCommand metaCommand)
+        {
+            Debug.Log($"分岐終端");
+
+            return new ForkEndCommand(metaCommand.IndentDepth);
         }
 
         // イベントコマンドの取得は未済み
