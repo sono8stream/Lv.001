@@ -14,6 +14,10 @@ namespace Infrastructure
     {
         public DataField<int> FindInt(DataRef dataRef);
 
+        public void SetInt(DataRef dataRef,int value);
+
         public DataField<string> FindString(DataRef dataRef);
+
+        public void SetString(DataRef dataRef,int value);
     }
 }

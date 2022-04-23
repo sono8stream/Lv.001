@@ -40,6 +40,9 @@ namespace Expression.Map.MapEvent
                 case 0x0000006F:
                     command = CreateFlagForkByVariableCommand(metaCommand);
                     break;
+                case 0x00000079:
+                    CreateChangeVariableCommand(metaCommand);
+                    break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
                     break;
@@ -231,6 +234,19 @@ namespace Expression.Map.MapEvent
 
             // 特殊条件以外の場合、定数を取得
             return new Common.ConstDataAccessor<int>(val);
+        }
+
+        private EventCommandBase CreateChangeVariableCommand(MetaEventCommand metaCommand)
+        {
+            Debug.Log("変数操作");
+            int assignedParamRef = metaCommand.NumberArgs[1];
+            int rightParamRef1 = metaCommand.NumberArgs[2];
+            int rightParamRef2 = metaCommand.NumberArgs[3];
+            int valueCondition = metaCommand.NumberArgs[4] % 0x100;
+            int assignType = (metaCommand.NumberArgs[4] / 0x100) % 0x100;
+            bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
+
+            return null;
         }
 
         private EventCommandBase CreateForkBeginCommand(MetaEventCommand metaCommand)

@@ -17,10 +17,15 @@ namespace Expression.Common
             this.dataRef = dataRef;
         }
 
-        public string Access()
+        public string Get()
         {
             Domain.Data.DataField<string> field=repository.FindString(dataRef);
             return field != null ? field.Val : "";
+        }
+
+        public void Set(string value)
+        {
+            repository.SetString(dataRef, value);
         }
     }
 }

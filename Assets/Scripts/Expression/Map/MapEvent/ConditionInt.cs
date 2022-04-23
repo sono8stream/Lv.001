@@ -21,8 +21,8 @@ namespace Expression.Map.MapEvent
 
         public bool CheckIsTrue()
         {
-            int leftValue = LeftHandAccessor.Access();
-            int rightValue = RightHandAccessor.Access();
+            int leftValue = LeftHandAccessor.Get();
+            int rightValue = RightHandAccessor.Get();
 
             switch (OperatorType)
             {

@@ -14,9 +14,15 @@ namespace Expression.Common
             this.val = val;
         }
 
-        public T Access()
+        public T Get()
         {
             return val;
+        }
+
+        public void Set(T value)
+        {
+            // 再代入不可なので何もしない
+            return;
         }
     }
 

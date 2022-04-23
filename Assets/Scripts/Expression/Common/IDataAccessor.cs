@@ -12,7 +12,9 @@ namespace Expression.Common
     /// </summary>
     public interface IDataAccessor<T>
     {
-        public T Access();
+        public T Get();
+
+        public void Set(T value);
     }
 
 }
