@@ -34,7 +34,6 @@ namespace UI.Action
         public override bool Run()
         {
             isCompleted = true;
-            Debug.Log(message);
             if (message.Equals(""))
             {
                 return true;

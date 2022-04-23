@@ -11,14 +11,15 @@ namespace Domain.Data
     /// </summary>
     public class DataRef
     {
-        private TableId tableId;
-        private RecordId recordId;
-        private FieldId fieldId;
+        public TableId TableId { get; private set; }
+        public RecordId RecordId { get; private set; }
+        public FieldId FieldId { get; private set; }
 
         public DataRef(TableId tableId, RecordId recordId, FieldId fieldId)
         {
-            this.recordId = recordId;
-            this.fieldId = fieldId;
+            TableId = tableId;
+            RecordId = recordId;
+            FieldId = fieldId;
         }
     }
 }

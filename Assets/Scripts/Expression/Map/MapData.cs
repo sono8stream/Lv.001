@@ -7,6 +7,8 @@ namespace Expression.Map
 {
     public class MapData
     {
+        public MapId Id { get; private set; }
+
         public Texture2D UnderTexture { get; private set; }
 
         public Texture2D UpperTexture { get; private set; }
@@ -21,7 +23,7 @@ namespace Expression.Map
 
         public MapEvent.EventData[] EventDataArray { get; private set; }
 
-        public MapData(Texture2D underTexture, Texture2D upperTexture, int width, int height,
+        public MapData(MapId id,Texture2D underTexture, Texture2D upperTexture, int width, int height,
          MovableInfo[,] movableGrid, MapEvent.EventData[] eventDataArray)
         {
             // テクスチャサイズの整合性チェック
@@ -29,6 +31,7 @@ namespace Expression.Map
         && upperTexture.width / width == upperTexture.height / height
         && underTexture.width == upperTexture.width);
 
+            Id = id;
             UnderTexture = underTexture;
             UpperTexture = upperTexture;
             PixelPerUnit = UnderTexture.width / width;

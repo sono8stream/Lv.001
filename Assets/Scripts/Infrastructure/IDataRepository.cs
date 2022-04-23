@@ -9,6 +9,8 @@ namespace Infrastructure
     /// ゲームの詳細な仕様に関するデータを読み出すためのリポジトリのインターフェース
     /// </summary>
     public interface IDataRepository : IRepository<DataRecord, RecordId>
+    // 【暫定】RecordIdからDataRecordを読み出したいユースケースがないので，今後廃止
+    // DataRefからDataFieldを読み出すユースケースの方がありそう
     {
         public DataField<int> FindInt(DataRef dataRef);
 

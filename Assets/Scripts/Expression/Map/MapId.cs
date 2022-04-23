@@ -6,16 +6,16 @@ namespace Expression.Map
 {
     public class MapId
     {
-        private int value;
+        public int Value { get; private set; }
 
         public MapId(int value)
         {
-            this.value = value;
+            Value = value;
         }
 
         public override int GetHashCode()
         {
-            return value.GetHashCode();
+            return Value.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -26,7 +26,7 @@ namespace Expression.Map
                 return false;
             }
 
-            return this.value == other.value;
+            return this.Value == other.Value;
         }
     }
 }

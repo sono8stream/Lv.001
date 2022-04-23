@@ -16,34 +16,20 @@ namespace DI
 
         public IExpressionDataRepository ExpressionDataRpository { get; private set; }
 
-        private DependencyInjector(
-            ISystemDataRepository systemDataRepository,
-            IMasterDataRepository masterDataRepository,
-            IPlayDataRepository playDataRepository, 
-            IMapDataRepository mapDataRepository,
-            IExpressionDataRepository expressionDataRepository
-            )
-        {
-            SystemDataRepository = systemDataRepository;
-            MasterDataRepository = masterDataRepository;
-            PlayDataRepository = playDataRepository;
-
-            MapDataRepository = mapDataRepository;
-            ExpressionDataRpository = expressionDataRepository;
-        }
+        private DependencyInjector() { }
 
         public static DependencyInjector It()
         {
             if (instance == null)
             {
                 // ä¬ã´Ç…âûÇ∂ÇƒàÀë∂ä÷åWÇíçì¸Ç∑ÇÈ
-                instance = new DependencyInjector(
-                    new WolfSystemDataRepository(),
-                    new WolfMasterDataRepository(),
-                    new WolfPlayDataRepository(),
-                    new WolfMapDataRepository(),
-                    new WolfExpressionDataRepository()
-                    );
+                // àÀë∂ä÷åWÇ™Ç†ÇÈÇÃÇ≈ÅCÇ±ÇÃèáÇ…èâä˙âª
+                instance = new DependencyInjector();
+                instance.SystemDataRepository = new WolfSystemDataRepository();
+                instance.MasterDataRepository = new WolfMasterDataRepository();
+                instance.PlayDataRepository = new WolfPlayDataRepository();
+                instance.MapDataRepository = new WolfMapDataRepository();
+                instance.ExpressionDataRpository = new WolfExpressionDataRepository();
             }
 
             return instance;

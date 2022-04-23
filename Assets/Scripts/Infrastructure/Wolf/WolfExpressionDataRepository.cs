@@ -57,7 +57,9 @@ namespace Infrastructure
 
         public DataField<int> FindInt(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            DataTable table = mapVariableDict[dataRef.TableId];
+            DataRecord record = table.Records[dataRef.RecordId];
+            return record.IntFields[dataRef.FieldId];
         }
 
         public DataField<string> FindString(DataRef dataRef)

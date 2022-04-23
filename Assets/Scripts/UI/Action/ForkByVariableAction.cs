@@ -10,23 +10,33 @@ using Expression;
 
 namespace UI.Action
 {
-    class ForkByVariableAction<T> : ActionBase
+    class ForkByVariableIntAction : ActionBase
     {
-        int indentDepth;
-        Expression.Map.MapEvent.Condition<T>[] conditions;
         ActionControl controlInfo;
+        int indentDepth;
+        Expression.Map.MapEvent.ConditionInt[] conditions;
 
-        public ForkByVariableAction(int indentDepth,ActionControl controlInfo)
+        public ForkByVariableIntAction(ActionControl controlInfo, int indentDepth,
+            Expression.Map.MapEvent.ConditionInt[] conditions)
         {
-            this.indentDepth = indentDepth;
             this.controlInfo = controlInfo;
+            this.indentDepth = indentDepth;
+            this.conditions = conditions;
         }
 
         /// <inheritdoc/>
         public override bool Run()
         {
+            int forkId = -1;
+            for (int i = 0; i < conditions.Length; i++)
+            {
+                if (conditions[i].CheckIsTrue())
+                {
+                    forkId = i + 1;
+                }
+            }
 
-            ActionLabel label = new ActionLabel($"{indentDepth}.{0}");
+            ActionLabel label = new ActionLabel($"{indentDepth}.{forkId}");
             controlInfo.ReserveSkip(label);
             return true;
         }

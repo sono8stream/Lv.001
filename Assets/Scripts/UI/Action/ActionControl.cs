@@ -61,6 +61,7 @@ namespace UI.Action
                 }
                 if (nextActNo == CurrentActNo)
                 {
+                    // 遷移先を見つけられなかったので次のアクションに遷移する
                     CurrentActNo++;
                 }
                 else

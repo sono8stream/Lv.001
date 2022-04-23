@@ -74,5 +74,10 @@ namespace UI.Map
         {
             generatedAction = new ForkBeginAction(command.LabelString);
         }
+
+        public void OnVisitForkByVariableIntCommand(ForkByVariableIntCommand command)
+        {
+            generatedAction = new ForkByVariableIntAction(controlInfo, command.IndentDepth, command.Conditions);
+        }
     }
 }

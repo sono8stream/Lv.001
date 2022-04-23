@@ -4,7 +4,7 @@ namespace Expression.Map.MapEvent
 {
     public class EventData
     {
-        public int EventId { get; private set; }
+        public EventId Id { get; private set; }
 
         public int PosX { get; private set; }
 
@@ -12,9 +12,9 @@ namespace Expression.Map.MapEvent
 
         public EventPageData[] PageData { get; private set; }
 
-        public EventData(int eventId, int posX, int posY, EventPageData[] pageData)
+        public EventData(EventId id, int posX, int posY, EventPageData[] pageData)
         {
-            EventId = eventId;
+            Id = id;
             PosX = posX;
             PosY = posY;
             PageData = pageData;

@@ -7,11 +7,15 @@ namespace Expression.Map.MapEvent
     public class WolfEventCommandFactory
     {
         WolfDataReader reader;
+        MapId mapId;
+        EventId eventId;
         int startOffset;
 
-        public WolfEventCommandFactory(WolfDataReader reader, int startOffset)
+        public WolfEventCommandFactory(WolfDataReader reader, MapId mapId,EventId eventId, int startOffset)
         {
             this.reader = reader;
+            this.mapId = mapId;
+            this.eventId = eventId;
             this.startOffset = startOffset;
         }
 
@@ -34,7 +38,7 @@ namespace Expression.Map.MapEvent
                     command = CreateChoiceForkCommand(metaCommand);
                     break;
                 case 0x0000006F:
-                    CreateFlagForkByVariableCommand(metaCommand);
+                    command = CreateFlagForkByVariableCommand(metaCommand);
                     break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
@@ -118,18 +122,21 @@ namespace Expression.Map.MapEvent
             int forkCount = forkParams % (1 << 4);
             int flagCount = (metaCommand.NumberArgs.Length - 2) / 3;
             Debug.Log($"条件数：{flagCount}、分岐数：{forkCount}");
+            ConditionInt[] conditions = new ConditionInt[flagCount];
             for (int i = 0; i < flagCount; i++)
             {
                 int flagLeft = metaCommand.NumberArgs[2 + 3 * i];
                 int flagRight = metaCommand.NumberArgs[3 + 3 * i];
                 int rightAndCompareParams = metaCommand.NumberArgs[4 + 3 * i];
                 Debug.Log($"左辺 : {flagLeft}, 右辺 : {flagRight}, 条件ID : {rightAndCompareParams}");
+
+                conditions[i] = GenerateCondition(flagLeft, flagRight, rightAndCompareParams);
             }
 
-            return null;
+            return new ForkByVariableIntCommand(metaCommand.IndentDepth, conditions);
         }
 
-        private Condition<int> GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
+        private ConditionInt GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
         {
             Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(flagLeft);
 
@@ -143,9 +150,9 @@ namespace Expression.Map.MapEvent
                 rightAccessor = GenerateIntAccessor(flagLeft);
             }
 
-            OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
+            IntOperatorType operatorType = (IntOperatorType)Enum.ToObject(typeof(IntOperatorType), rightAndCompareParams % (1 << 4));
 
-            var condition = new Condition<int>(leftAccessor, rightAccessor, operatorType);
+            var condition = new ConditionInt(leftAccessor, rightAccessor, operatorType);
             return condition;
         }
 
@@ -206,6 +213,13 @@ namespace Expression.Map.MapEvent
             else if (val >= 1100000)
             {
                 // 実行中のマップイベントのセルフ変数呼び出し
+                var repository = DI.DependencyInjector.It().ExpressionDataRpository;
+                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                    new Domain.Data.TableId(mapId.Value),
+                    new Domain.Data.RecordId(eventId.Value),
+                    new Domain.Data.FieldId(val % 10)
+                    );
+                return new Common.RepositoryIntAccessor(repository, dataRef);
             }
             else if (val >= 1000000)
             {

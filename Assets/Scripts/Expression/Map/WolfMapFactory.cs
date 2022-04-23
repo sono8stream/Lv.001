@@ -9,6 +9,12 @@ namespace Expression.Map
         //          マップ描画時など至る所で使用するので，どう使いまわすかが課題
         //          MapDataに含める?
         private const int PIXEL_PER_GRID = 16;
+        private MapId mapId;
+
+        public WolfMapCreator(MapId mapId)
+        {
+            this.mapId = mapId;
+        }
 
         public MapData Create(string mapFilePath)
         {
@@ -130,7 +136,7 @@ namespace Expression.Map
             upperTexture.Apply();
             underTexture.Apply();
 
-            return new MapData(underTexture, upperTexture, width, height, movableGrid, null);
+            return new MapData(mapId,underTexture, upperTexture, width, height, movableGrid, null);
         }
 
         private MapData CombineMapData(MapEvent.EventData[] eventDataArray, params MapData[] mapDataArray)
@@ -190,7 +196,7 @@ namespace Expression.Map
                 }
             }
 
-            MapData data = new MapData(underTexture, upperTexture,
+            MapData data = new MapData(mapId, underTexture, upperTexture,
             mapDataArray[0].Width, mapDataArray[0].Height,
              movableGrid, eventDataArray);
             return data;
@@ -229,13 +235,14 @@ namespace Expression.Map
                 {
                     reader.ReadByte(offset, out offset);
                 }
-                int eventId = reader.ReadInt(offset, true, out offset);
-                Debug.Log(eventId);
+                MapEvent.EventId eventId = new MapEvent.EventId(
+                    reader.ReadInt(offset, true, out offset));
+                Debug.Log($"イベントID：{eventId.Value}");
                 string eventName = reader.ReadString(offset, out offset);
                 int posX = reader.ReadInt(offset, true, out offset);
                 int posY = reader.ReadInt(offset, true, out offset);
                 int pageCount = reader.ReadInt(offset, true, out offset);
-                Debug.Log(pageCount);
+                Debug.Log($"ページ数：{pageCount}");
                 // 00 00 00 00のスキップ
                 reader.ReadInt(offset, true, out offset);
 
@@ -243,7 +250,7 @@ namespace Expression.Map
                 for (int i = 0; i < pageCount; i++)
                 {
                     // イベントページの読み込み
-                    eventPages.Add(ReadEventPageData(reader, mapTexture, offset, out offset));
+                    eventPages.Add(ReadEventPageData(reader, mapTexture, eventId, offset, out offset));
                 }
 
                 // フッタースキップ
@@ -260,7 +267,8 @@ namespace Expression.Map
             return list.ToArray();
         }
 
-        private MapEvent.EventPageData ReadEventPageData(Util.Wolf.WolfDataReader reader, Texture2D mapTexture, int offset, out int nextOffset)
+        private MapEvent.EventPageData ReadEventPageData(Util.Wolf.WolfDataReader reader, Texture2D mapTexture,
+            MapEvent.EventId eventId, int offset, out int nextOffset)
         {
             // ヘッダースキップ
             int hh = reader.ReadByte(offset, out offset);
@@ -288,9 +296,9 @@ namespace Expression.Map
             ReadEventMoveRoute(reader, offset, out offset);
 
             int eventCommandCount = reader.ReadInt(offset, true, out offset);
-            Debug.Log(eventCommandCount);
+            Debug.Log($"イベントコマンド数：{eventCommandCount}");
             // デバッグここまでOK
-            MapEvent.EventCommandBase[] commands = ReadEventCommands(reader, eventCommandCount, offset, out offset);
+            MapEvent.EventCommandBase[] commands = ReadEventCommands(reader, eventId, eventCommandCount, offset, out offset);
 
             // イベントコマンドフッタースキップ
             reader.ReadInt(offset, true, out offset);
@@ -401,11 +409,12 @@ namespace Expression.Map
             nextOffset = offset;
         }
 
-        // 【暫定】詳細定義まで空読み
-        private MapEvent.EventCommandBase[] ReadEventCommands(Util.Wolf.WolfDataReader reader, int eventCommandCount, int offset, out int nextOffset)
+        // 【暫定】詳細定義していないコマンドは空読み
+        private MapEvent.EventCommandBase[] ReadEventCommands(Util.Wolf.WolfDataReader reader,
+            MapEvent.EventId eventId, int eventCommandCount, int offset, out int nextOffset)
         {
             int currentOffset = offset;
-            MapEvent.WolfEventCommandFactory factory = new MapEvent.WolfEventCommandFactory(reader, currentOffset);
+            MapEvent.WolfEventCommandFactory factory = new MapEvent.WolfEventCommandFactory(reader, mapId, eventId, currentOffset);
             List<MapEvent.EventCommandBase> commands = new List<MapEvent.EventCommandBase>();
             for (int i = 0; i < eventCommandCount; i++)
             {
