@@ -247,7 +247,7 @@ namespace Expression.Map.MapEvent
             Debug.Log(operatorType);
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
-            // 【暫定】正式な演算子に対応させる
+            // 【暫定】正式な計算処理に対応させる．連続計算，可変DB対応など
             Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(leftParamRef);
             Common.IDataAccessor<int> rightAccessor1 = GenerateIntAccessor(rightParamRef1);
             Common.IDataAccessor<int> rightAccessor2 = GenerateIntAccessor(rightParamRef2);
@@ -280,7 +280,7 @@ namespace Expression.Map.MapEvent
                 case 0x50:
                     return OperatorType.And;
                 case 0x60:
-                    return OperatorType.Not;
+                    return OperatorType.Random;
                 default:
                     return OperatorType.Plus;
             }

@@ -65,7 +65,7 @@ namespace Expression.Map.MapEvent
         Multiply,
         Divide,
         Mod,
-        Not,
+        Random,
         ArcTan,// 傾きを得る
 
         // 代入演算
