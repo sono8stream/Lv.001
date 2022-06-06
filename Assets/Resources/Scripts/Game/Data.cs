@@ -140,7 +140,7 @@ public class PlayerData
         {
             for (int i = 0; i < g.Length; i++)
             {
-                instance.selfVars[sceneNo].Add(g[i].GetComponent<EventCommands>().SelfVar);
+                instance.selfVars[sceneNo].Add(g[i].GetComponent<ActionEnvironment>().SelfVar);
             }
         }
     }
@@ -161,7 +161,7 @@ public class PlayerData
             }
             for (int i = 0; i < g.Length; i++)
             {
-                g[i].GetComponent<EventCommands>().SelfVar = instance.selfVars[sceneNo][i];
+                g[i].GetComponent<ActionEnvironment>().SelfVar = instance.selfVars[sceneNo][i];
             }
         }
         catch { }
