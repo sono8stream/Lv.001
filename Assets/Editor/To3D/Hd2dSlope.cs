@@ -4,6 +4,10 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class Hd2dSlope : Hd2dBlock
 {
+    enum MeshType
+    {
+        Rectangle, Triangle
+    }
 
     protected override void Generate()
     {
@@ -30,6 +34,7 @@ public class Hd2dSlope : Hd2dBlock
             new Vector2(-0.5f,-0.5f),
         };
 
+        var factory = new Hd2d.MeshFactory();
         for (int i = 0; i < meshes; i++)
         {
             GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -38,6 +43,7 @@ public class Hd2dSlope : Hd2dBlock
             quad.transform.localEulerAngles = angles[i];
             quad.transform.localScale = Vector3.one;
             quad.GetComponent<Renderer>().material = mat;
+            /*
             var triangles = new int[3] { 0, 1, 2 };
             quad.GetComponent<MeshFilter>().mesh.SetTriangles(triangles, 0);
             var vartices = new Vector3[3] {
@@ -46,19 +52,11 @@ public class Hd2dSlope : Hd2dBlock
                 new Vector2(0.5f,-0.5f)
             };
             quad.GetComponent<MeshFilter>().mesh.SetVertices(vartices);
-            quad.GetComponent<MeshFilter>().mesh.SetUVs(0, GetTriUvs(offsets[i]));
+            Debug.Log(quad.GetComponent<MeshFilter>().mesh.vertices.Length);
+            quad.GetComponent<MeshFilter>().mesh.SetUVs(0, selector.GetTriUvs(offsets[i]));
+            */
+            quad.GetComponent<MeshFilter>().mesh= factory.CreateMesh(Hd2d.MeshType.Triangle, offsets[i]);
             quads.Add(quad);
         }
-    }
-
-    private Vector2[] GetTriUvs(Vector2Int offset)
-    {
-        Vector2[] res = new Vector2[3];
-        float xUnit = 0.125f;
-        float yUnit = 0.00390625f;
-        res[0] = new Vector2(xUnit * offset.x, 1 - yUnit * (offset.y + 1));
-        res[1] = new Vector2(xUnit * offset.x, 1 - yUnit * offset.y);
-        res[2] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * (offset.y + 1));
-        return res;
     }
 }
