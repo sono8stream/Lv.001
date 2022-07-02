@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[ExecuteInEditMode]
 public class Hd2dSlope : Hd2dBlock
 {
     enum MeshType
@@ -42,7 +41,7 @@ public class Hd2dSlope : Hd2dBlock
             quad.transform.localPosition = poses[i];
             quad.transform.localEulerAngles = angles[i];
             quad.transform.localScale = Vector3.one;
-            quad.GetComponent<Renderer>().material = mat;
+            quad.GetComponent<Renderer>().sharedMaterial = new Material(mat);
             /*
             var triangles = new int[3] { 0, 1, 2 };
             quad.GetComponent<MeshFilter>().mesh.SetTriangles(triangles, 0);
@@ -55,7 +54,7 @@ public class Hd2dSlope : Hd2dBlock
             Debug.Log(quad.GetComponent<MeshFilter>().mesh.vertices.Length);
             quad.GetComponent<MeshFilter>().mesh.SetUVs(0, selector.GetTriUvs(offsets[i]));
             */
-            quad.GetComponent<MeshFilter>().mesh= factory.CreateMesh(Hd2d.MeshType.Triangle, offsets[i]);
+            quad.GetComponent<MeshFilter>().sharedMesh= factory.CreateMesh(Hd2d.MeshType.Triangle, offsets[i]);
             quads.Add(quad);
         }
     }

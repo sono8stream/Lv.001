@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-//[ExecuteInEditMode]
 public class Hd2dCube : Hd2dBlock
 {
     protected override void Generate()
@@ -35,7 +34,7 @@ public class Hd2dCube : Hd2dBlock
             quads.Add(quad);
 
             quad.GetComponent<Renderer>().sharedMaterial = new Material(mat);
-            quad.GetComponent<MeshFilter>().mesh = factory.CreateMesh(Hd2d.MeshType.Rectangle, offsets[i]);
+            quad.GetComponent<MeshFilter>().sharedMesh = factory.CreateMesh(Hd2d.MeshType.Rectangle, offsets[i]);
         }
     }
 }
