@@ -30,7 +30,7 @@ namespace Hd2d
                         mesh.SetUVs(0, selector.GetSquareUvs(uvChipOffset));
                     }
                     break;
-                case MeshType.Triangle:
+                case MeshType.LeftTriangle:
                     {
                         var vartices = new Vector3[3] {
                 new Vector2(-0.5f,-0.5f),
@@ -40,7 +40,20 @@ namespace Hd2d
                         mesh.SetVertices(vartices);
                         var triangles = new int[3] { 0, 1, 2 };
                         mesh.SetTriangles(triangles, 0);
-                        mesh.SetUVs(0, selector.GetTriUvs(uvChipOffset));
+                        mesh.SetUVs(0, selector.GetLeftTriangleUvs(uvChipOffset));
+                    }
+                    break;
+                case MeshType.RightTriangle:
+                    {
+                        var vartices = new Vector3[3] {
+                new Vector2(-0.5f,-0.5f),
+                new Vector2(0.5f,0.5f),
+                new Vector2(0.5f,-0.5f)
+            };
+                        mesh.SetVertices(vartices);
+                        var triangles = new int[3] { 0, 1, 2 };
+                        mesh.SetTriangles(triangles, 0);
+                        mesh.SetUVs(0, selector.GetRightTriangleUvs(uvChipOffset));
                     }
                     break;
             }

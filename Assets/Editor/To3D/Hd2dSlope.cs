@@ -25,12 +25,21 @@ public class Hd2dSlope : Hd2dBlock
             new Vector3(0,90,0),
             new Vector3(-90,0,0),
         };
-        Vector3[][] vertices = new Vector3[5][];
-        vertices[0] = new Vector3[4]        {
-            new Vector2(-0.5f,-0.5f),
-            new Vector2(-0.5f,0.5f),
-            new Vector2(0.5f,-0.5f),
-            new Vector2(-0.5f,-0.5f),
+        Vector3[] scales = new Vector3[meshes]
+        {
+            new Vector3(1,Mathf.Sqrt(2),1),
+            Vector3.one,
+            Vector3.one,
+            Vector3.one,
+            Vector3.one,
+        };
+
+        Hd2d.MeshType[] meshTypes = new Hd2d.MeshType[meshes] {
+            Hd2d.MeshType.Rectangle,
+            Hd2d.MeshType.RightTriangle,
+            Hd2d.MeshType.Rectangle,
+            Hd2d.MeshType.LeftTriangle,
+            Hd2d.MeshType.Rectangle,
         };
 
         var factory = new Hd2d.MeshFactory();
@@ -40,21 +49,9 @@ public class Hd2dSlope : Hd2dBlock
             quad.transform.SetParent(transform);
             quad.transform.localPosition = poses[i];
             quad.transform.localEulerAngles = angles[i];
-            quad.transform.localScale = Vector3.one;
+            quad.transform.localScale = scales[i];
             quad.GetComponent<Renderer>().sharedMaterial = new Material(mat);
-            /*
-            var triangles = new int[3] { 0, 1, 2 };
-            quad.GetComponent<MeshFilter>().mesh.SetTriangles(triangles, 0);
-            var vartices = new Vector3[3] {
-                new Vector2(-0.5f,-0.5f),
-                new Vector2(-0.5f,0.5f),
-                new Vector2(0.5f,-0.5f)
-            };
-            quad.GetComponent<MeshFilter>().mesh.SetVertices(vartices);
-            Debug.Log(quad.GetComponent<MeshFilter>().mesh.vertices.Length);
-            quad.GetComponent<MeshFilter>().mesh.SetUVs(0, selector.GetTriUvs(offsets[i]));
-            */
-            quad.GetComponent<MeshFilter>().sharedMesh= factory.CreateMesh(Hd2d.MeshType.Triangle, offsets[i]);
+            quad.GetComponent<MeshFilter>().sharedMesh= factory.CreateMesh(meshTypes[i], offsets[i]);
             quads.Add(quad);
         }
     }

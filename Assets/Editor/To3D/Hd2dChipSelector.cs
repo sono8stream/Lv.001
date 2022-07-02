@@ -21,8 +21,10 @@ namespace Hd2d
             {
                 case MeshType.Rectangle:
                     return GetSquareUvs(offset);
-                case MeshType.Triangle:
-                    return GetTriUvs(offset);
+                case MeshType.LeftTriangle:
+                    return GetLeftTriangleUvs(offset);
+                case MeshType.RightTriangle:
+                    return GetRightTriangleUvs(offset);
             }
 
             Assert.IsTrue(false, "不正なメッシュタイプが指定されました");
@@ -35,19 +37,30 @@ namespace Hd2d
             float xUnit = GetXUnit();
             float yUnit = GetYUnit();
             res[0] = new Vector2(xUnit * offset.x, 1 - yUnit * (offset.y + 1));
-            res[1] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * (offset.y + 1));
-            res[2] = new Vector2(xUnit * offset.x, 1 - yUnit * offset.y);
+            res[1] = new Vector2(xUnit * offset.x, 1 - yUnit * offset.y);
+            res[2] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * (offset.y + 1));
             res[3] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * offset.y);
             return res;
         }
 
-        public Vector2[] GetTriUvs(Vector2Int offset)
+        public Vector2[] GetLeftTriangleUvs(Vector2Int offset)
         {
             Vector2[] res = new Vector2[3];
             float xUnit = GetXUnit();
             float yUnit = GetYUnit();
             res[0] = new Vector2(xUnit * offset.x, 1 - yUnit * (offset.y + 1));
             res[1] = new Vector2(xUnit * offset.x, 1 - yUnit * offset.y);
+            res[2] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * (offset.y + 1));
+            return res;
+        }
+
+        public Vector2[] GetRightTriangleUvs(Vector2Int offset)
+        {
+            Vector2[] res = new Vector2[3];
+            float xUnit = GetXUnit();
+            float yUnit = GetYUnit();
+            res[0] = new Vector2(xUnit * offset.x, 1 - yUnit * (offset.y + 1));
+            res[1] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * offset.y);
             res[2] = new Vector2(xUnit * (offset.x + 1), 1 - yUnit * (offset.y + 1));
             return res;
         }
