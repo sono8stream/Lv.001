@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-namespace HdConversion
+namespace Hd2d
 {
 #if UNITY_EDITOR
     public class HdConversionEditor : EditorWindow
@@ -26,11 +26,6 @@ namespace HdConversion
             {
                 GenerateMapObject();
             }
-        }
-
-        public enum MapBlockType
-        {
-            Cube, Slope
         }
 
         private void GenerateMapObject()

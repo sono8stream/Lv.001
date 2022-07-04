@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Hd2d
 {
+    // yb’èzƒQ[ƒ€“à‚Åg—p‚Å‚«‚é‚æ‚¤Expression‘w‚ÉˆÚ“®
     public class ChipSelector
     {
         private int unitPerWidth;
