@@ -45,7 +45,7 @@ namespace Infrastructure
             {
                 if (mapNameDict.ContainsKey(id))
                 {
-                    WolfMapCreator creator = new WolfMapCreator(id);
+                    WolfMapFactory creator = new WolfMapFactory(id);
                     mapDataDict.Add(id, creator.Create(mapNameDict[id]));
                     return mapDataDict[id];
                 }

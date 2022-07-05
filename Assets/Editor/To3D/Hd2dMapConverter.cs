@@ -55,7 +55,7 @@ namespace Hd2d
                     MapId id = new MapId(mapDataIndex);
 
                     string dirPath = $"{Application.streamingAssetsPath}/Data/MapData/SampleMapA.mps";
-                    Wolhd2dfMapCreator creator = new Wolhd2dfMapCreator(null);
+                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(null);
                     creator.Create(dirPath);
                 }
             }

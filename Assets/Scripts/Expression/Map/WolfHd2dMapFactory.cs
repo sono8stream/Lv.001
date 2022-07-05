@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Expression.Map
 {
-    public class Wolhd2dfMapCreator
+    public class WolfHd2dMapFactory
     {
         // 【暫定】マップチップのピクセル数は16で固定とする
         //          マップ描画時など至る所で使用するので，どう使いまわすかが課題
@@ -11,7 +11,7 @@ namespace Expression.Map
         private const int PIXEL_PER_GRID = 16;
         private MapId mapId;
 
-        public Wolhd2dfMapCreator(MapId mapId)
+        public WolfHd2dMapFactory(MapId mapId)
         {
             this.mapId = mapId;
         }
