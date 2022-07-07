@@ -15,7 +15,7 @@ namespace Hd2d
         public Mesh CreateMesh(MeshType meshType, Vector2Int uvChipOffset)
         {
             Mesh mesh = new Mesh();
-            var selector = new ChipSelector(8, 256);
+            var selector = new BaseChipSelector(8, 256);
             switch (meshType)
             {
                 case MeshType.Rectangle:
@@ -29,7 +29,7 @@ namespace Hd2d
                         mesh.SetVertices(vartices);
                         var triangles = new int[6] { 0, 1, 2, 2, 1, 3 };
                         mesh.SetTriangles(triangles, 0);
-                        mesh.SetUVs(0, selector.GetSquareUvs(uvChipOffset));
+                        mesh.SetUVs(0, selector.GetUvs(uvChipOffset,meshType));
                     }
                     break;
                 case MeshType.LeftTriangle:
@@ -42,7 +42,7 @@ namespace Hd2d
                         mesh.SetVertices(vartices);
                         var triangles = new int[3] { 0, 1, 2 };
                         mesh.SetTriangles(triangles, 0);
-                        mesh.SetUVs(0, selector.GetLeftTriangleUvs(uvChipOffset));
+                        mesh.SetUVs(0, selector.GetUvs(uvChipOffset, meshType));
                     }
                     break;
                 case MeshType.RightTriangle:
@@ -55,7 +55,7 @@ namespace Hd2d
                         mesh.SetVertices(vartices);
                         var triangles = new int[3] { 0, 1, 2 };
                         mesh.SetTriangles(triangles, 0);
-                        mesh.SetUVs(0, selector.GetRightTriangleUvs(uvChipOffset));
+                        mesh.SetUVs(0, selector.GetUvs(uvChipOffset, meshType));
                     }
                     break;
             }

@@ -4,34 +4,18 @@ using System.Collections.Generic;
 
 namespace Expression.Map
 {
-    public class ChipSelector
+    public class BaseChipSelector : ChipSelector
     {
         private int unitPerWidth;
         private int unitPerHeight;
 
-        public ChipSelector(int unitPerWidth, int unitPerHeight)
+        public BaseChipSelector(int unitPerWidth, int unitPerHeight) : base()
         {
             this.unitPerWidth = unitPerWidth;
             this.unitPerHeight = unitPerHeight;
         }
 
-        public Vector2[] GetUvs(Vector2Int offset, MeshType meshType)
-        {
-            switch (meshType)
-            {
-                case MeshType.Rectangle:
-                    return GetSquareUvs(offset);
-                case MeshType.LeftTriangle:
-                    return GetLeftTriangleUvs(offset);
-                case MeshType.RightTriangle:
-                    return GetRightTriangleUvs(offset);
-            }
-
-            Assert.IsTrue(false, "不正なメッシュタイプが指定されました");
-            return null;
-        }
-
-        public Vector2[] GetSquareUvs(Vector2Int offset)
+        protected override Vector2[] GetSquareUvs(Vector2Int offset)
         {
             Vector2[] res = new Vector2[4];
             float xUnit = GetXUnit();
@@ -43,7 +27,7 @@ namespace Expression.Map
             return res;
         }
 
-        public Vector2[] GetLeftTriangleUvs(Vector2Int offset)
+        protected override Vector2[] GetLeftTriangleUvs(Vector2Int offset)
         {
             Vector2[] res = new Vector2[3];
             float xUnit = GetXUnit();
@@ -54,7 +38,7 @@ namespace Expression.Map
             return res;
         }
 
-        public Vector2[] GetRightTriangleUvs(Vector2Int offset)
+        protected override Vector2[] GetRightTriangleUvs(Vector2Int offset)
         {
             Vector2[] res = new Vector2[3];
             float xUnit = GetXUnit();
