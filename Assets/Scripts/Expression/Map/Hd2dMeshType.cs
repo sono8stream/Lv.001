@@ -1,5 +1,5 @@
 
-namespace Hd2d
+namespace Expression.Map
 {
     public enum MeshType
     {

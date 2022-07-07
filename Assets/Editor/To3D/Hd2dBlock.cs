@@ -30,6 +30,7 @@ public class Hd2dBlock : MonoBehaviour
     {
         for (int i = 0; i < quads.Count; i++)
         {
+            // yŽb’èzƒAƒZƒbƒg‚ð’¼ÚŠ„‚è“–‚Ä‚éˆ—‚ð”pŽ~
             if (Application.isPlaying)
             {
                 Destroy(quads[i].GetComponent<Renderer>().sharedMaterial);

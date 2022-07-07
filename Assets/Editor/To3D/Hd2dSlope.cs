@@ -1,12 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Expression.Map;
 
 public class Hd2dSlope : Hd2dBlock
 {
-    enum MeshType
-    {
-        Rectangle, Triangle
-    }
 
     protected override void Generate()
     {
@@ -34,12 +31,12 @@ public class Hd2dSlope : Hd2dBlock
             Vector3.one,
         };
 
-        Hd2d.MeshType[] meshTypes = new Hd2d.MeshType[meshes] {
-            Hd2d.MeshType.Rectangle,
-            Hd2d.MeshType.RightTriangle,
-            Hd2d.MeshType.Rectangle,
-            Hd2d.MeshType.LeftTriangle,
-            Hd2d.MeshType.Rectangle,
+        MeshType[] meshTypes = new MeshType[meshes] {
+            MeshType.Rectangle,
+            MeshType.RightTriangle,
+            MeshType.Rectangle,
+            MeshType.LeftTriangle,
+            MeshType.Rectangle,
         };
 
         var factory = new Hd2d.MeshFactory();

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Expression.Map;
 
 public class Hd2dCube : Hd2dBlock
 {
@@ -33,8 +34,8 @@ public class Hd2dCube : Hd2dBlock
             quad.transform.localScale = Vector3.one;
             quads.Add(quad);
 
-            quad.GetComponent<Renderer>().sharedMaterial = new Material(mat);
-            quad.GetComponent<MeshFilter>().sharedMesh = factory.CreateMesh(Hd2d.MeshType.Rectangle, offsets[i]);
+            quad.GetComponent<Renderer>().sharedMaterial = mat;// = new Material(mat);
+            quad.GetComponent<MeshFilter>().sharedMesh = factory.CreateMesh(MeshType.Rectangle, offsets[i]);
         }
     }
 }

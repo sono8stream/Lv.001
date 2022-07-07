@@ -43,6 +43,7 @@ namespace Expression.Map
                 mapchipTexture.LoadImage(baseTexBytes);
                 mapchipTexture.Apply();
                 mapchipMaterial.mainTexture = mapchipTexture;
+                mapchipMaterial.mainTexture.filterMode = FilterMode.Point;
 
                 for (int i = 1; i < autoTileCount; i++)
                 {
@@ -52,6 +53,7 @@ namespace Expression.Map
                     autochipTexture.LoadImage(autoTexBytes);
                     autochipTexture.Apply();
                     autochipMaterials[i].mainTexture = autochipTexture;
+                    autochipMaterials[i].mainTexture.filterMode = FilterMode.Point;
                 }
             }
 
