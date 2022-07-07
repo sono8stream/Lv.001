@@ -39,7 +39,7 @@ public class Hd2dSlope : Hd2dBlock
             MeshType.Rectangle,
         };
 
-        var factory = new Hd2d.MeshFactory();
+        var factory = new MeshFactory();
         for (int i = 0; i < meshes; i++)
         {
             GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);

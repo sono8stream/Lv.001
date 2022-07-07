@@ -24,7 +24,7 @@ public class Hd2dCube : Hd2dBlock
             new Vector3(-90,0,0),
         };
 
-        var factory = new Hd2d.MeshFactory();
+        var factory = new MeshFactory();
         for (int i = 0; i < quadCount; i++)
         {
             GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
