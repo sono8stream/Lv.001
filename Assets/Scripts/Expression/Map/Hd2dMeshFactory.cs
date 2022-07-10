@@ -16,10 +16,6 @@ namespace Expression.Map
 
         public Mesh CreateMesh(MeshType meshType, Vector2Int uvChipOffset)
         {
-            Mesh mesh = new Mesh();
-            Vector3[] vartices = null;
-            int[] triangles = null;
-
             switch (meshType)
             {
                 case MeshType.Rectangle:
