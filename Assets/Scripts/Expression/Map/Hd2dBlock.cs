@@ -13,7 +13,7 @@ namespace Expression.Map
         protected List<GameObject> quads;
         protected Vector3Int pos;
 
-        public void Initialize(Material mat, Vector2Int[] offsets, Vector3Int pos, MeshFactory meshFactory)
+        public void Initialize(Material mat, Vector2Int[] offsets, Vector3Int pos, Hd2dMeshFactory meshFactory)
         {
             this.mat = mat;
             this.offsets = offsets;
@@ -46,7 +46,7 @@ namespace Expression.Map
             }
         }
 
-        protected virtual void Generate(MeshFactory meshFactory)
+        protected virtual void Generate(Hd2dMeshFactory meshFactory)
         {
 
         }

@@ -5,68 +5,81 @@ using Expression.Map;
 
 namespace Expression.Map
 {
-    public class MeshFactory
+    public class Hd2dMeshFactory
     {
         public ChipSelector Selector { get; private set; }
 
-        public MeshFactory(ChipSelector selector)
+        public Hd2dMeshFactory(ChipSelector selector)
         {
+            this.Selector = selector;
         }
 
         public Mesh CreateMesh(MeshType meshType, Vector2Int uvChipOffset)
         {
             Mesh mesh = new Mesh();
-            // チップ画像に応じてサイズを切り替える
-            //var selector = new BaseChipSelector(8, 256);
-            var selector = new BaseChipSelector(8, 249);
             Vector3[] vartices = null;
             int[] triangles = null;
 
             switch (meshType)
             {
                 case MeshType.Rectangle:
-                    {
-                        vartices = new Vector3[4] {
+                    return CreateRectangle(uvChipOffset);
+                case MeshType.LeftTriangle:
+                    return CreateLeftTriangle(uvChipOffset);
+                case MeshType.RightTriangle:
+                    return CreateRightTriangle(uvChipOffset);
+                default:
+                    throw new System.Exception("Undefined mesh type was specified!");
+            }
+        }
+
+        public Mesh CreateRectangle(Vector2Int uvChipOffset)
+        {
+            var vartices = new Vector3[4] {
                 new Vector2(-0.5f,-0.5f),
                 new Vector2(-0.5f,0.5f),
                 new Vector2(0.5f,-0.5f),
                 new Vector2(0.5f,0.5f)
             };
-                        triangles = new int[6] { 0, 1, 2, 2, 1, 3 };
-                    }
-                    break;
-                case MeshType.LeftTriangle:
-                    {
-                        vartices = new Vector3[3] {
+            var triangles = new int[6] { 0, 1, 2, 2, 1, 3 };
+
+            Mesh mesh = new Mesh();
+            mesh.SetVertices(vartices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.SetUVs(0, Selector.GetUvs(uvChipOffset, MeshType.Rectangle));
+            return mesh;
+        }
+
+        public Mesh CreateLeftTriangle(Vector2Int uvChipOffset)
+        {
+            var vartices = new Vector3[3] {
                 new Vector2(-0.5f,-0.5f),
                 new Vector2(-0.5f,0.5f),
                 new Vector2(0.5f,-0.5f)
             };
-                        triangles = new int[3] { 0, 1, 2 };
-                    }
-                    break;
-                case MeshType.RightTriangle:
-                    {
-                        vartices = new Vector3[3] {
+            var triangles = new int[3] { 0, 1, 2 };
+
+            Mesh mesh = new Mesh();
+            mesh.SetVertices(vartices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.SetUVs(0, Selector.GetUvs(uvChipOffset, MeshType.LeftTriangle));
+            return mesh;
+        }
+
+        public Mesh CreateRightTriangle(Vector2Int uvChipOffset)
+        {
+            var vartices = new Vector3[3] {
                 new Vector2(-0.5f,-0.5f),
                 new Vector2(0.5f,0.5f),
                 new Vector2(0.5f,-0.5f)
             };
-                        triangles = new int[3] { 0, 1, 2 };
-                    }
-                    break;
-            }
+            var triangles = new int[3] { 0, 1, 2 };
 
+            Mesh mesh = new Mesh();
             mesh.SetVertices(vartices);
             mesh.SetTriangles(triangles, 0);
-            mesh.SetUVs(0, selector.GetUvs(uvChipOffset, meshType));
-
+            mesh.SetUVs(0, Selector.GetUvs(uvChipOffset, MeshType.RightTriangle));
             return mesh;
-        }
-
-        public Mesh CreateMesh(MeshType meshType)
-        {
-            return null;
         }
     }
 }

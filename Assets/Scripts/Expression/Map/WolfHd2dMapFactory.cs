@@ -262,7 +262,7 @@ namespace Expression.Map
                     break;
             }
 
-            MeshFactory factory = new MeshFactory(selector);
+            Hd2dMeshFactory factory = new Hd2dMeshFactory(selector);
             block?.Initialize(material, offsets, Vector3Int.one, factory);
             return block;
         }

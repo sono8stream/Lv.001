@@ -5,7 +5,7 @@ namespace Expression.Map
 {
     public class Hd2dCube : Hd2dBlock
     {
-        protected override void Generate(MeshFactory meshFactory)
+        protected override void Generate(Hd2dMeshFactory meshFactory)
         {
             const int quadCount = 6;
             Vector3[] poses = new Vector3[quadCount] {

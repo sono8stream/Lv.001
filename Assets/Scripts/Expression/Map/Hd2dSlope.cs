@@ -7,7 +7,7 @@ namespace Expression.Map
     public class Hd2dSlope : Hd2dBlock
     {
 
-        protected override void Generate(MeshFactory meshFactory)
+        protected override void Generate(Hd2dMeshFactory meshFactory)
         {
             const int meshes = 5;
             Vector3[] poses = new Vector3[meshes] {

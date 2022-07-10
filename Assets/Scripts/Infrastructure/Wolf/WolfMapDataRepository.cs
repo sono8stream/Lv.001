@@ -9,6 +9,7 @@ using Util;
 
 namespace Infrastructure
 {
+
     public class WolfMapDataRepository : IMapDataRepository
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
