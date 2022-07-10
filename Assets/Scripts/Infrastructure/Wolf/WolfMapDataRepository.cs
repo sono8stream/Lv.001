@@ -20,6 +20,7 @@ namespace Infrastructure
         {
             // 暫定：mpsをシステム変数DBから読み込めるようになるまで固定の値を割り当てておく
             string[] fileNames = { "Dungeon.mps", "SampleMapA.mps", "SampleMapB.mps", "TitleMap.mps" };
+            //string[] fileNames = { "Map005.mps", "Map005_1.mps" };
             //string[] filePaths = Directory.GetFiles(dirPath, "*.mps");
             mapNameDict = new Dictionary<MapId, string>();
             for (int i = 0; i < fileNames.Length; i++)
@@ -55,6 +56,11 @@ namespace Infrastructure
                     return null;
                 }
             }
+        }
+
+        public int GetCount()
+        {
+            return mapDataDict.Count;
         }
     }
 }

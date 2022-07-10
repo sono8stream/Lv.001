@@ -20,7 +20,7 @@ namespace Infrastructure
             IMapDataRepository mapDataRepository = DI.DependencyInjector.It().MapDataRepository;
 
             // 【暫定】システム変数を登録するまでマップ情報のIDは決め打ちとする
-            for(int i = 0; i < 4; i++)
+            for(int i = 0; i < mapDataRepository.GetCount(); i++)
             {
                 var mapId = new MapId(i);
                 MapData mapData = mapDataRepository.Find(mapId);

@@ -9,6 +9,8 @@ namespace Expression.Map
     {
         public MapId Id { get; private set; }
 
+        public GameObject BaseObject { get; private set; }
+
         public Hd2dBlock[] Blocks { get; private set; }
 
         public int Width { get; private set; }
@@ -19,7 +21,7 @@ namespace Expression.Map
 
         public MapEvent.EventData[] EventDataArray { get; private set; }
 
-        public Hd2dMapData(MapId id,Hd2dBlock[] blocks, int width, int height,
+        public Hd2dMapData(MapId id, Hd2dBlock[] blocks, int width, int height,
          MovableInfo[,] movableGrid, MapEvent.EventData[] eventDataArray)
         {
             Id = id;
@@ -28,6 +30,13 @@ namespace Expression.Map
             Height = height;
             MovableGrid = movableGrid;
             EventDataArray = eventDataArray;
+
+            BaseObject = new GameObject("Hd2dMap");
+            BaseObject.transform.position = Vector3.zero;
+            foreach (Hd2dBlock block in Blocks)
+            {
+                block.transform.SetParent(BaseObject.transform);
+            }
         }
     }
 }

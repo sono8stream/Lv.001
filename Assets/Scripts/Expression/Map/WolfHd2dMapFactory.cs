@@ -141,8 +141,11 @@ namespace Expression.Map
                         // 【暫定】マップチップの横ユニット数を8以外に対応する
                         int xUnitCount = 8;
                         Vector2Int offset = new Vector2Int(mapData[i, j] % xUnitCount, mapData[i, j] / xUnitCount);
-                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial);
-                        block.transform.localPosition = new Vector3(j, 0, i);
+                        int chipLength = mapchipMaterial.mainTexture.width / xUnitCount;
+                        int yUnitCount = mapchipMaterial.mainTexture.height / chipLength;
+                        BaseChipSelector selector = new BaseChipSelector(xUnitCount, yUnitCount);
+                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, selector);
+                        block.transform.localPosition = new Vector3(j, 0, -i);
                         blocks.Add(block);
                     }
                 }
@@ -163,6 +166,10 @@ namespace Expression.Map
             List<Hd2dBlock> blocks = new List<Hd2dBlock>();
             for (int i = 0; i < mapDataArray.Length; i++)
             {
+                foreach(Hd2dBlock block in mapDataArray[i].Blocks)
+                {
+                    block.transform.position += Vector3.up * i;
+                }
                 blocks.AddRange(mapDataArray[i].Blocks);
             }
 
@@ -183,6 +190,18 @@ namespace Expression.Map
             Hd2dMapData data = new Hd2dMapData(mapId, blocks.ToArray(),
             mapDataArray[0].Width, mapDataArray[0].Height,
              movableGrid, eventDataArray);
+
+            for(int i = 0; i < mapDataArray.Length; i++)
+            {
+                if (Application.isPlaying)
+                {
+                    Object.Destroy(mapDataArray[i].BaseObject);
+                }
+                else
+                {
+                    Object.DestroyImmediate(mapDataArray[i].BaseObject);
+                }
+            }
             return data;
         }
 
@@ -208,7 +227,8 @@ namespace Expression.Map
             return new MovableInfo(isMovable);
         }
 
-        private Hd2dBlock GenerateMapObject(Hd2d.MapBlockType blockType,Vector2Int offset,Material material)
+        private Hd2dBlock GenerateMapObject(Hd2d.MapBlockType blockType, Vector2Int offset,
+            Material material, ChipSelector selector)
         {
             GameObject ob = new GameObject("Block");
             Hd2dBlock block = null;
@@ -242,7 +262,8 @@ namespace Expression.Map
                     break;
             }
 
-            block?.Initialize(material, offsets, Vector3Int.one);
+            MeshFactory factory = new MeshFactory(selector);
+            block?.Initialize(material, offsets, Vector3Int.one, factory);
             return block;
         }
 

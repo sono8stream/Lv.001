@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using Expression.Map;
 
 namespace Hd2d
 {
@@ -60,7 +61,9 @@ namespace Hd2d
                 default:
                     break;
             }
-            block?.Initialize(mat, offsets, Vector3Int.one);
+            ChipSelector selector = new BaseChipSelector(8, 256);
+            MeshFactory factory = new MeshFactory(selector);
+            block?.Initialize(mat, offsets, Vector3Int.one, factory);
 
             //obj.GetComponent<Renderer>().material=
 

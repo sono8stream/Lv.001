@@ -7,14 +7,18 @@ namespace Expression.Map
 {
     public class MeshFactory
     {
-        public MeshFactory()
+        public ChipSelector Selector { get; private set; }
+
+        public MeshFactory(ChipSelector selector)
         {
         }
 
         public Mesh CreateMesh(MeshType meshType, Vector2Int uvChipOffset)
         {
             Mesh mesh = new Mesh();
-            var selector = new BaseChipSelector(8, 256);
+            // チップ画像に応じてサイズを切り替える
+            //var selector = new BaseChipSelector(8, 256);
+            var selector = new BaseChipSelector(8, 249);
             Vector3[] vartices = null;
             int[] triangles = null;
 
@@ -58,6 +62,11 @@ namespace Expression.Map
             mesh.SetUVs(0, selector.GetUvs(uvChipOffset, meshType));
 
             return mesh;
+        }
+
+        public Mesh CreateMesh(MeshType meshType)
+        {
+            return null;
         }
     }
 }
