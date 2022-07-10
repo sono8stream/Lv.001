@@ -61,8 +61,7 @@ namespace Hd2d
                 default:
                     break;
             }
-            ChipSelector selector = new BaseChipSelector(8, 256);
-            Hd2dMeshFactory factory = new Hd2dMeshFactory(selector);
+            Hd2dMeshFactory factory = new Hd2dBaseChipMeshFactory(8, 256);
             block?.Initialize(mat, offsets, Vector3Int.one, factory);
 
             //obj.GetComponent<Renderer>().material=

@@ -5,13 +5,10 @@ using Expression.Map;
 
 namespace Expression.Map
 {
-    public class Hd2dMeshFactory
+    public abstract class Hd2dMeshFactory
     {
-        public ChipSelector Selector { get; private set; }
-
-        public Hd2dMeshFactory(ChipSelector selector)
+        public Hd2dMeshFactory()
         {
-            this.Selector = selector;
         }
 
         public Mesh CreateMesh(MeshType meshType, Vector2Int uvChipOffset)
@@ -29,53 +26,10 @@ namespace Expression.Map
             }
         }
 
-        public Mesh CreateRectangle(Vector2Int uvChipOffset)
-        {
-            var vartices = new Vector3[4] {
-                new Vector2(-0.5f,-0.5f),
-                new Vector2(-0.5f,0.5f),
-                new Vector2(0.5f,-0.5f),
-                new Vector2(0.5f,0.5f)
-            };
-            var triangles = new int[6] { 0, 1, 2, 2, 1, 3 };
+        protected abstract Mesh CreateRectangle(Vector2Int uvChipOffset);
 
-            Mesh mesh = new Mesh();
-            mesh.SetVertices(vartices);
-            mesh.SetTriangles(triangles, 0);
-            mesh.SetUVs(0, Selector.GetUvs(uvChipOffset, MeshType.Rectangle));
-            return mesh;
-        }
+        protected abstract Mesh CreateLeftTriangle(Vector2Int uvChipOffset);
 
-        public Mesh CreateLeftTriangle(Vector2Int uvChipOffset)
-        {
-            var vartices = new Vector3[3] {
-                new Vector2(-0.5f,-0.5f),
-                new Vector2(-0.5f,0.5f),
-                new Vector2(0.5f,-0.5f)
-            };
-            var triangles = new int[3] { 0, 1, 2 };
-
-            Mesh mesh = new Mesh();
-            mesh.SetVertices(vartices);
-            mesh.SetTriangles(triangles, 0);
-            mesh.SetUVs(0, Selector.GetUvs(uvChipOffset, MeshType.LeftTriangle));
-            return mesh;
-        }
-
-        public Mesh CreateRightTriangle(Vector2Int uvChipOffset)
-        {
-            var vartices = new Vector3[3] {
-                new Vector2(-0.5f,-0.5f),
-                new Vector2(0.5f,0.5f),
-                new Vector2(0.5f,-0.5f)
-            };
-            var triangles = new int[3] { 0, 1, 2 };
-
-            Mesh mesh = new Mesh();
-            mesh.SetVertices(vartices);
-            mesh.SetTriangles(triangles, 0);
-            mesh.SetUVs(0, Selector.GetUvs(uvChipOffset, MeshType.RightTriangle));
-            return mesh;
-        }
+        protected abstract Mesh CreateRightTriangle(Vector2Int uvChipOffset);
     }
 }

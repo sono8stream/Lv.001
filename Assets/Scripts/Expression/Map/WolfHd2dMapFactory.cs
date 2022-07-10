@@ -143,8 +143,8 @@ namespace Expression.Map
                         Vector2Int offset = new Vector2Int(mapData[i, j] % xUnitCount, mapData[i, j] / xUnitCount);
                         int chipLength = mapchipMaterial.mainTexture.width / xUnitCount;
                         int yUnitCount = mapchipMaterial.mainTexture.height / chipLength;
-                        BaseChipSelector selector = new BaseChipSelector(xUnitCount, yUnitCount);
-                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, selector);
+                        Hd2dMeshFactory meshFactory = new Hd2dBaseChipMeshFactory(xUnitCount, yUnitCount);
+                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, meshFactory);
                         block.transform.localPosition = new Vector3(j, 0, -i);
                         blocks.Add(block);
                     }
@@ -228,7 +228,7 @@ namespace Expression.Map
         }
 
         private Hd2dBlock GenerateMapObject(Hd2d.MapBlockType blockType, Vector2Int offset,
-            Material material, ChipSelector selector)
+            Material material, Hd2dMeshFactory meshFactory)
         {
             GameObject ob = new GameObject("Block");
             Hd2dBlock block = null;
@@ -262,8 +262,7 @@ namespace Expression.Map
                     break;
             }
 
-            Hd2dMeshFactory factory = new Hd2dMeshFactory(selector);
-            block?.Initialize(material, offsets, Vector3Int.one, factory);
+            block?.Initialize(material, offsets, Vector3Int.one, meshFactory);
             return block;
         }
 
