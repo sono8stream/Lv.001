@@ -101,7 +101,15 @@ namespace Expression.Map
                             continue;
                         }
 
-                        // 【暫定】オートタイルはテクスチャ形式が特殊なので生成の仕組みを追加実装
+                        // 【暫定】オートチップの横幅を16以外に対応する
+                        int chipLength = 16;
+                        int xUnitCount = autochipMaterials[id].mainTexture.width / chipLength;
+                        int yUnitCount = autochipMaterials[id].mainTexture.height / chipLength;
+                        Vector2Int offset = new Vector2Int(mapData[i, j], 0);
+                        Hd2dMeshFactory meshFactory = new Hd2dAutoChipMeshFactory(xUnitCount, yUnitCount);
+                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, autochipMaterials[id], meshFactory);
+                        block.transform.localPosition = new Vector3(j, 0, -i);
+                        blocks.Add(block);
                         /*
                         Texture2D targetTexture = tile.MovableTypeValue == MapTile.MovableType.AlwaysUpper ? upperTexture : underTexture;
 
