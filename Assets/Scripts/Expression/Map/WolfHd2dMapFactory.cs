@@ -11,9 +11,12 @@ namespace Expression.Map
         private const int PIXEL_PER_GRID = 16;
         private MapId mapId;
 
-        public WolfHd2dMapFactory(MapId mapId)
+        private Hd2dTileInfo[] tileInfoArray;
+
+        public WolfHd2dMapFactory(MapId mapId, Hd2dTileInfo[] tileInfoArray)
         {
             this.mapId = mapId;
+            this.tileInfoArray = tileInfoArray;
         }
 
         public Hd2dMapData Create(string mapFilePath)
@@ -35,6 +38,7 @@ namespace Expression.Map
             {
                 autochipMaterials[i] = new Material(Shader.Find("Legacy Shaders/Transparent/Diffuse"));
             }
+
             {
                 // 【暫定】ファイルを読み込めなかった場合のエラー処理
                 string imagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.BaseTileFilePath;
@@ -87,6 +91,7 @@ namespace Expression.Map
             {
                 for (int j = 0; j < width; j++)
                 {
+                    Hd2dBlock block = null;
                     // オートチップ判定
                     if (mapData[i, j] >= 100000)
                     {
@@ -107,39 +112,7 @@ namespace Expression.Map
                         int yUnitCount = autochipMaterials[id].mainTexture.height / chipLength;
                         Vector2Int offset = new Vector2Int(mapData[i, j], 0);
                         Hd2dMeshFactory meshFactory = new Hd2dAutoChipMeshFactory(xUnitCount, yUnitCount);
-                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, autochipMaterials[id], meshFactory);
-                        block.transform.localPosition = new Vector3(j, 0, -i);
-                        blocks.Add(block);
-                        /*
-                        Texture2D targetTexture = tile.MovableTypeValue == MapTile.MovableType.AlwaysUpper ? upperTexture : underTexture;
-
-                        int leftUp = mapData[i, j] / 1000 % 10;
-
-                        Color[] c = autochipMaterials[id].GetPixels(0,
-                            autochipMaterials[id].height - leftUp * PIXEL_PER_GRID - PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
-                        targetTexture.SetPixels(PIXEL_PER_GRID * j, targetTexture.height - PIXEL_PER_GRID * (i + 1) + PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
-
-                        int rightUp = mapData[i, j] / 100 % 10;
-
-                        c = autochipMaterials[id].GetPixels(PIXEL_PER_GRID / 2,
-                            autochipMaterials[id].height - rightUp * PIXEL_PER_GRID - PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
-                        targetTexture.SetPixels(PIXEL_PER_GRID * j + PIXEL_PER_GRID / 2,
-                            targetTexture.height - PIXEL_PER_GRID * (i + 1) + PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
-
-                        int leftDown = mapData[i, j] / 10 % 10;
-
-                        c = autochipMaterials[id].GetPixels(0,
-                            autochipMaterials[id].height - leftDown * PIXEL_PER_GRID - PIXEL_PER_GRID, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
-                        targetTexture.SetPixels(PIXEL_PER_GRID * j,
-                            targetTexture.height - PIXEL_PER_GRID * (i + 1), PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
-
-                        int rightDown = mapData[i, j] / 1 % 10;
-
-                        c = autochipMaterials[id].GetPixels(PIXEL_PER_GRID / 2,
-                            autochipMaterials[id].height - rightDown * PIXEL_PER_GRID - PIXEL_PER_GRID, PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2);
-                        targetTexture.SetPixels(PIXEL_PER_GRID * j + PIXEL_PER_GRID / 2,
-                            targetTexture.height - PIXEL_PER_GRID * (i + 1), PIXEL_PER_GRID / 2, PIXEL_PER_GRID / 2, c);
-                        */
+                        block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, autochipMaterials[id], meshFactory);
                     }
                     else
                     {
@@ -152,10 +125,10 @@ namespace Expression.Map
                         int chipLength = mapchipMaterial.mainTexture.width / xUnitCount;
                         int yUnitCount = mapchipMaterial.mainTexture.height / chipLength;
                         Hd2dMeshFactory meshFactory = new Hd2dBaseChipMeshFactory(xUnitCount, yUnitCount);
-                        Hd2dBlock block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, meshFactory);
-                        block.transform.localPosition = new Vector3(j, 0, -i);
-                        blocks.Add(block);
+                        block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, meshFactory);
                     }
+                    block.transform.localPosition = new Vector3(j, 0, -i);
+                    blocks.Add(block);
                 }
             }
 

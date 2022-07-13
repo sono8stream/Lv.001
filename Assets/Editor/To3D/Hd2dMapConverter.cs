@@ -13,6 +13,9 @@ namespace Hd2d
     {
         private Material mat = null;
         private int mapDataIndex = -1;
+        private const int CHIP_COUNT = 256;// ‰¼‚ÅŒˆ‚ß‘Å‚¿
+        private Vector3[] offsets = new Vector3[CHIP_COUNT];
+        private Vector2 scrollPos = Vector2.zero;
 
         [MenuItem("Window/Hd2dConverter/WolfConverter")]
         static void ShowMapConverter()
@@ -26,12 +29,16 @@ namespace Hd2d
             ShowMapFilePullDown();
 
             mat = EditorGUILayout.ObjectField("Material", mat, typeof(Material), false) as Material;
-            /*
-            if (GUILayout.Button("Generate quads"))
+
+            using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPos))
             {
-                GenerateMapObject();
+                scrollPos = scrollView.scrollPosition;
+
+                for (int i = 0; i < CHIP_COUNT; i++)
+                {
+                    offsets[i] = EditorGUILayout.Vector3Field("Sample", offsets[i]);
+                }
             }
-            */
         }
 
         private void ShowMapFilePullDown()
@@ -53,10 +60,9 @@ namespace Hd2d
                 {
                     mapDataIndex = curIndex;
                     MapId id = new MapId(mapDataIndex);
-
-                    string dirPath = $"{Application.streamingAssetsPath}/Data/MapData/SampleMapA.mps";
-                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(null);
-                    creator.Create(dirPath);
+                    Hd2dTileInfo[] tileInfoArray = offsets.Select(offset => new Hd2dTileInfo(offset)).ToArray();
+                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoArray);
+                    creator.Create(filePaths[curIndex]);
                 }
             }
         }
