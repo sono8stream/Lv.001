@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Expression.Map
@@ -85,13 +86,17 @@ namespace Expression.Map
             int width = mapData.GetLength(1);
             int height = mapData.GetLength(0);
             MovableInfo[,] movableGrid = new MovableInfo[height, width];
-            List<Hd2dBlock> blocks = new List<Hd2dBlock>();
+            Hd2dBlock[,] blocks = new Hd2dBlock[height, width];
 
-            for (int i = 0; i < height; i++)
+            // オフセット計算のため下側から順に描画
+            int firstRow = height - 1;
+            for (int i =firstRow; i >= 0; i--)
             {
                 for (int j = 0; j < width; j++)
                 {
                     Hd2dBlock block = null;
+                    Hd2dTileInfo tileInfo = null;
+
                     // オートチップ判定
                     if (mapData[i, j] >= 100000)
                     {
@@ -99,6 +104,7 @@ namespace Expression.Map
                         id--;
                         MapTile.UnitTile tile = tileData.UnitTileConfigs[id];
                         movableGrid[i, j] = GetTileInfoFrom(tile);
+                        tileInfo = tileInfoArray[id];
 
                         // ID 0はテクスチャ情報無し
                         if (id == 0)
@@ -118,6 +124,7 @@ namespace Expression.Map
                     {
                         MapTile.UnitTile tile = tileData.UnitTileConfigs[mapData[i, j] + 16];
                         movableGrid[i, j] = GetTileInfoFrom(tile);
+                        tileInfo = tileInfoArray[mapData[i, j] + 16];
 
                         // 【暫定】マップチップの横ユニット数を8以外に対応する
                         int xUnitCount = 8;
@@ -127,12 +134,31 @@ namespace Expression.Map
                         Hd2dMeshFactory meshFactory = new Hd2dBaseChipMeshFactory(xUnitCount, yUnitCount);
                         block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, meshFactory);
                     }
-                    block.transform.localPosition = new Vector3(j, 0, -i);
-                    blocks.Add(block);
+
+                    if (i == firstRow)
+                    {
+                        block.transform.localPosition = new Vector3(j, 0, -i);
+                    }
+                    else
+                    {
+                        Hd2dBlock frontBlock = blocks[i + 1, j];
+                        if (frontBlock == null)
+                        {
+                            block.transform.localPosition = new Vector3(j, 0, -i);
+                        }
+                        else
+                        {
+                            Vector3 frontPos = frontBlock.transform.localPosition;
+                            block.transform.localPosition = frontPos + Vector3.forward;
+                        }
+                    }
+                    block.transform.localPosition += tileInfo.Offset;
+                    blocks[i, j] = block;
                 }
             }
 
-            return new Hd2dMapData(mapId, blocks.ToArray(), width, height, movableGrid, null);
+            Hd2dBlock[] blockArray = blocks.Cast<Hd2dBlock>().Where(block => block != null).ToArray();
+            return new Hd2dMapData(mapId, blockArray, width, height, movableGrid, null);
         }
 
         private Hd2dMapData CombineMapData(MapEvent.EventData[] eventDataArray, params Hd2dMapData[] mapDataArray)
@@ -147,10 +173,12 @@ namespace Expression.Map
             List<Hd2dBlock> blocks = new List<Hd2dBlock>();
             for (int i = 0; i < mapDataArray.Length; i++)
             {
+                /*
                 foreach(Hd2dBlock block in mapDataArray[i].Blocks)
                 {
-                    block.transform.position += Vector3.up * i;
+                    block.transform.localPosition += Vector3.up * i;
                 }
+                */
                 blocks.AddRange(mapDataArray[i].Blocks);
             }
 

@@ -13,15 +13,52 @@ namespace Hd2d
     {
         private Material mat = null;
         private int mapDataIndex = -1;
-        private const int CHIP_COUNT = 256;// ‰¼‚ÅŒˆ‚ß‘Å‚¿
+        private const int CHIP_COUNT = 2500;// ‰¼‚ÅŒˆ‚ß‘Å‚¿
         private Vector3[] offsets = new Vector3[CHIP_COUNT];
         private Vector2 scrollPos = Vector2.zero;
+
+        [System.Serializable]
+        class SaveData
+        {
+            public Vector3[] offsets;
+
+            public SaveData()
+            {
+                offsets = new Vector3[0];
+            }
+        }
+
+        private string saveKey = "Hd2dTileSetting";
 
         [MenuItem("Window/Hd2dConverter/WolfConverter")]
         static void ShowMapConverter()
         {
             GetWindow(typeof(Hd2dMapConverter));
         }
+
+        private void OnEnable()
+        {
+            if (EditorPrefs.HasKey(saveKey))
+            {
+                string json = EditorPrefs.GetString(saveKey);
+                SaveData loaded = JsonUtility.FromJson<SaveData>(json);
+                if (loaded.offsets.Length == CHIP_COUNT)
+                {
+                    offsets = loaded.offsets;
+                    Debug.Log("Loaded tile data");
+                }
+            }
+        }
+
+        private void OnDisable()
+        {
+            SaveData data = new SaveData();
+            data.offsets = offsets;
+            string json = JsonUtility.ToJson(data);
+            EditorPrefs.SetString(saveKey, json);
+            Debug.Log("Saved tile data");
+        }
+
 
         private void OnGUI()
         {
@@ -36,7 +73,7 @@ namespace Hd2d
 
                 for (int i = 0; i < CHIP_COUNT; i++)
                 {
-                    offsets[i] = EditorGUILayout.Vector3Field("Sample", offsets[i]);
+                    offsets[i] = EditorGUILayout.Vector3Field($"Tile {i}", offsets[i]);
                 }
             }
         }
