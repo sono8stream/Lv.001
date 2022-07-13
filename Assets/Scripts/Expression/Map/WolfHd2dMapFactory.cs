@@ -28,12 +28,12 @@ namespace Expression.Map
             MapTile.WolfRepository repository = new MapTile.WolfRepository();
             MapTile.TileData tileData = repository.Find(tileSetId);
 
-            Material mapchipMaterial = new Material(Shader.Find("Sprites/Default"));
+            Material mapchipMaterial = new Material(Shader.Find("Legacy Shaders/Transparent/Diffuse"));
             int autoTileCount = 16;
             Material[] autochipMaterials = new Material[autoTileCount];
             for(int i = 0; i < autoTileCount; i++)
             {
-                autochipMaterials[i]= new Material(Shader.Find("Sprites/Default"));
+                autochipMaterials[i] = new Material(Shader.Find("Legacy Shaders/Transparent/Diffuse"));
             }
             {
                 // 【暫定】ファイルを読み込めなかった場合のエラー処理

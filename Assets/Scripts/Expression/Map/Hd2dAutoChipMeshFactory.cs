@@ -40,10 +40,10 @@ namespace Expression.Map
                 new Vector2(0.5f,0),
             };
             var triangles = new int[24] {
-                0, 2, 1, 2, 1, 3,
-                4, 6, 5, 6, 5, 7,
-                8, 10, 9, 10, 9, 11,
-                12, 14, 13, 14, 13, 15,
+                0, 1, 2, 2, 1, 3,
+                4, 5, 6, 6, 5, 7,
+                8, 9, 10, 10, 9, 11,
+                12, 13, 14, 14, 13, 15,
             };
 
             float xUnit = GetXUnit();
@@ -57,23 +57,23 @@ namespace Expression.Map
 
             uvs[0] = new Vector2(0, 1 - yUnit * (leftUp + 0.5f));
             uvs[1] = new Vector2(0, 1 - yUnit * leftUp);
-            uvs[2] = new Vector2(0.5f, 1 - yUnit * (leftUp + 0.5f));
-            uvs[3] = new Vector2(0.5f, 1 - yUnit * leftUp);
+            uvs[2] = new Vector2(xUnit * 0.5f, 1 - yUnit * (leftUp + 0.5f));
+            uvs[3] = new Vector2(xUnit * 0.5f, 1 - yUnit * leftUp);
 
-            uvs[4] = new Vector2(0.5f, 1 - yUnit * (rightUp + 0.5f));
-            uvs[5] = new Vector2(0.5f, 1 - yUnit * rightUp);
-            uvs[6] = new Vector2(1, 1 - yUnit * (rightUp + 0.5f));
-            uvs[7] = new Vector2(1, 1 - yUnit * rightUp);
+            uvs[4] = new Vector2(xUnit * 0.5f, 1 - yUnit * (rightUp + 0.5f));
+            uvs[5] = new Vector2(xUnit * 0.5f, 1 - yUnit * rightUp);
+            uvs[6] = new Vector2(xUnit * 1, 1 - yUnit * (rightUp + 0.5f));
+            uvs[7] = new Vector2(xUnit * 1, 1 - yUnit * rightUp);
 
             uvs[8] = new Vector2(0, 1 - yUnit * (leftDown + 1));
             uvs[9] = new Vector2(0, 1 - yUnit * (leftDown + 0.5f));
-            uvs[10] = new Vector2(0.5f, 1 - yUnit * (leftDown + 1));
-            uvs[11] = new Vector2(0.5f, 1 - yUnit * (leftDown + 0.5f));
+            uvs[10] = new Vector2(xUnit * 0.5f, 1 - yUnit * (leftDown + 1));
+            uvs[11] = new Vector2(xUnit * 0.5f, 1 - yUnit * (leftDown + 0.5f));
 
-            uvs[12] = new Vector2(0.5f, 1 - yUnit * (rightDown + 1));
-            uvs[13] = new Vector2(0.5f, 1 - yUnit * (rightDown + 0.5f));
-            uvs[14] = new Vector2(1, 1 - yUnit * (rightDown + 1));
-            uvs[15] = new Vector2(1, 1 - yUnit * (rightDown + 0.5f));
+            uvs[12] = new Vector2(xUnit * 0.5f, 1 - yUnit * (rightDown + 1));
+            uvs[13] = new Vector2(xUnit * 0.5f, 1 - yUnit * (rightDown + 0.5f));
+            uvs[14] = new Vector2(xUnit * 1, 1 - yUnit * (rightDown + 1));
+            uvs[15] = new Vector2(xUnit * 1, 1 - yUnit * (rightDown + 0.5f));
 
             Mesh mesh = new Mesh();
             mesh.SetVertices(vartices);
