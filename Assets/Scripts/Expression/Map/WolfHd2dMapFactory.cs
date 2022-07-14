@@ -118,7 +118,7 @@ namespace Expression.Map
                         int yUnitCount = autochipMaterials[id].mainTexture.height / chipLength;
                         Vector2Int offset = new Vector2Int(mapData[i, j], 0);
                         Hd2dMeshFactory meshFactory = new Hd2dAutoChipMeshFactory(xUnitCount, yUnitCount);
-                        block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, autochipMaterials[id], meshFactory);
+                        block = GenerateMapObject(tileInfo.type, offset, autochipMaterials[id], meshFactory);
                     }
                     else
                     {
@@ -132,7 +132,7 @@ namespace Expression.Map
                         int chipLength = mapchipMaterial.mainTexture.width / xUnitCount;
                         int yUnitCount = mapchipMaterial.mainTexture.height / chipLength;
                         Hd2dMeshFactory meshFactory = new Hd2dBaseChipMeshFactory(xUnitCount, yUnitCount);
-                        block = GenerateMapObject(Hd2d.MapBlockType.Cube, offset, mapchipMaterial, meshFactory);
+                        block = GenerateMapObject(tileInfo.type, offset, mapchipMaterial, meshFactory);
                     }
 
                     if (i == firstRow)
@@ -152,7 +152,7 @@ namespace Expression.Map
                             block.transform.localPosition = frontPos + Vector3.forward;
                         }
                     }
-                    block.transform.localPosition += tileInfo.Offset;
+                    block.transform.localPosition += tileInfo.offset;
                     blocks[i, j] = block;
                 }
             }
@@ -236,7 +236,7 @@ namespace Expression.Map
             return new MovableInfo(isMovable);
         }
 
-        private Hd2dBlock GenerateMapObject(Hd2d.MapBlockType blockType, Vector2Int offset,
+        private Hd2dBlock GenerateMapObject(MapBlockType blockType, Vector2Int offset,
             Material material, Hd2dMeshFactory meshFactory)
         {
             GameObject ob = new GameObject("Block");
@@ -245,7 +245,7 @@ namespace Expression.Map
 
             switch (blockType)
             {
-                case Hd2d.MapBlockType.Cube:
+                case MapBlockType.Cube:
                     {
                         int meshCount = 6;
                         offsets = new Vector2Int[meshCount];
@@ -256,7 +256,7 @@ namespace Expression.Map
                         block = ob.AddComponent<Hd2dCube>();
                     }
                     break;
-                case Hd2d.MapBlockType.Slope:
+                case MapBlockType.Slope:
                     {
                         int meshCount = 5;
                         offsets = new Vector2Int[meshCount];
@@ -265,6 +265,14 @@ namespace Expression.Map
                             offsets[i] = offset;
                         }
                         block = ob.AddComponent<Hd2dSlope>();
+                    }
+                    break;
+                case MapBlockType.Plane:
+                    {
+                        int meshCount = 1;
+                        offsets = new Vector2Int[meshCount];
+                        offsets[0] = offset;
+                        block = ob.AddComponent<Hd2dPlane>();
                     }
                     break;
                 default:

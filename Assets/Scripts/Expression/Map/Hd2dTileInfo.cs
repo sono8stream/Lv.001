@@ -3,13 +3,16 @@ using UnityEngine;
 
 namespace Expression.Map
 {
+    [Serializable]
     public class Hd2dTileInfo
     {
-        public Vector3 Offset { get; private set; }
+        public Vector3 offset;
+        public MapBlockType type;
 
-        public Hd2dTileInfo(Vector3 offset)
+        public Hd2dTileInfo(Vector3 offset, MapBlockType type)
         {
-            Offset = offset;
+            this.offset = offset;
+            this.type = type;
         }
     }
 }
