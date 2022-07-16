@@ -13,11 +13,13 @@ namespace Expression.Map
         private MapId mapId;
 
         private Hd2dTileInfo[] tileInfoArray;
+        private Shader shader;
 
-        public WolfHd2dMapFactory(MapId mapId, Hd2dTileInfo[] tileInfoArray)
+        public WolfHd2dMapFactory(MapId mapId, Hd2dTileInfo[] tileInfoArray,Shader shader)
         {
             this.mapId = mapId;
             this.tileInfoArray = tileInfoArray;
+            this.shader = shader;
         }
 
         public Hd2dMapData Create(string mapFilePath)
@@ -32,12 +34,16 @@ namespace Expression.Map
             MapTile.WolfRepository repository = new MapTile.WolfRepository();
             MapTile.TileData tileData = repository.Find(tileSetId);
 
-            Material mapchipMaterial = new Material(Shader.Find("Legacy Shaders/Transparent/Diffuse"));
+            if (shader == null)
+            {
+                shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
+            }
+            Material mapchipMaterial = new Material(shader);
             int autoTileCount = 16;
             Material[] autochipMaterials = new Material[autoTileCount];
             for(int i = 0; i < autoTileCount; i++)
             {
-                autochipMaterials[i] = new Material(Shader.Find("Legacy Shaders/Transparent/Diffuse"));
+                autochipMaterials[i] = new Material(shader);
             }
 
             {
@@ -173,12 +179,10 @@ namespace Expression.Map
             List<Hd2dBlock> blocks = new List<Hd2dBlock>();
             for (int i = 0; i < mapDataArray.Length; i++)
             {
-                /*
                 foreach(Hd2dBlock block in mapDataArray[i].Blocks)
                 {
-                    block.transform.localPosition += Vector3.up * i;
+                    block.transform.localPosition += Vector3.up * 0.0001f * i;
                 }
-                */
                 blocks.AddRange(mapDataArray[i].Blocks);
             }
 

@@ -11,11 +11,13 @@ namespace Hd2d
 #if UNITY_EDITOR
     public class Hd2dMapConverter : EditorWindow
     {
-        private Material mat = null;
+        private Shader shad = null;
         private int mapDataIndex = -1;
         private const int CHIP_COUNT = 2500;// ‰¼‚ÅŒˆ‚ß‘Å‚¿
         private Hd2dTileInfo[] tileInfoArray = new Hd2dTileInfo[CHIP_COUNT];
         private Vector2 scrollPos = Vector2.zero;
+
+        private bool isShownTileInfo = false;
 
         [System.Serializable]
         class SaveData
@@ -73,20 +75,29 @@ namespace Hd2d
             // GUI
             ShowMapFilePullDown();
 
-            mat = EditorGUILayout.ObjectField("Material", mat, typeof(Material), false) as Material;
+            shad = EditorGUILayout.ObjectField("SHader", shad, typeof(Shader), false) as Shader;
 
-            using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPos))
+            isShownTileInfo = EditorGUILayout.BeginFoldoutHeaderGroup(isShownTileInfo, "Tile Info");
+
+            if (isShownTileInfo)
             {
-                scrollPos = scrollView.scrollPosition;
-
-                for (int i = 0; i < CHIP_COUNT; i++)
+                using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPos))
                 {
-                    tileInfoArray[i].type
-                        = (MapBlockType)EditorGUILayout.EnumPopup("Type", tileInfoArray[i].type);
-                    tileInfoArray[i].offset
-                        = EditorGUILayout.Vector3Field($"Tile {i}", tileInfoArray[i].offset); 
+                    scrollPos = scrollView.scrollPosition;
+
+                    for (int i = 0; i < CHIP_COUNT; i++)
+                    {
+                        tileInfoArray[i].type
+                            = (MapBlockType)EditorGUILayout.EnumPopup($"Type {i}", tileInfoArray[i].type);
+                        tileInfoArray[i].offset
+                            = EditorGUILayout.Vector3Field($"Tile {i}", tileInfoArray[i].offset);
+                    }
                 }
             }
+
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+
         }
 
         private void ShowMapFilePullDown()
@@ -109,7 +120,7 @@ namespace Hd2d
                     RemoveExistingMap();
                     mapDataIndex = curIndex;
                     MapId id = new MapId(mapDataIndex);
-                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoArray);
+                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoArray, shad);
                     creator.Create(filePaths[curIndex]);
                 }
             }
