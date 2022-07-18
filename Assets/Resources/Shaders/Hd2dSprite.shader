@@ -6,10 +6,45 @@ Shader "Custom/Hd2dSprite"
     }
        
     SubShader
-    {
+    { 
         Pass
         {
+            ZWrite Off
+            Stencil
+            {
+                Ref 2
+                Comp always
+                Pass replace
+            }
+
+            CGPROGRAM
+            sampler2D _MainTex;
+            #pragma vertex vert_img  
+            #pragma fragment frag  
+            #include "UnityCG.cginc"  
+
+            fixed4 frag(v2f_img i) : SV_Target
+            {
+                fixed4 c = tex2D(_MainTex, i.uv);
+            // 不要な透明ピクセルを破棄
+            if (c.a - 0.1 < 0) {
+                discard;
+        }
+                return c;
+            }
+            ENDCG
+        }
+
+        Pass
+        {
+            //ZWrite On
             Tags { "LightMode" = "ForwardBase" }
+
+            Stencil
+            {
+                Ref 2
+                Comp equal
+            }
 
             CGPROGRAM
             #pragma vertex vert
@@ -46,8 +81,9 @@ Shader "Custom/Hd2dSprite"
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord;
                 half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-                half NdotL = saturate(dot(worldNormal, _WorldSpaceLightPos0.xyz));
+                half NdotL = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
                 o.diff = NdotL * _LightColor0;
+                o.diff.rgb += ShadeSH9(half4(worldNormal, 1));
                 TRANSFER_SHADOW(o)
 
                 return o;
@@ -60,8 +96,11 @@ Shader "Custom/Hd2dSprite"
                 //col = fixed4(depth,depth,depth,1);
                 // 影を計算
                 fixed4 shadow = SHADOW_ATTENUATION(i);
-                col *= shadow;
-                //col *= i.diff;
+                //col *= shadow;
+                col *= i.diff;
+                if (col.a - 0.1 < 0) {
+                    discard;
+                }
                 return col;
             }
             ENDCG
@@ -69,6 +108,15 @@ Shader "Custom/Hd2dSprite"
 
         Pass
         {
+
+                /*
+                Stencil
+                {
+                    Ref 2
+                    Comp equal
+                }
+                */
+            ZWrite On
             Tags{ "LightMode" = "ShadowCaster" }
 
             CGPROGRAM
@@ -85,24 +133,35 @@ Shader "Custom/Hd2dSprite"
                 float2 texcoord : TEXCOORD0;
             };
 
-            struct v2f
-            {
+            struct shadowcaster {
                 V2F_SHADOW_CASTER;
             };
+
+            struct v2f
+            {
+                float2 uv : TEXCOORD0;
+                shadowcaster shad;
+            };
+
+            sampler2D _MainTex;
 
             v2f vert(appdata v)
             {
                 v2f o;
-                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+                o.uv = v.texcoord;
+                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o.shad)
                 return o;
             }
 
             fixed4 frag(v2f i) : SV_Target
             {
-                SHADOW_CASTER_FRAGMENT(i)
+                fixed4 col = tex2D(_MainTex, i.uv);
+                if (col.a - 0.1 < 0) {
+                    discard;
+                }
+                SHADOW_CASTER_FRAGMENT(i.shad)
             }
             ENDCG
         }
-
     }
 }
