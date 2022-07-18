@@ -104,7 +104,7 @@ Shader "Custom/Hd2dSprite"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
+                float2 uv : TEXCOORD1;
                 shadowcaster shad;
             };
 
