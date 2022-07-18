@@ -75,7 +75,7 @@ namespace Hd2d
             // GUI
             ShowMapFilePullDown();
 
-            shad = EditorGUILayout.ObjectField("SHader", shad, typeof(Shader), false) as Shader;
+            shad = EditorGUILayout.ObjectField("Shader", shad, typeof(Shader), false) as Shader;
 
             isShownTileInfo = EditorGUILayout.BeginFoldoutHeaderGroup(isShownTileInfo, "Tile Info");
 
