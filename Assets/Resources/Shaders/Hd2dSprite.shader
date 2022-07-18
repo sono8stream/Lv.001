@@ -4,51 +4,17 @@ Shader "Custom/Hd2dSprite"
     {
         _MainTex("Texture", 2D) = "white" {}
     }
-       
+
     SubShader
-    { 
+    {
         Pass
         {
-            ZWrite Off
-            Stencil
-            {
-                Ref 2
-                Comp always
-                Pass replace
-            }
-
-            CGPROGRAM
-            sampler2D _MainTex;
-            #pragma vertex vert_img  
-            #pragma fragment frag  
-            #include "UnityCG.cginc"  
-
-            fixed4 frag(v2f_img i) : SV_Target
-            {
-                fixed4 c = tex2D(_MainTex, i.uv);
-            // 不要な透明ピクセルを破棄
-            if (c.a - 0.1 < 0) {
-                discard;
-        }
-                return c;
-            }
-            ENDCG
-        }
-
-        Pass
-        {
-            //ZWrite On
             Tags { "LightMode" = "ForwardBase" }
-
-            Stencil
-            {
-                Ref 2
-                Comp equal
-            }
 
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile_fog
             #pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight
             #include "UnityCG.cginc" 
             #include "UnityLightingCommon.cginc"
@@ -66,8 +32,9 @@ Shader "Custom/Hd2dSprite"
             {
                 float2 uv : TEXCOORD0;
                 fixed4 diff : COLOR0;
-                float4 pos : SV_POSITION; // posに変更する！！TRANSFER_SHADOWがposとうい名前でないと受け付けない。
+                float4 pos : SV_POSITION; // pos固定。TRANSFER_SHADOWがposでないと受け付けない。
                 SHADOW_COORDS(1)
+                UNITY_FOG_COORDS(2)// shadowCoordとsemanticsが合わないよう2を指定
             };
 
             sampler2D _CameraDepthTexture;
@@ -77,45 +44,43 @@ Shader "Custom/Hd2dSprite"
             v2f vert(appdata v)
             {
                 v2f o;
-                // ここの左辺もposに変更
+                // オブジェクト座標を2次元座標に割り当て
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord;
                 half3 worldNormal = UnityObjectToWorldNormal(v.normal);
                 half NdotL = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
-                o.diff = NdotL * _LightColor0;
+                NdotL = saturate(dot(worldNormal, _WorldSpaceLightPos0.xyz));
+                float diffuse = 0.2;
+                o.diff = NdotL * _LightColor0 * diffuse + (1 - diffuse);
                 o.diff.rgb += ShadeSH9(half4(worldNormal, 1));
                 TRANSFER_SHADOW(o)
+                TRANSFER_VERTEX_TO_FRAGMENT(o)
+                UNITY_TRANSFER_FOG(o, o.pos);
 
                 return o;
             }
 
             fixed4 frag(v2f i) : SV_Target
             {
-                fixed depth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv));
                 fixed4 col = tex2D(_MainTex, i.uv);
-                //col = fixed4(depth,depth,depth,1);
-                // 影を計算
-                fixed4 shadow = SHADOW_ATTENUATION(i);
-                //col *= shadow;
-                col *= i.diff;
                 if (col.a - 0.1 < 0) {
                     discard;
                 }
+
+                // 影を計算
+                fixed4 shadow = SHADOW_ATTENUATION(i);
+                col *= saturate(shadow);
+                col *= saturate(i.diff);
+
+                // Fogを計算
+                UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }
             ENDCG
         }
-
+        
         Pass
         {
-
-                /*
-                Stencil
-                {
-                    Ref 2
-                    Comp equal
-                }
-                */
             ZWrite On
             Tags{ "LightMode" = "ShadowCaster" }
 
