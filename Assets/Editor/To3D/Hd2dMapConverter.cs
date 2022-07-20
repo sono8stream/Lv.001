@@ -17,7 +17,14 @@ namespace Hd2d
         private Hd2dTileInfo[] tileInfoArray = new Hd2dTileInfo[CHIP_COUNT];
         private Vector2 scrollPos = Vector2.zero;
 
+        private Expression.Map.MapTile.WolfRepository repository = new Expression.Map.MapTile.WolfRepository();
+        private int tileId;
+        private Texture2D baseTex = null;
+        private Vector2 imageScrollPos = Vector2.zero;
+
         private bool isShownTileInfo = false;
+        private Vector2Int chipOffset = Vector2Int.zero;
+        private int selectedChipIndex = 0;
 
         [System.Serializable]
         class SaveData
@@ -77,22 +84,13 @@ namespace Hd2d
 
             shad = EditorGUILayout.ObjectField("Shader", shad, typeof(Shader), false) as Shader;
 
+            ShowMapTiles();
+
             isShownTileInfo = EditorGUILayout.BeginFoldoutHeaderGroup(isShownTileInfo, "Tile Info");
 
             if (isShownTileInfo)
             {
-                using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPos))
-                {
-                    scrollPos = scrollView.scrollPosition;
-
-                    for (int i = 0; i < CHIP_COUNT; i++)
-                    {
-                        tileInfoArray[i].type
-                            = (MapBlockType)EditorGUILayout.EnumPopup($"Type {i}", tileInfoArray[i].type);
-                        tileInfoArray[i].offset
-                            = EditorGUILayout.Vector3Field($"Tile {i}", tileInfoArray[i].offset);
-                    }
-                }
+                ShowMapTileEditor();
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
@@ -122,6 +120,92 @@ namespace Hd2d
                     MapId id = new MapId(mapDataIndex);
                     WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoArray, shad);
                     creator.Create(filePaths[curIndex]);
+                }
+            }
+        }
+
+        private void ShowMapTiles()
+        {
+            float rate = 2;
+            EditorGUILayout.LabelField("マウスの位置", Event.current.mousePosition.ToString());
+            EditorGUILayout.LabelField("画像上の位置", chipOffset.ToString());
+            EditorGUILayout.LabelField("スクロールバーの位置", imageScrollPos.ToString());
+
+            //wantsMouseMoveをトグルで切り替えられるように
+            wantsMouseMove = EditorGUILayout.Toggle("wantsMouseMove", wantsMouseMove);
+
+            //マウスが動いたら再描画(wantsMouseMoveが有効でないとOnGUI自体が呼ばれないの無意味)
+            if (Event.current.type == EventType.MouseMove)
+            {
+                Repaint();
+            }
+            if (Event.current.type == EventType.MouseDown)
+            {
+                float xRaw = Event.current.mousePosition.x + imageScrollPos.x;
+                float yRaw = Event.current.mousePosition.y + imageScrollPos.y - 140;
+                int unitSize = 16;
+                int chipsPerWidth = 8;
+                int col = (int)(xRaw / unitSize / rate);
+                int row = (int)(yRaw / unitSize / rate);
+                chipOffset = new Vector2Int(col, row);
+
+                if (0 <= chipOffset.x && chipOffset.x * unitSize < baseTex.width
+                    && 0 <= chipOffset.y && chipOffset.y * unitSize < baseTex.height)
+                {
+                    // 【暫定】オートチップの分を追加しておく
+                    selectedChipIndex = chipOffset.x + chipOffset.y * chipsPerWidth + 16;
+                }
+            }
+
+            int nextTileId = EditorGUILayout.IntField("Tile ID", tileId);
+            if (tileId != nextTileId || baseTex == null)
+            {
+                tileId = nextTileId;
+                Expression.Map.MapTile.TileData tileData = repository.Find(tileId);
+                string imagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.BaseTileFilePath;
+                byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
+                baseTex = new Texture2D(0, 0);
+                baseTex.LoadImage(baseTexBytes);
+                baseTex.filterMode = FilterMode.Point;
+                baseTex.Apply();
+            }
+
+
+            EditorGUILayout.BeginHorizontal();
+            //画像表示
+            using (var scrollView = new EditorGUILayout.ScrollViewScope(imageScrollPos))
+            {
+                imageScrollPos = scrollView.scrollPosition;
+                EditorGUIUtility.SetIconSize(new Vector2(baseTex.width, baseTex.height)*rate);
+                GUILayout.Button(baseTex, GUIStyle.none);
+                EditorGUIUtility.SetIconSize(Vector2.one);
+
+            }
+
+            EditorGUILayout.BeginVertical();
+
+            tileInfoArray[selectedChipIndex].type
+                = (MapBlockType)EditorGUILayout.EnumPopup($"Type {selectedChipIndex}", tileInfoArray[selectedChipIndex].type);
+            tileInfoArray[selectedChipIndex].offset
+                = EditorGUILayout.Vector3Field($"Tile {selectedChipIndex}", tileInfoArray[selectedChipIndex].offset);
+
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void ShowMapTileEditor()
+        {
+            using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPos))
+            {
+                scrollPos = scrollView.scrollPosition;
+
+                for (int i = 0; i < CHIP_COUNT; i++)
+                {
+                    tileInfoArray[i].type
+                        = (MapBlockType)EditorGUILayout.EnumPopup($"Type {i}", tileInfoArray[i].type);
+                    tileInfoArray[i].offset
+                        = EditorGUILayout.Vector3Field($"Tile {i}", tileInfoArray[i].offset);
                 }
             }
         }
