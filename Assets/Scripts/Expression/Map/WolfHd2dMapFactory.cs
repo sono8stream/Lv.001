@@ -15,57 +15,64 @@ namespace Expression.Map
         private Hd2dTileInfoList tileInfoList;
         private Shader shader;
 
-        public WolfHd2dMapFactory(MapId mapId, Hd2dTileInfoList tileInfoList, Shader shader)
+        public WolfHd2dMapFactory(MapId mapId)
         {
             this.mapId = mapId;
             this.tileInfoList = tileInfoList;
-            this.shader = shader;
+
+            // 【暫定】パスをここで直接定義しない
+            string shaderPath = "Shaders/Hd2dSprite";
+            shader = Resources.Load<Shader>(shaderPath);
+            if (shader == null)
+            {
+                shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
+            }
+
+            LoadTileInfo();
         }
 
-        public Hd2dMapData Create(string mapFilePath)
+        public Hd2dMapData Create()
         {
             // マップファイルからタイル情報を読み出し
             // タイル情報からテクスチャ読み込み
             // テクスチャとマップファイルからマップ生成
 
-            Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(mapFilePath);
+            // 【暫定】ファイル名をシステムDBから取り出す
+
+            string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
+            string[] fileNames = { "Dungeon.mps", "SampleMapA.mps", "SampleMapB.mps", "TitleMap.mps" };
+            Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader($"{dirPath}/{fileNames[mapId.Value]}");
 
             int tileSetId = reader.ReadInt(0x22, true, out int tmp);
             MapTile.WolfRepository repository = new MapTile.WolfRepository();
             MapTile.TileData tileData = repository.Find(tileSetId);
 
-            if (shader == null)
-            {
-                shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
-            }
             Material mapchipMaterial = new Material(shader);
             int autoTileCount = 16;
             Material[] autochipMaterials = new Material[autoTileCount];
-            for(int i = 0; i < autoTileCount; i++)
+            for (int i = 0; i < autoTileCount; i++)
             {
                 autochipMaterials[i] = new Material(shader);
             }
 
-            {
-                // 【暫定】ファイルを読み込めなかった場合のエラー処理
-                string imagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.BaseTileFilePath;
-                byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
-                Texture2D mapchipTexture = new Texture2D(0, 0);
-                mapchipTexture.LoadImage(baseTexBytes);
-                mapchipTexture.Apply();
-                mapchipMaterial.mainTexture = mapchipTexture;
-                mapchipMaterial.mainTexture.filterMode = FilterMode.Point;
+            // 【暫定】ファイルを読み込めなかった場合のエラー処理
+            string imagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.BaseTileFilePath;
+            byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
+            Texture2D mapchipTexture = new Texture2D(0, 0);
+            mapchipTexture.LoadImage(baseTexBytes);
+            mapchipTexture.Apply();
+            mapchipMaterial.mainTexture = mapchipTexture;
+            mapchipMaterial.mainTexture.filterMode = FilterMode.Point;
 
-                for (int i = 1; i < autoTileCount; i++)
-                {
-                    string autochipImagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.AutoTileFilePaths[i - 1];
-                    byte[] autoTexBytes = Util.Common.FileLoader.LoadSync(autochipImagePath);
-                    Texture2D autochipTexture = new Texture2D(0, 0);
-                    autochipTexture.LoadImage(autoTexBytes);
-                    autochipTexture.Apply();
-                    autochipMaterials[i].mainTexture = autochipTexture;
-                    autochipMaterials[i].mainTexture.filterMode = FilterMode.Point;
-                }
+            for (int i = 1; i < autoTileCount; i++)
+            {
+                string autochipImagePath = $"{Application.streamingAssetsPath}/Data/" + tileData.AutoTileFilePaths[i - 1];
+                byte[] autoTexBytes = Util.Common.FileLoader.LoadSync(autochipImagePath);
+                Texture2D autochipTexture = new Texture2D(0, 0);
+                autochipTexture.LoadImage(autoTexBytes);
+                autochipTexture.Apply();
+                autochipMaterials[i].mainTexture = autochipTexture;
+                autochipMaterials[i].mainTexture.filterMode = FilterMode.Point;
             }
 
             int width = reader.ReadInt(0x26, true, out tmp);
@@ -79,9 +86,9 @@ namespace Expression.Map
             Hd2dMapData mapDataX3 = ReadMap(mapData3, mapchipMaterial, autochipMaterials, tileData);
 
             // 変更範囲が巨大になるので、一旦イベントは無視
-            //MapEvent.EventData[] events = ReadMapEvents(reader, mapchipMaterial, 0x32 + width * height * 4 * 3);
+            MapEvent.EventData[] events = ReadMapEvents(reader, mapchipTexture, 0x32 + width * height * 4 * 3);
 
-            return CombineMapData(null, mapDataX1, mapDataX2, mapDataX3);
+            return CombineMapData(events, mapDataX1, mapDataX2, mapDataX3);
         }
 
         private Hd2dMapData ReadMap(int[,] mapData, Material mapchipMaterial, Material[] autochipMaterials, MapTile.TileData tileData)
@@ -96,7 +103,7 @@ namespace Expression.Map
 
             // オフセット計算のため下側から順に描画
             int firstRow = height - 1;
-            for (int i =firstRow; i >= 0; i--)
+            for (int i = firstRow; i >= 0; i--)
             {
                 for (int j = 0; j < width; j++)
                 {
@@ -143,14 +150,14 @@ namespace Expression.Map
 
                     if (i == firstRow)
                     {
-                        block.transform.localPosition = new Vector3(j, 0, -i);
+                        block.transform.localPosition = new Vector3(j, 0, height - i);
                     }
                     else
                     {
                         Hd2dBlock frontBlock = blocks[i + 1, j];
                         if (frontBlock == null)
                         {
-                            block.transform.localPosition = new Vector3(j, 0, -i);
+                            block.transform.localPosition = new Vector3(j, 0, height - i);
                         }
                         else
                         {
@@ -487,6 +494,29 @@ namespace Expression.Map
             nextOffset = currentOffset;
 
             return commands.ToArray();
+        }
+
+        private void LoadTileInfo()
+        {
+            try
+            {
+                // 【暫定】キーをここで直接定義しない
+                string tileFileKey = "Hd2dTileSetting";
+                string json = PlayerPrefs.GetString(tileFileKey);
+                tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
+                Debug.Log("Loaded tile data");
+            }
+            catch
+            {
+                // 【暫定】チップ数を固定しないよう、タイル情報と紐づける
+                int chipCount = 2500;
+                tileInfoList = new Hd2dTileInfoList(chipCount);
+                for (int i = 0; i < chipCount; i++)
+                {
+                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
+                }
+                Debug.Log("Initialized tile info list");
+            }
         }
     }
 

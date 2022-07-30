@@ -9,7 +9,7 @@ using Util;
 
 namespace Infrastructure
 {
-
+    // 【暫定】BasemapDataのみを抜き出すように修正
     public class WolfBaseMapDataRepository : IBaseMapDataRepository
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
@@ -21,7 +21,6 @@ namespace Infrastructure
         private string tileFileKey = "Hd2dTileSetting";
         private const int CHIP_COUNT = 2500;// 仮で決め打ち
         private Hd2dTileInfoList tileInfoList;
-        private Shader shader;
 
         public WolfBaseMapDataRepository()
         {
@@ -35,10 +34,6 @@ namespace Infrastructure
             mapDataDict = new Dictionary<MapId, BaseMapData>();
 
             LoadTileInfo();
-
-            // 【暫定】パスを直接指定しない
-            string shaderPath = "Shaders/Hd2dSprite";
-            shader = Resources.Load<Shader>(shaderPath);
         }
 
         public BaseMapData Find(MapId id)
@@ -57,8 +52,8 @@ namespace Infrastructure
             {
                 if (mapNameDict.ContainsKey(id))
                 {
-                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoList, shader);
-                    mapDataDict.Add(id, creator.Create(mapNameDict[id]));
+                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id);
+                    mapDataDict.Add(id, creator.Create());
                     return mapDataDict[id];
                 }
                 else

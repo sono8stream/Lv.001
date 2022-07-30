@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Expression;
+using Expression.Map;
 
 namespace UI.Map
 {
@@ -9,6 +9,9 @@ namespace UI.Map
     {
         [SerializeField]
         private int mapIndex;
+
+        [SerializeField]
+        private Shader spriteShader;
 
         [SerializeField]
         private GameObject eventObjectOrigin;
@@ -19,7 +22,9 @@ namespace UI.Map
         void Awake()
         {
             Expression.Map.MapId mapId = new Expression.Map.MapId(mapIndex);
-            mapData = DI.DependencyInjector.It().Hd2dMapDataRepository.Find(mapId);
+
+            WolfHd2dMapFactory creator = new WolfHd2dMapFactory(mapId);
+            mapData = creator.Create();
 
             GenerateEventObjects(mapData);
         }
@@ -51,7 +56,8 @@ namespace UI.Map
             {
                 GameObject gameObject = Instantiate(eventObjectOrigin);
                 Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
-                gameObject.transform.position = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
+                Vector2 unityPos = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
+                gameObject.transform.position = new Vector3(unityPos.x, 1, unityPos.y);
 
                 ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
                 if (eventObject)
@@ -61,18 +67,17 @@ namespace UI.Map
 
                 // この処理はカプセル化できるのでEventObjectクラスに委譲したほうがよさそう
                 Texture2D currentTexture = mapData.EventDataArray[i].PageData[0].GetCurrentTexture();
-                SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+
                 if (currentTexture == null)
                 {
-                    spriteRenderer.sprite = null;
+                    gameObject.GetComponent<MeshRenderer>().enabled = false;
                 }
                 else
                 {
-                    // 【暫定】ピクセルサイズをDB層から取り出す
-                    int pixelPerUnit = 16;
-                    Sprite sprite = Sprite.Create(currentTexture, new Rect(0, 0, currentTexture.width, currentTexture.height), new Vector2(0.5f, 0.5f), pixelPerUnit);
-                    sprite.texture.filterMode = FilterMode.Point;
-                    spriteRenderer.sprite = sprite;
+                    Material mat = new Material(spriteShader);
+                    mat.mainTexture = currentTexture;
+                    mat.mainTexture.filterMode = FilterMode.Point;
+                    gameObject.GetComponent<Renderer>().sharedMaterial = mat;
                 }
             }
         }

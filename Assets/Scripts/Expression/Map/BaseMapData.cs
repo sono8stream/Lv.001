@@ -13,6 +13,7 @@ namespace Expression.Map
 
         public int Height { get; private set; }
 
+        // 【暫定】各チップの番号情報も内包するチップ情報を保持するように修正
         public MovableInfo[,] MovableGrid { get; private set; }
 
         public MapEvent.EventData[] EventDataArray { get; private set; }

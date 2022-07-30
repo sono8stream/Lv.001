@@ -99,9 +99,8 @@ namespace Hd2d
                     RemoveExistingMap();
                     mapDataIndex = curIndex;
                     MapId id = new MapId(mapDataIndex);
-                    DI.DependencyInjector.It().Hd2dMapDataRepository.Find(id);
-                    //WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoList, shad);
-                    //creator.Create(filePaths[curIndex]);
+                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id);
+                    creator.Create();
                 }
             }
         }
