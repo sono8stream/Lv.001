@@ -97,7 +97,7 @@ public class PlayerController : MonoBehaviour
                 if (curGeneral.x - 1 >= 0
                 && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
                 {
-                    nodePos.Add(transform.position+Vector3.left);
+                    nodePos.Add(transform.position + Vector3.left);
                 }
             }
             else if (Input.GetKey(KeyCode.DownArrow))
@@ -113,35 +113,28 @@ public class PlayerController : MonoBehaviour
                 GetComponent<ActionProcessor>().StartActions();
                 return;
             }
-            else if (eventObject != null)//イベント実行
+            else if (Input.GetKey(KeyCode.Z))
             {
-                Vector2Int d
-                    = new Vector2Int((int)(eventObject.transform.position.x - transform.position.x),
-                    (int)(eventObject.transform.position.y - transform.position.y));
-                try
+                if (eventObject != null)//イベント実行
                 {
-                    direction = directionDic[d];
-                }
-                catch
-                {
-                    Debug.Log(eventObject.transform.position);
-                    Debug.Log(transform.position);
-                    Debug.Log(d);
-                }
-                spriteAniCor *= -1;
-                SetMeshWait();
-                eventObject.GetComponent<ActionProcessor>().StartActions();
-                eventObject = null;
-                selectPos.SetActive(false);
-            }
-            else//接触中のイベントを実行
-            {
-                Collider2D c = Physics2D.OverlapPoint(transform.position);
-                if (c != null && c.GetComponent<ActionProcessor>().enabled)
-                {
-                    eventObject = c.gameObject;
+                    Vector2Int d
+                        = new Vector2Int((int)(eventObject.transform.position.x - transform.position.x),
+                        (int)(eventObject.transform.position.z - transform.position.z));
+                    try
+                    {
+                        direction = directionDic[d];
+                    }
+                    catch
+                    {
+                        Debug.Log(eventObject.transform.position);
+                        Debug.Log(transform.position);
+                        Debug.Log(d);
+                    }
+                    spriteAniCor *= -1;
+                    SetMeshWait();
                     eventObject.GetComponent<ActionProcessor>().StartActions();
                     eventObject = null;
+                    selectPos.SetActive(false);
                 }
             }
         }
@@ -294,6 +287,18 @@ public class PlayerController : MonoBehaviour
             default:
                 return Expression.Map.Direction.Down;
 
+        }
+    }
+
+    private void OnTriggerEnter(Collider col)
+    {
+        if (col.GetComponent<ActionProcessor>()!=null
+            && col.GetComponent<ActionProcessor>().enabled)
+        {
+            Debug.Log("当たった!");
+            eventObject = col.gameObject;
+            //eventObject.GetComponent<ActionProcessor>().StartActions();
+            //eventObject = null;
         }
     }
 }
