@@ -61,7 +61,7 @@ namespace Infrastructure
 
         public int GetCount()
         {
-            return mapDataDict.Count;
+            return mapNameDict.Count;
         }
     }
 }

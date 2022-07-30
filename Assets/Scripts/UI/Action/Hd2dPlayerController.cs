@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UI.Map;
 
-public class PlayerController : MonoBehaviour
+public class Hd2dPlayerController : MonoBehaviour
 {
 
     [SerializeField]
@@ -152,8 +152,7 @@ public class PlayerController : MonoBehaviour
             {
                 count = 0;
                 transform.position = nodePos[0];
-                spriteAniCor *= -1;
-                SetMeshWalk();
+                SetMeshWait();
 
                 nodePos.RemoveAt(0);
                 if (nodePos.Count == 0)
@@ -295,10 +294,7 @@ public class PlayerController : MonoBehaviour
         if (col.GetComponent<ActionProcessor>()!=null
             && col.GetComponent<ActionProcessor>().enabled)
         {
-            Debug.Log("当たった!");
             eventObject = col.gameObject;
-            //eventObject.GetComponent<ActionProcessor>().StartActions();
-            //eventObject = null;
         }
     }
 }
