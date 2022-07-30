@@ -10,19 +10,20 @@ using Util;
 namespace Infrastructure
 {
 
-    public class WolfHd2dMapDataRepository : IHd2dMapDataRepository
+    public class WolfBaseMapDataRepository : IBaseMapDataRepository
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
         private Dictionary<MapId, string> mapNameDict;
 
-        private Dictionary<MapId, Hd2dMapData> mapDataDict;
+        private Dictionary<MapId, BaseMapData> mapDataDict;
 
         // 【暫定】エディタ層と名前を共有できるよう、共有文字列クラスを整備する
         private string tileFileKey = "Hd2dTileSetting";
         private const int CHIP_COUNT = 2500;// 仮で決め打ち
         private Hd2dTileInfoList tileInfoList;
+        private Shader shader;
 
-        public WolfHd2dMapDataRepository()
+        public WolfBaseMapDataRepository()
         {
             // 暫定：mpsをシステム変数DBから読み込めるようになるまで固定の値を割り当てておく
             string[] fileNames = { "Dungeon.mps", "SampleMapA.mps", "SampleMapB.mps", "TitleMap.mps" };
@@ -31,12 +32,16 @@ namespace Infrastructure
             {
                 mapNameDict.Add(new MapId(i), $"{dirPath}/{fileNames[i]}");
             }
-            mapDataDict = new Dictionary<MapId, Hd2dMapData>();
+            mapDataDict = new Dictionary<MapId, BaseMapData>();
 
             LoadTileInfo();
+
+            // 【暫定】パスを直接指定しない
+            string shaderPath = "Shaders/Hd2dSprite";
+            shader = Resources.Load<Shader>(shaderPath);
         }
 
-        public Hd2dMapData Find(MapId id)
+        public BaseMapData Find(MapId id)
         {
             // 【暫定】デバッグのために毎回読み出す
             if (mapDataDict.ContainsKey(id))
@@ -52,7 +57,7 @@ namespace Infrastructure
             {
                 if (mapNameDict.ContainsKey(id))
                 {
-                    WolfHd2dMapFactory creator = null;// new WolfHd2dMapFactory(id);
+                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoList, shader);
                     mapDataDict.Add(id, creator.Create(mapNameDict[id]));
                     return mapDataDict[id];
                 }

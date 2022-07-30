@@ -14,7 +14,7 @@ namespace Hd2d
         private Shader shad = null;
         private int mapDataIndex = -1;
         private const int CHIP_COUNT = 2500;// ‰¼‚ÅŒˆ‚ß‘Å‚¿
-        private Hd2dTileInfo[] tileInfoArray = new Hd2dTileInfo[CHIP_COUNT];
+        private Hd2dTileInfoList tileInfoList;
 
         private Expression.Map.MapTile.WolfRepository repository = new Expression.Map.MapTile.WolfRepository();
         private int tileId;
@@ -48,23 +48,15 @@ namespace Hd2d
             try
             {
                 string json = PlayerPrefs.GetString(saveKey);
-                Hd2dTileInfoList loaded = JsonUtility.FromJson<Hd2dTileInfoList>(json); 
-                if (loaded.length == CHIP_COUNT)
-                {
-                    tileInfoArray = new Hd2dTileInfo[CHIP_COUNT];
-                    for (int i = 0; i < CHIP_COUNT; i++)
-                    {
-                        tileInfoArray[i] = loaded[i];
-                    }
-                }
+                tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
                 Debug.Log("Loaded tile data");
             }
             catch
             {
-                tileInfoArray = new Hd2dTileInfo[CHIP_COUNT];
+                tileInfoList = new Hd2dTileInfoList(CHIP_COUNT);
                 for (int i = 0; i < CHIP_COUNT; i++)
                 {
-                    tileInfoArray[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
+                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
                 }
                 Debug.Log("Initialized tile info list");
             }
@@ -72,16 +64,10 @@ namespace Hd2d
 
         private void OnDisable()
         {
-            Hd2dTileInfoList list = new Hd2dTileInfoList(CHIP_COUNT);
-            for(int i = 0; i < tileInfoArray.Length; i++)
-            {
-                list[i] = tileInfoArray[i];
-            }
-            string json = JsonUtility.ToJson(list);
+            string json = JsonUtility.ToJson(tileInfoList);
             PlayerPrefs.SetString(saveKey, json);
             Debug.Log("Saved tile data");
         }
-
 
         private void OnGUI()
         {
@@ -113,8 +99,9 @@ namespace Hd2d
                     RemoveExistingMap();
                     mapDataIndex = curIndex;
                     MapId id = new MapId(mapDataIndex);
-                    WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoArray, shad);
-                    creator.Create(filePaths[curIndex]);
+                    DI.DependencyInjector.It().Hd2dMapDataRepository.Find(id);
+                    //WolfHd2dMapFactory creator = new WolfHd2dMapFactory(id, tileInfoList, shad);
+                    //creator.Create(filePaths[curIndex]);
                 }
             }
         }
@@ -179,10 +166,10 @@ namespace Hd2d
 
             EditorGUILayout.BeginVertical();
 
-            tileInfoArray[selectedChipIndex].type
-                = (MapBlockType)EditorGUILayout.EnumPopup($"Type {selectedChipIndex}", tileInfoArray[selectedChipIndex].type);
-            tileInfoArray[selectedChipIndex].offset
-                = EditorGUILayout.Vector3Field($"Tile {selectedChipIndex}", tileInfoArray[selectedChipIndex].offset);
+            tileInfoList[selectedChipIndex].type
+                = (MapBlockType)EditorGUILayout.EnumPopup($"Type {selectedChipIndex}", tileInfoList[selectedChipIndex].type);
+            tileInfoList[selectedChipIndex].offset
+                = EditorGUILayout.Vector3Field($"Tile {selectedChipIndex}", tileInfoList[selectedChipIndex].offset);
 
             EditorGUILayout.EndVertical();
 

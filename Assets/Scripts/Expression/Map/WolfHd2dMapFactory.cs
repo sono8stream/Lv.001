@@ -12,13 +12,13 @@ namespace Expression.Map
         private const int PIXEL_PER_GRID = 16;
         private MapId mapId;
 
-        private Hd2dTileInfo[] tileInfoArray;
+        private Hd2dTileInfoList tileInfoList;
         private Shader shader;
 
-        public WolfHd2dMapFactory(MapId mapId, Hd2dTileInfo[] tileInfoArray,Shader shader)
+        public WolfHd2dMapFactory(MapId mapId, Hd2dTileInfoList tileInfoList, Shader shader)
         {
             this.mapId = mapId;
-            this.tileInfoArray = tileInfoArray;
+            this.tileInfoList = tileInfoList;
             this.shader = shader;
         }
 
@@ -110,7 +110,7 @@ namespace Expression.Map
                         id--;
                         MapTile.UnitTile tile = tileData.UnitTileConfigs[id];
                         movableGrid[i, j] = GetTileInfoFrom(tile);
-                        tileInfo = tileInfoArray[id];
+                        tileInfo = tileInfoList[id];
 
                         // ID 0はテクスチャ情報無し
                         if (id == 0)
@@ -130,7 +130,7 @@ namespace Expression.Map
                     {
                         MapTile.UnitTile tile = tileData.UnitTileConfigs[mapData[i, j] + 16];
                         movableGrid[i, j] = GetTileInfoFrom(tile);
-                        tileInfo = tileInfoArray[mapData[i, j] + 16];
+                        tileInfo = tileInfoList[mapData[i, j] + 16];
 
                         // 【暫定】マップチップの横ユニット数を8以外に対応する
                         int xUnitCount = 8;

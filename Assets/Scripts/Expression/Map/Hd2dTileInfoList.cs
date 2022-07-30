@@ -2,7 +2,7 @@
 namespace Expression.Map
 {
     [System.Serializable]
-    class Hd2dTileInfoList
+    public class Hd2dTileInfoList
     {
         public int length;
         public Hd2dTileInfo[] tiles;

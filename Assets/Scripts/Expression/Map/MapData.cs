@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 
 namespace Expression.Map
 {
-    public class MapData : MapDataBase
+    public class MapData : BaseMapData
     {
 
         public Texture2D UnderTexture { get; private set; }

@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 
 namespace Expression.Map
 {
-    public class Hd2dMapData:MapDataBase
+    public class Hd2dMapData:BaseMapData
     {
         public GameObject BaseObject { get; private set; }
 

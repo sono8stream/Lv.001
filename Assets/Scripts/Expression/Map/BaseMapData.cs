@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 
 namespace Expression.Map
 {
-    public class MapDataBase
+    public class BaseMapData
     {
         public MapId Id { get; private set; }
 
@@ -17,7 +17,7 @@ namespace Expression.Map
 
         public MapEvent.EventData[] EventDataArray { get; private set; }
 
-        public MapDataBase(MapId id, int width, int height,
+        public BaseMapData(MapId id, int width, int height,
          MovableInfo[,] movableGrid, MapEvent.EventData[] eventDataArray)
         {
             Id = id;
