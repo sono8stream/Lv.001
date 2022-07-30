@@ -76,37 +76,25 @@ public class Hd2dPlayerController : MonoBehaviour
         {
             // 【暫定】タップで移動を有効にする
             Vector2Int curGeneral = new Vector2Int(Mathf.RoundToInt(transform.position.x), movableGrid.GetLength(0) - Mathf.RoundToInt(transform.position.z) - 1);
-            if (Input.GetKey(KeyCode.RightArrow))
-            {//現在位置
-                if (curGeneral.x + 1 < movableGrid.GetLength(1)
-                && movableGrid[curGeneral.y, curGeneral.x + 1].IsMovable)
-                {
-                    nodePos.Add(transform.position + Vector3.right);
-                }
-            }
-            else if (Input.GetKey(KeyCode.UpArrow))
+            if (Input.GetKey(KeyCode.RightArrow)
+                && CheckIsMovable(curGeneral + Vector2Int.right))
             {
-                if (curGeneral.y - 1 >= 0
-                && movableGrid[curGeneral.y - 1, curGeneral.x].IsMovable)
-                {
-                    nodePos.Add(transform.position + Vector3.forward);
-                }
+                nodePos.Add(transform.position + Vector3.right);
             }
-            else if (Input.GetKey(KeyCode.LeftArrow))
+            else if (Input.GetKey(KeyCode.UpArrow)
+                && CheckIsMovable(curGeneral + Vector2Int.down))
             {
-                if (curGeneral.x - 1 >= 0
-                && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
-                {
-                    nodePos.Add(transform.position + Vector3.left);
-                }
+                nodePos.Add(transform.position + Vector3.forward);
             }
-            else if (Input.GetKey(KeyCode.DownArrow))
+            else if (Input.GetKey(KeyCode.LeftArrow)
+                && CheckIsMovable(curGeneral + Vector2Int.left))
             {
-                if (curGeneral.y + 1 < movableGrid.GetLength(0)
-                && movableGrid[curGeneral.y + 1, curGeneral.x].IsMovable)
-                {
+                nodePos.Add(transform.position + Vector3.left);
+            }
+            else if (Input.GetKey(KeyCode.DownArrow)
+                && CheckIsMovable(curGeneral + Vector2Int.up))
+            {
                     nodePos.Add(transform.position + Vector3.back);
-                }
             }
             else if (Input.GetKey(KeyCode.X))
             {
@@ -247,10 +235,11 @@ public class Hd2dPlayerController : MonoBehaviour
         }
     }
 
-    bool CheckInMap(Vector2Int pos)
+    bool CheckIsMovable(Vector2Int pos)
     {
         return 0 <= pos.x && pos.x < movableGrid.GetLength(1)
-            && 0 <= pos.y && pos.y < movableGrid.GetLength(0);
+            && 0 <= pos.y && pos.y < movableGrid.GetLength(0)
+            && movableGrid[pos.y, pos.x].IsMovable;
     }
 
     private void SetMeshWait()
