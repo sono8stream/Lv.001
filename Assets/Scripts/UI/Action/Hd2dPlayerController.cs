@@ -7,22 +7,22 @@ public class PlayerController : MonoBehaviour
 {
 
     [SerializeField]
-    Map map;
-    [SerializeField]
-    string spriteName;
+    Hd2dMap map;
     int direction;
     Dictionary<Vector2Int, int> directionDic;//主人公向き
-    int validChipNo;
-    List<Vector2> nodePos;
-    float corPosY;//y座標位置の補正
+    List<Vector3> nodePos;
     int inter = 3;
     int count = 0;
-    Sprite[] sprites;//すべてのスプライト
     int spritePat = 3;//スプライトのアニメーションパターン
     int spriteAniCor = 1;//移動中アニメの変化パターン
     [SerializeField]
     GameObject selectPos;
     GameObject eventObject;
+
+    [SerializeField]
+    Shader shader;
+    [SerializeField]
+    Texture2D texture;
 
     Expression.Map.MovableInfo[,] movableGrid;
     int[,] mapCostData;
@@ -45,7 +45,7 @@ public class PlayerController : MonoBehaviour
                 mapCostData[i, j] = -1;
             }
         }
-        transform.position = new Vector2(movableGrid.GetLength(1) / 2 + 0.5f, movableGrid.GetLength(0) / 2 + 0.5f);
+        transform.position = new Vector3(movableGrid.GetLength(1) / 2, 1, movableGrid.GetLength(0) / 2);
 
         directionDic = new Dictionary<Vector2Int, int>();
         directionDic.Add(Vector2Int.up, 3);
@@ -53,10 +53,14 @@ public class PlayerController : MonoBehaviour
         directionDic.Add(Vector2Int.down, 0);
         directionDic.Add(Vector2Int.left, 1);
         direction = directionDic[Vector2Int.down];
-        validChipNo = 7;
-        nodePos = new List<Vector2>();
-        corPosY = 0.5f;
-        sprites = Resources.LoadAll<Sprite>("Sprites/" + spriteName);
+        nodePos = new List<Vector3>();
+
+        Material mat = new Material(shader);
+        mat.mainTexture = texture;
+        mat.mainTexture.filterMode = FilterMode.Point;
+        GetComponentInChildren<Renderer>().sharedMaterial = mat;
+        SetMeshWait();
+
         eventObject = null;
     }
 
@@ -70,100 +74,38 @@ public class PlayerController : MonoBehaviour
 
         if (nodePos.Count == 0)
         {
-            if (Input.GetMouseButtonDown(0))//クリックされたとき、その座標まで主人公を移動
-            {
-                count = 0;
-                Vector2 rawDest = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                Debug.Log($"rawDest:{rawDest}");
-                Vector2 dest = Util.Map.PositionConverter.GetNormalizedUnityPos(rawDest);
-                Debug.Log($"dest:{dest}");
-                Collider2D c = Physics2D.OverlapPoint(dest);
-                Vector2Int destGeneral = Util.Map.PositionConverter.GetGeneralPos(dest, movableGrid.GetLength(0));
-                Debug.Log($"destGeneral:{destGeneral}");
-                if (destGeneral.x < 0 || destGeneral.y < 0 || destGeneral.x >= movableGrid.GetLength(1) || destGeneral.y >= movableGrid.GetLength(0)
-                || !movableGrid[destGeneral.y, destGeneral.x].IsMovable)//移動座標が通行不可だったら処理無効
-                {
-                    return;
-                }
-                if (nodePos.Count > 0)//移動が残っていたら完了させる
-                {
-                    transform.position = nodePos[0];
-                }
-                selectPos.SetActive(true);
-                selectPos.transform.position = dest;
-                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
-                Debug.Log($"curGeneral:{curGeneral}");
-                Debug.Log($"object detected:{c != null}");
-                if (destGeneral == curGeneral)//メニュー呼び出し
-                {
-                    GetComponent<ActionProcessor>().ReadScript();
-                    ActionProcessor.isProcessing = true;
-                    return;
-                }
-
-                nodePos = new List<Vector2>();
-                SearchRoute(destGeneral, curGeneral, 0);
-                GetRoute(destGeneral, mapCostData[destGeneral.y, destGeneral.x]);
-                nodePos.Reverse();
-                for (int i = 0; i < nodePos.Count; i++)
-                {
-                    Debug.Log(nodePos[i]);
-                }
-
-                if (c != null && !c.GetComponent<ActionProcessor>().CanThrough
-                && c.GetComponent<ActionProcessor>().enabled)
-                {
-                    // イベント実行できるなら最後の座標を削除
-                    eventObject = c.gameObject;
-                    nodePos.RemoveAt(nodePos.Count - 1);
-                }
-                else
-                {
-                    eventObject = null;
-                }
-
-                for (int i = 0; i < mapCostData.GetLength(0); i++)
-                {
-                    for (int j = 0; j < mapCostData.GetLength(1); j++)
-                    {
-                        mapCostData[i, j] = -1;
-                    }
-                }
-            }
-            else if (Input.GetKey(KeyCode.RightArrow))
-            {
-                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
+            // 【暫定】タップで移動を有効にする
+            Vector2Int curGeneral = new Vector2Int(Mathf.RoundToInt(transform.position.x), movableGrid.GetLength(0) - Mathf.RoundToInt(transform.position.z) - 1);
+            if (Input.GetKey(KeyCode.RightArrow))
+            {//現在位置
                 if (curGeneral.x + 1 < movableGrid.GetLength(1)
                 && movableGrid[curGeneral.y, curGeneral.x + 1].IsMovable)
                 {
-                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.right);
+                    nodePos.Add(transform.position + Vector3.right);
                 }
             }
             else if (Input.GetKey(KeyCode.UpArrow))
             {
-                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                 if (curGeneral.y - 1 >= 0
                 && movableGrid[curGeneral.y - 1, curGeneral.x].IsMovable)
                 {
-                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.up);
+                    nodePos.Add(transform.position + Vector3.forward);
                 }
             }
             else if (Input.GetKey(KeyCode.LeftArrow))
             {
-                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                 if (curGeneral.x - 1 >= 0
                 && movableGrid[curGeneral.y, curGeneral.x - 1].IsMovable)
                 {
-                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.left);
+                    nodePos.Add(transform.position+Vector3.left);
                 }
             }
             else if (Input.GetKey(KeyCode.DownArrow))
             {
-                Vector2Int curGeneral = Util.Map.PositionConverter.GetGeneralPos(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position), movableGrid.GetLength(0));//現在位置
                 if (curGeneral.y + 1 < movableGrid.GetLength(0)
                 && movableGrid[curGeneral.y + 1, curGeneral.x].IsMovable)
                 {
-                    nodePos.Add(Util.Map.PositionConverter.GetNormalizedUnityPos(transform.position) + Vector2.down);
+                    nodePos.Add(transform.position + Vector3.back);
                 }
             }
             else if (Input.GetKey(KeyCode.X))
@@ -187,7 +129,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log(d);
                 }
                 spriteAniCor *= -1;
-                GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+                SetMeshWait();
                 eventObject.GetComponent<ActionProcessor>().StartActions();
                 eventObject = null;
                 selectPos.SetActive(false);
@@ -207,28 +149,30 @@ public class PlayerController : MonoBehaviour
         {
             if (count == 0)
             {
-                Vector2Int d = new Vector2Int((int)Mathf.Round(nodePos[0].x - transform.position.x), (int)Mathf.Round(nodePos[0].y - transform.position.y));
+                Vector2Int d = new Vector2Int(Mathf.RoundToInt(nodePos[0].x - transform.position.x), Mathf.RoundToInt(nodePos[0].z - transform.position.z));
                 direction = directionDic[d];
                 spriteAniCor *= -1;
-                GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1 + spriteAniCor];
+                SetMeshWalk();
                 count++;
             }
             else if (count >= inter)
             {
                 count = 0;
                 transform.position = nodePos[0];
-                GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
+                spriteAniCor *= -1;
+                SetMeshWalk();
 
                 nodePos.RemoveAt(0);
                 if (nodePos.Count == 0)
                 {
                     selectPos.SetActive(false);
+                    SetMeshWait();
                 }
             }
             else /*if (count < inter)*/
             {
-                transform.position = (nodePos[0] - (Vector2)transform.position) / (inter - count)
-                    + (Vector2)transform.position;
+                transform.position = (nodePos[0] - transform.position) / (inter - count)
+                    + transform.position;
                 count++;
             }
         }
@@ -308,6 +252,48 @@ public class PlayerController : MonoBehaviour
             && mapCostData[pos.y - 1, pos.x] != -1 && mapCostData[pos.y - 1, pos.x] <= cost)
         {
             GetRoute(pos + Vector2Int.down, cost);
+        }
+    }
+
+    bool CheckInMap(Vector2Int pos)
+    {
+        return 0 <= pos.x && pos.x < movableGrid.GetLength(1)
+            && 0 <= pos.y && pos.y < movableGrid.GetLength(0);
+    }
+
+    private void SetMeshWait()
+    {
+        SetMesh(1);
+    }
+
+    private void SetMeshWalk()
+    {
+        SetMesh(1 + spriteAniCor);
+    }
+
+    private void SetMesh(int patternValue)
+    {
+        var meshFactory = new Expression.Map.Hd2dCharaChipMeshFactory(3, 4);
+        var dir = GetDirectionFromValue(direction);
+        GetComponentInChildren<MeshFilter>().sharedMesh = meshFactory.Create(dir, patternValue);
+
+    }
+
+    private Expression.Map.Direction GetDirectionFromValue(int dir)
+    {
+        switch (dir)
+        {
+            case 0:
+                return Expression.Map.Direction.Down;
+            case 1:
+                return Expression.Map.Direction.Left;
+            case 2:
+                return Expression.Map.Direction.Right;
+            case 3:
+                return Expression.Map.Direction.Up;
+            default:
+                return Expression.Map.Direction.Down;
+
         }
     }
 }

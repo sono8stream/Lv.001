@@ -57,7 +57,7 @@ namespace UI.Map
                 GameObject gameObject = Instantiate(eventObjectOrigin);
                 Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
                 Vector2 unityPos = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
-                gameObject.transform.position = new Vector3(unityPos.x, 1, unityPos.y);
+                gameObject.transform.position = new Vector3(unityPos.x-0.5f, 1, unityPos.y+0.5f);
 
                 ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
                 if (eventObject)
