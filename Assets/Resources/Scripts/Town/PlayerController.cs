@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UI.Map;
 
-public class PlayerController : MonoBehaviour
+public class Hd2dPlayerController : MonoBehaviour
 {
 
     [SerializeField]

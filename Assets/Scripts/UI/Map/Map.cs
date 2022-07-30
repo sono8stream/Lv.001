@@ -34,8 +34,6 @@ namespace UI.Map
             upperRenderer.sprite = upperSprite;
 
             GenerateEventObjects(mapData);
-
-            FpsFixer.FixFrameRate();
         }
 
         void Start()
