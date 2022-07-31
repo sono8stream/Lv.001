@@ -30,5 +30,15 @@ namespace Util.Map
 
             return new Vector2Int(nextX, nextY);
         }
+
+        public static Vector3 GetUnityHd2dPos(Vector2Int pos, int mapHeight)
+        {
+            Vector3 res = new Vector3();
+            res.x = pos.x;
+            res.y = 1;
+            res.z = mapHeight - pos.y - 1;
+
+            return res;
+        }
     }
 }

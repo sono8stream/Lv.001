@@ -56,8 +56,7 @@ namespace UI.Map
             {
                 GameObject gameObject = Instantiate(eventObjectOrigin);
                 Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
-                Vector2 unityPos = Util.Map.PositionConverter.GetUnityPos(pos, mapData.Height);
-                gameObject.transform.position = new Vector3(unityPos.x-0.5f, 1, unityPos.y+0.5f);
+                gameObject.transform.position = Util.Map.PositionConverter.GetUnityHd2dPos(pos, mapData.Height);
 
                 ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
                 if (eventObject)
@@ -70,14 +69,14 @@ namespace UI.Map
 
                 if (currentTexture == null)
                 {
-                    gameObject.GetComponent<MeshRenderer>().enabled = false;
+                    gameObject.GetComponentInChildren<MeshRenderer>().enabled = false;
                 }
                 else
                 {
                     Material mat = new Material(spriteShader);
                     mat.mainTexture = currentTexture;
                     mat.mainTexture.filterMode = FilterMode.Point;
-                    gameObject.GetComponent<Renderer>().sharedMaterial = mat;
+                    gameObject.GetComponentInChildren<Renderer>().sharedMaterial = mat;
                 }
             }
         }

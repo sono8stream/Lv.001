@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UI.Map;
+using Expression.Map;
 
 public class Hd2dPlayerController : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class Hd2dPlayerController : MonoBehaviour
     int direction;
     Dictionary<Vector2Int, int> directionDic;//主人公向き
     List<Vector3> nodePos;
+    Vector3 currentNormalizedPos;
     int inter = 3;
     int count = 0;
     int spritePat = 3;//スプライトのアニメーションパターン
@@ -24,7 +26,7 @@ public class Hd2dPlayerController : MonoBehaviour
     [SerializeField]
     Texture2D texture;
 
-    Expression.Map.MovableInfo[,] movableGrid;
+    MovableInfo[,] movableGrid;
     int[,] mapCostData;
 
     // Use this for initialization
@@ -46,6 +48,7 @@ public class Hd2dPlayerController : MonoBehaviour
             }
         }
         transform.position = new Vector3(movableGrid.GetLength(1) / 2, 1, movableGrid.GetLength(0) / 2);
+        currentNormalizedPos = transform.position;
 
         directionDic = new Dictionary<Vector2Int, int>();
         directionDic.Add(Vector2Int.up, 3);
@@ -108,16 +111,8 @@ public class Hd2dPlayerController : MonoBehaviour
                     Vector2Int d
                         = new Vector2Int((int)(eventObject.transform.position.x - transform.position.x),
                         (int)(eventObject.transform.position.z - transform.position.z));
-                    try
-                    {
-                        direction = directionDic[d];
-                    }
-                    catch
-                    {
-                        Debug.Log(eventObject.transform.position);
-                        Debug.Log(transform.position);
-                        Debug.Log(d);
-                    }
+
+                    direction = directionDic[d];
                     spriteAniCor *= -1;
                     SetMeshWait();
                     eventObject.GetComponent<ActionProcessor>().StartActions();
@@ -140,6 +135,7 @@ public class Hd2dPlayerController : MonoBehaviour
             {
                 count = 0;
                 transform.position = nodePos[0];
+                currentNormalizedPos = nodePos[0];
                 SetMeshWait();
 
                 nodePos.RemoveAt(0);
@@ -151,8 +147,8 @@ public class Hd2dPlayerController : MonoBehaviour
             }
             else /*if (count < inter)*/
             {
-                transform.position = (nodePos[0] - transform.position) / (inter - count)
-                    + transform.position;
+                transform.position = (nodePos[0] - currentNormalizedPos) / (inter - count)
+                    + currentNormalizedPos;
                 count++;
             }
         }
@@ -254,26 +250,26 @@ public class Hd2dPlayerController : MonoBehaviour
 
     private void SetMesh(int patternValue)
     {
-        var meshFactory = new Expression.Map.Hd2dCharaChipMeshFactory(3, 4);
+        var meshFactory = new Hd2dCharaChipMeshFactory(3, 4);
         var dir = GetDirectionFromValue(direction);
         GetComponentInChildren<MeshFilter>().sharedMesh = meshFactory.Create(dir, patternValue);
 
     }
 
-    private Expression.Map.Direction GetDirectionFromValue(int dir)
+    private Direction GetDirectionFromValue(int dir)
     {
         switch (dir)
         {
             case 0:
-                return Expression.Map.Direction.Down;
+                return Direction.Down;
             case 1:
-                return Expression.Map.Direction.Left;
+                return Direction.Left;
             case 2:
-                return Expression.Map.Direction.Right;
+                return Direction.Right;
             case 3:
-                return Expression.Map.Direction.Up;
+                return Direction.Up;
             default:
-                return Expression.Map.Direction.Down;
+                return Direction.Down;
 
         }
     }
@@ -285,5 +281,10 @@ public class Hd2dPlayerController : MonoBehaviour
         {
             eventObject = col.gameObject;
         }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        eventObject = null;
     }
 }

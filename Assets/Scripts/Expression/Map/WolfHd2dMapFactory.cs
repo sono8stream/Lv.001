@@ -150,14 +150,14 @@ namespace Expression.Map
 
                     if (i == firstRow)
                     {
-                        block.transform.localPosition = new Vector3(j, 0, height - i);
+                        block.transform.localPosition = new Vector3(j, 0, height - i - 1);
                     }
                     else
                     {
                         Hd2dBlock frontBlock = blocks[i + 1, j];
                         if (frontBlock == null)
                         {
-                            block.transform.localPosition = new Vector3(j, 0, height - i);
+                            block.transform.localPosition = new Vector3(j, 0, height - i - 1);
                         }
                         else
                         {
