@@ -11,9 +11,12 @@ namespace Infrastructure
     /// </summary>
     public class WolfSystemDataRepository : ISystemDataRepository
     {
-        public DataRecord Find(RecordId id)
+        private Dictionary<DataRef, int> intDict;
+        private Dictionary<DataRef, string> stringDict;
+
+        public WolfSystemDataRepository()
         {
-            return null;
+            string typePath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.project";
         }
 
         public DataField<int> FindInt(DataRef dataRef)
