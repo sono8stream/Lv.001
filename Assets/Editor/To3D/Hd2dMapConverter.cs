@@ -45,13 +45,10 @@ namespace Hd2d
 
         private void OnEnable()
         {
-            try
-            {
-                string json = PlayerPrefs.GetString(saveKey);
-                tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
-                Debug.Log("Loaded tile data");
-            }
-            catch
+
+            string json = PlayerPrefs.GetString(saveKey);
+            tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
+            if (tileInfoList == null)
             {
                 tileInfoList = new Hd2dTileInfoList(CHIP_COUNT);
                 for (int i = 0; i < CHIP_COUNT; i++)
@@ -59,6 +56,10 @@ namespace Hd2d
                     tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
                 }
                 Debug.Log("Initialized tile info list");
+            }
+            else
+            {
+                Debug.Log("Loaded tile data");
             }
         }
 
