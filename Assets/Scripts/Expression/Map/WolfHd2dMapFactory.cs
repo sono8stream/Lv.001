@@ -156,6 +156,46 @@ namespace Expression.Map
                     }
                     else
                     {
+                        // 【暫定】オフセット計算を全方向に対応させる
+                        
+                        Hd2dBlock frontBlock = blocks[i + 1, j];
+                        if (frontBlock == null)
+                        {
+                            block.transform.localPosition = new Vector3(j, 0, height - i - 1);
+                        }
+                        else
+                        {
+                            Vector3 frontPos = frontBlock.transform.localPosition;
+                            int frontTile = mapData[i + 1, j];
+                            var frontTileInfo = frontTile >= 100000 ? tileInfoList[frontTile - 100000] : tileInfoList[frontTile + 16];
+                            int currentTile = mapData[i, j];
+                            var currentTileInfo = currentTile >= 100000 ? tileInfoList[currentTile - 100000] : tileInfoList[currentTile + 16];
+
+                            // 制約照合
+                            var frontConstraint = frontTileInfo.neighborConstraints[Direction.Up];
+                            var currentConstraint = currentTileInfo.neighborConstraints[Direction.Down];
+                            if (frontConstraint.hasConstraint && currentConstraint.hasConstraint)
+                            {
+
+                            }
+                            else if(frontConstraint.hasConstraint)
+                            {
+
+                            }
+                            else if (currentConstraint.hasConstraint)
+                            {
+
+                            }
+                            else
+                            {
+                                block.transform.localPosition = new Vector3(j, 0, height - i - 1);
+                            }
+
+                            block.transform.localPosition = frontPos + Vector3.forward;
+
+                        }
+
+                        /*
                         Hd2dBlock frontBlock = blocks[i + 1, j];
                         if (frontBlock == null)
                         {
@@ -166,6 +206,7 @@ namespace Expression.Map
                             Vector3 frontPos = frontBlock.transform.localPosition;
                             block.transform.localPosition = frontPos + Vector3.forward;
                         }
+                        */
                     }
                     block.transform.localPosition += tileInfo.offset;
                     blocks[i, j] = block;
@@ -293,6 +334,7 @@ namespace Expression.Map
                     break;
             }
 
+            // 【暫定】正式な座標を割り当てる
             block?.Initialize(material, offsets, Vector3Int.one, meshFactory,layerNo);
             return block;
         }
