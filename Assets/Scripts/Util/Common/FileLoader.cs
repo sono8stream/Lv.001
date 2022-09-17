@@ -20,7 +20,8 @@ namespace Util.Common
 
                 while (true)
                 {
-                    if (request.isHttpError || request.isNetworkError)
+                    if (request.result == UnityWebRequest.Result.ProtocolError
+                        || request.result == UnityWebRequest.Result.ConnectionError)
                     {
                         //ÉGÉâÅ[
                         Debug.LogError(request.error);

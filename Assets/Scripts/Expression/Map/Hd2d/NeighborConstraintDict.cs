@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace Expression.Map.Hd2d
@@ -7,9 +8,13 @@ namespace Expression.Map.Hd2d
     /// 近傍マップチップを配置するうえでの制約情報リスト（4方向分）
     /// </summary>
     [System.Serializable]
-    public class NeighborConstraintDict
+    public class NeighborConstraintDict: ISerializationCallbackReceiver
     {
-        public Dictionary<Direction,NeighborConstraint> constraints;
+        public Dictionary<Direction, NeighborConstraint> constraints;
+
+        public List<int> keys;
+        public List<NeighborConstraint> values;
+
 
         public NeighborConstraintDict(Dictionary<Direction, NeighborConstraint> constraints)
         {
@@ -45,7 +50,11 @@ namespace Expression.Map.Hd2d
             constraints.Add(Direction.Right, right);
             constraints.Add(Direction.Down, down);
             constraints.Add(Direction.Left, left);
+
+            keys = new List<int>();
+            values = new List<NeighborConstraint>();
         }
+
         public NeighborConstraint this[Direction d]
         {
             get { return constraints[d]; }
@@ -61,6 +70,33 @@ namespace Expression.Map.Hd2d
             else
             {
                 throw new System.Exception("不正な方向呼び出し");
+            }
+        }
+
+        public int GetCount()
+        {
+            return constraints.Count;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            constraints = new Dictionary<Direction, NeighborConstraint>();
+
+            for (int i = 0; i < Math.Min(keys.Count, values.Count); i++)
+            {
+                constraints.Add((Direction)keys[i], values[i]);
+            }
+        }
+
+        public void OnBeforeSerialize()
+        {
+            keys = new List<int>();
+            values = new List<NeighborConstraint>();
+
+            foreach (Direction dire in constraints.Keys)
+            {
+                keys.Add((int)dire);
+                values.Add(constraints[dire]);
             }
         }
     }

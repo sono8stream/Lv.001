@@ -52,12 +52,15 @@ namespace Hd2d
                 tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
                 for (int i = 0; i < tileInfoList.length; i++)
                 {
-                    var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
-                    constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
-                    constraints.Add(Direction.Right, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
-                    constraints.Add(Direction.Down, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
-                    constraints.Add(Direction.Left, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
-                    tileInfoList[i].neighborConstraints = new Expression.Map.Hd2d.NeighborConstraintDict(constraints);
+                    if (tileInfoList[i].neighborConstraints.GetCount()==0)
+                    {
+                        var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
+                        constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        constraints.Add(Direction.Right, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        constraints.Add(Direction.Down, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        constraints.Add(Direction.Left, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        tileInfoList[i].neighborConstraints = new Expression.Map.Hd2d.NeighborConstraintDict(constraints);
+                    }
                 }
                 Debug.Log("Loaded tile data");
             }
@@ -81,6 +84,7 @@ namespace Hd2d
         {
             string json = JsonUtility.ToJson(tileInfoList);
             PlayerPrefs.SetString(saveKey, json);
+
             Debug.Log("Saved tile data");
         }
 
