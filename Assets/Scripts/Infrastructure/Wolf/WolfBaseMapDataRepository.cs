@@ -82,7 +82,12 @@ namespace Infrastructure
                 tileInfoList = new Hd2dTileInfoList(CHIP_COUNT);
                 for (int i = 0; i < CHIP_COUNT; i++)
                 {
-                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
+                    var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
+                    constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Right, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Down, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Left, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube, new Expression.Map.Hd2d.NeighborConstraintDict(constraints));
                 }
                 Debug.Log("Initialized tile info list");
             }

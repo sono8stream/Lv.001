@@ -10,7 +10,22 @@ namespace Infrastructure
     /// </summary>
     public class WolfDatabaseLoader
     {
-        public string[] LoadTypes(string projPath)
+        public WolfDatabaseSchema[] LoadTypes(string projPath)
+        {
+            Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(projPath);
+            int offset = 0;
+            int columns = reader.ReadInt(offset, true, out offset);
+            WolfDatabaseSchema[] res = new WolfDatabaseSchema[columns];
+
+            for (int i = 0; i < columns; i++)
+            {
+                res[i] = LoadType(reader);
+            }
+
+            return res;
+        }
+
+        private WolfDatabaseSchema LoadType(Util.Wolf.WolfDataReader reader)
         {
             throw new System.NotImplementedException();
         }

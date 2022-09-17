@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using System.Collections.Generic;
 
 namespace Expression.Map
@@ -12,8 +13,10 @@ namespace Expression.Map
         [SerializeField]// SerializeFieldにすることでゲーム開始後も値が保持されるようにする
         protected List<GameObject> quads;
         protected Vector3Int pos;
+        protected int sortingOrder;
 
-        public void Initialize(Material mat, Vector2Int[] offsets, Vector3Int pos, Hd2dMeshFactory meshFactory)
+        public void Initialize(Material mat, Vector2Int[] offsets,
+            Vector3Int pos, Hd2dMeshFactory meshFactory,int sortingOrder)
         {
             this.mat = mat;
             this.offsets = offsets;

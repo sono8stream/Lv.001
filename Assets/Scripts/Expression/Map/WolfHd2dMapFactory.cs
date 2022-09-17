@@ -18,11 +18,11 @@ namespace Expression.Map
         public WolfHd2dMapFactory(MapId mapId)
         {
             this.mapId = mapId;
-            this.tileInfoList = tileInfoList;
 
             // 【暫定】パスをここで直接定義しない
             string shaderPath = "Shaders/Hd2dSprite";
             shader = Resources.Load<Shader>(shaderPath);
+            //shader = null;
             if (shader == null)
             {
                 shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
@@ -81,9 +81,9 @@ namespace Expression.Map
             int[,] mapData2 = ReadLayer(reader, width, height, 0x32 + width * height * 4 * 1);
             int[,] mapData3 = ReadLayer(reader, width, height, 0x32 + width * height * 4 * 2);
 
-            Hd2dMapData mapDataX1 = ReadMap(mapData1, mapchipMaterial, autochipMaterials, tileData);
-            Hd2dMapData mapDataX2 = ReadMap(mapData2, mapchipMaterial, autochipMaterials, tileData);
-            Hd2dMapData mapDataX3 = ReadMap(mapData3, mapchipMaterial, autochipMaterials, tileData);
+            Hd2dMapData mapDataX1 = ReadMap(mapData1, mapchipMaterial, autochipMaterials, tileData,0);
+            Hd2dMapData mapDataX2 = ReadMap(mapData2, mapchipMaterial, autochipMaterials, tileData,1);
+            Hd2dMapData mapDataX3 = ReadMap(mapData3, mapchipMaterial, autochipMaterials, tileData,2);
 
             // 変更範囲が巨大になるので、一旦イベントは無視
             MapEvent.EventData[] events = ReadMapEvents(reader, mapchipTexture, 0x32 + width * height * 4 * 3);
@@ -91,7 +91,9 @@ namespace Expression.Map
             return CombineMapData(events, mapDataX1, mapDataX2, mapDataX3);
         }
 
-        private Hd2dMapData ReadMap(int[,] mapData, Material mapchipMaterial, Material[] autochipMaterials, MapTile.TileData tileData)
+        private Hd2dMapData ReadMap(int[,] mapData, Material mapchipMaterial,
+            Material[] autochipMaterials, MapTile.TileData tileData,
+            int layerNo)
         {
             // 【暫定】読み取る情報はイベントデータを含まずテクスチャとタイル情報のみなのでMapDataではなく別のモデルを返すようにする
             //          各マスの番号をグリッドで返すだけでも良さそう
@@ -131,7 +133,7 @@ namespace Expression.Map
                         int yUnitCount = autochipMaterials[id].mainTexture.height / chipLength;
                         Vector2Int offset = new Vector2Int(mapData[i, j], 0);
                         Hd2dMeshFactory meshFactory = new Hd2dAutoChipMeshFactory(xUnitCount, yUnitCount);
-                        block = GenerateMapObject(tileInfo.type, offset, autochipMaterials[id], meshFactory);
+                        block = GenerateMapObject(tileInfo.type, offset, autochipMaterials[id], meshFactory,layerNo);
                     }
                     else
                     {
@@ -145,7 +147,7 @@ namespace Expression.Map
                         int chipLength = mapchipMaterial.mainTexture.width / xUnitCount;
                         int yUnitCount = mapchipMaterial.mainTexture.height / chipLength;
                         Hd2dMeshFactory meshFactory = new Hd2dBaseChipMeshFactory(xUnitCount, yUnitCount);
-                        block = GenerateMapObject(tileInfo.type, offset, mapchipMaterial, meshFactory);
+                        block = GenerateMapObject(tileInfo.type, offset, mapchipMaterial, meshFactory,layerNo);
                     }
 
                     if (i == firstRow)
@@ -186,9 +188,10 @@ namespace Expression.Map
             List<Hd2dBlock> blocks = new List<Hd2dBlock>();
             for (int i = 0; i < mapDataArray.Length; i++)
             {
-                foreach(Hd2dBlock block in mapDataArray[i].Blocks)
+                // 【暫定】描画順序をRenderQueueなどで調整するよう修正
+                foreach(var block in mapDataArray[i].Blocks)
                 {
-                    block.transform.localPosition += Vector3.up * 0.0001f * i;
+                    block.transform.position += Vector3.up * 0.0001f * i;
                 }
                 blocks.AddRange(mapDataArray[i].Blocks);
             }
@@ -248,7 +251,7 @@ namespace Expression.Map
         }
 
         private Hd2dBlock GenerateMapObject(MapBlockType blockType, Vector2Int offset,
-            Material material, Hd2dMeshFactory meshFactory)
+            Material material, Hd2dMeshFactory meshFactory,int layerNo)
         {
             GameObject ob = new GameObject("Block");
             Hd2dBlock block = null;
@@ -290,7 +293,7 @@ namespace Expression.Map
                     break;
             }
 
-            block?.Initialize(material, offsets, Vector3Int.one, meshFactory);
+            block?.Initialize(material, offsets, Vector3Int.one, meshFactory,layerNo);
             return block;
         }
 
@@ -513,7 +516,12 @@ namespace Expression.Map
                 tileInfoList = new Hd2dTileInfoList(chipCount);
                 for (int i = 0; i < chipCount; i++)
                 {
-                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
+                    var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
+                    constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Right, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Down, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Left, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube,new Hd2d.NeighborConstraintDict(constraints));
                 }
                 Debug.Log("Initialized tile info list");
             }

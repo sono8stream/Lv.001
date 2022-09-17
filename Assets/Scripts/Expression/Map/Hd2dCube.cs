@@ -32,10 +32,12 @@ namespace Expression.Map
                 quad.transform.localPosition = poses[i];
                 quad.transform.localEulerAngles = angles[i];
                 quad.transform.localScale = Vector3.one;
-                quads.Add(quad);
 
                 quad.GetComponent<Renderer>().sharedMaterial = mat;// = new Material(mat);
                 quad.GetComponent<MeshFilter>().sharedMesh = meshFactory.CreateMesh(MeshType.Rectangle, offsets[i]);
+
+                quads.Add(quad);
+
             }
         }
     }

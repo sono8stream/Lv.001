@@ -10,7 +10,8 @@ namespace Expression.Map
         private int unitPerWidth;
         private int unitPerHeight;
 
-        public Hd2dAutoChipMeshFactory(int unitPerWidth, int unitPerHeight) : base()
+        public Hd2dAutoChipMeshFactory(int unitPerWidth, int unitPerHeight)
+            : base()
         {
             this.unitPerWidth = unitPerWidth;
             this.unitPerHeight = unitPerHeight;
