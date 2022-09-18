@@ -7,6 +7,7 @@ namespace Util.Common
 {
     /// <summary>
     /// ファイルの読み取りをラップするクラス
+    /// 対応：Win、Android、WebGL
     /// </summary>
     public class FileLoader
     {
@@ -16,6 +17,7 @@ namespace Util.Common
 
             using (var request = UnityWebRequest.Get(path))
             {
+                request.timeout = 5;// タイムアウトを基本的に5秒で設定
                 var async = request.SendWebRequest();
 
                 while (true)
@@ -38,15 +40,6 @@ namespace Util.Common
 
                 res = async.webRequest.downloadHandler.data;
             }
-
-            // Windowsのみ動作
-            /*
-            using (var fs = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-            {
-                res = new byte[fs.Length];
-                fs.Read(res, 0, res.Length);
-            }
-            */
 
             return res;
         }

@@ -52,7 +52,7 @@ namespace Hd2d
                 tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
                 for (int i = 0; i < tileInfoList.length; i++)
                 {
-                    if (tileInfoList[i].neighborConstraints.GetCount()==0)
+                    if (tileInfoList[i].neighborConstraints.GetCount() == 0)
                     {
                         var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
                         constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
@@ -84,6 +84,9 @@ namespace Hd2d
         {
             string json = JsonUtility.ToJson(tileInfoList);
             PlayerPrefs.SetString(saveKey, json);
+            string infoPath = $"{Application.streamingAssetsPath}/UnityData/tileInfoList.txt";
+            Util.Common.FileSaver.SaveLocalSync(infoPath,
+                System.Text.Encoding.Unicode.GetBytes(json));
 
             Debug.Log("Saved tile data");
         }
