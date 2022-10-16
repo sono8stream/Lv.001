@@ -77,6 +77,8 @@ public class Hd2dPlayerController : MonoBehaviour
 
         if (nodePos.Count == 0)
         {
+            ChangeDirection();
+
             // 【暫定】タップで移動を有効にする
             Vector2Int curGeneral = new Vector2Int(Mathf.RoundToInt(transform.position.x), movableGrid.GetLength(0) - Mathf.RoundToInt(transform.position.z) - 1);
             if (Input.GetKey(KeyCode.RightArrow)
@@ -236,6 +238,34 @@ public class Hd2dPlayerController : MonoBehaviour
         return 0 <= pos.x && pos.x < movableGrid.GetLength(1)
             && 0 <= pos.y && pos.y < movableGrid.GetLength(0)
             && movableGrid[pos.y, pos.x].IsMovable;
+    }
+
+    void ChangeDirection()
+    {
+        Vector2Int dire;
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            dire = Vector2Int.right;
+        }
+        else if (Input.GetKey(KeyCode.UpArrow))
+        {
+            dire = Vector2Int.up;
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            dire = Vector2Int.left;
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            dire = Vector2Int.down;
+        }
+        else
+        {
+            return;
+        }
+
+        direction = directionDic[dire];
+        SetMeshWait();
     }
 
     private void SetMeshWait()

@@ -62,7 +62,7 @@ namespace Hd2d
                     break;
             }
             Hd2dMeshFactory factory = new Hd2dBaseChipMeshFactory(8, 256);
-            block?.Initialize(mat, offsets, Vector3Int.one, factory);
+            block?.Initialize(mat, offsets, Vector3Int.one, factory, 0);
 
             //obj.GetComponent<Renderer>().material=
 

@@ -63,6 +63,8 @@ Shader "Custom/Hd2dSprite"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 col = tex2D(_MainTex, i.uv);
+            // “§–¾•”•ª‚ÍŸ‚Ì•`‰æ–½—ß‚ğÀs‚µ‚È‚¢
+           
                 if (col.a - 0.1 < 0) {
                     discard;
                 }
@@ -81,6 +83,7 @@ Shader "Custom/Hd2dSprite"
         
         Pass
         {
+            // ‹——£î•ñ‚ğ•t—^‚µ‚Ä•`‰æ
             ZWrite On
             Tags{ "LightMode" = "ShadowCaster" }
 

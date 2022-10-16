@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -45,15 +46,35 @@ namespace Hd2d
 
         private void OnEnable()
         {
-
-            string json = PlayerPrefs.GetString(saveKey);
-            tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
-            if (tileInfoList == null)
+            try
+            {
+                string json = PlayerPrefs.GetString(saveKey);
+                tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
+                for (int i = 0; i < tileInfoList.length; i++)
+                {
+                    if (tileInfoList[i].neighborConstraints.GetCount() == 0)
+                    {
+                        var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
+                        constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        constraints.Add(Direction.Right, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        constraints.Add(Direction.Down, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        constraints.Add(Direction.Left, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                        tileInfoList[i].neighborConstraints = new Expression.Map.Hd2d.NeighborConstraintDict(constraints);
+                    }
+                }
+                Debug.Log("Loaded tile data");
+            }
+            catch
             {
                 tileInfoList = new Hd2dTileInfoList(CHIP_COUNT);
                 for (int i = 0; i < CHIP_COUNT; i++)
                 {
-                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube);
+                    var constraints = new Dictionary<Direction, Expression.Map.Hd2d.NeighborConstraint>();
+                    constraints.Add(Direction.Up, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Right, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Down, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    constraints.Add(Direction.Left, new Expression.Map.Hd2d.NeighborConstraint(false, Vector3Int.zero));
+                    tileInfoList[i] = new Hd2dTileInfo(Vector3.zero, MapBlockType.Cube, new Expression.Map.Hd2d.NeighborConstraintDict(constraints));
                 }
                 Debug.Log("Initialized tile info list");
             }
@@ -67,6 +88,10 @@ namespace Hd2d
         {
             string json = JsonUtility.ToJson(tileInfoList);
             PlayerPrefs.SetString(saveKey, json);
+            string infoPath = $"{Application.streamingAssetsPath}/UnityData/tileInfoList.txt";
+            Util.Common.FileSaver.SaveLocalSync(infoPath,
+                System.Text.Encoding.Unicode.GetBytes(json));
+
             Debug.Log("Saved tile data");
         }
 
@@ -170,6 +195,27 @@ namespace Hd2d
                 = (MapBlockType)EditorGUILayout.EnumPopup($"Type {selectedChipIndex}", tileInfoList[selectedChipIndex].type);
             tileInfoList[selectedChipIndex].offset
                 = EditorGUILayout.Vector3Field($"Tile {selectedChipIndex}", tileInfoList[selectedChipIndex].offset);
+            {
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Up].hasConstraint
+                    = EditorGUILayout.Toggle("Up constraint", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Up].hasConstraint);
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Up].offset
+                    = EditorGUILayout.Vector3IntField($"Up offset", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Up].offset);
+
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Right].hasConstraint
+                    = EditorGUILayout.Toggle("Right constraint", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Right].hasConstraint);
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Right].offset
+                    = EditorGUILayout.Vector3IntField($"Right offset", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Right].offset);
+
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Down].hasConstraint
+                    = EditorGUILayout.Toggle("Down constraint", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Down].hasConstraint);
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Down].offset
+                    = EditorGUILayout.Vector3IntField($"Down offset", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Down].offset);
+
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Left].hasConstraint
+                    = EditorGUILayout.Toggle("Left constraint", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Left].hasConstraint);
+                tileInfoList[selectedChipIndex].neighborConstraints[Direction.Left].offset
+                    = EditorGUILayout.Vector3IntField($"Left offset", tileInfoList[selectedChipIndex].neighborConstraints[Direction.Left].offset);
+            }
 
             EditorGUILayout.EndVertical();
 
