@@ -43,6 +43,9 @@ namespace Expression.Map.MapEvent
                 case 0x00000079:
                     command = CreateChangeVariableCommand(metaCommand);
                     break;
+                case 0x00000082:
+                    command = CreateMovePositionCommand(metaCommand);
+                    break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
                     break;
@@ -221,9 +224,9 @@ namespace Expression.Map.MapEvent
                 // 実行中のマップイベントのセルフ変数呼び出し
                 var repository = DI.DependencyInjector.It().ExpressionDataRpository;
                 Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                    new Domain.Data.TableId(mapId.Value),
-                    new Domain.Data.RecordId(eventId.Value),
-                    new Domain.Data.FieldId(val % 10)
+                    new Domain.Data.TableId(mapId.Value, ""),
+                    new Domain.Data.RecordId(eventId.Value, ""),
+                    new Domain.Data.FieldId(val % 10, "")
                     );
                 return new Common.RepositoryIntAccessor(repository, dataRef);
             }
@@ -318,6 +321,18 @@ namespace Expression.Map.MapEvent
                     return OperatorType.NormalAssign;
 
             }
+        }
+
+        private EventCommandBase CreateMovePositionCommand(MetaEventCommand metaCommand)
+        {
+            Debug.Log("場所移動");
+            EventId eventId = new EventId(metaCommand.NumberArgs[1]);
+            int x = metaCommand.NumberArgs[2];
+            int y = metaCommand.NumberArgs[3];
+            MapId mapId = new MapId(metaCommand.NumberArgs[4]);
+            // 【暫定】移動の各種詳細フラグは追って実装（精密座標指定、トランジションの設定）
+
+            return new MovePositionCommand(eventId, x, y, mapId);
         }
 
         private EventCommandBase CreateForkBeginCommand(MetaEventCommand metaCommand)

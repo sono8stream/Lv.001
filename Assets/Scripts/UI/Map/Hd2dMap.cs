@@ -7,7 +7,6 @@ namespace UI.Map
 {
     public class Hd2dMap : MonoBehaviour
     {
-        [SerializeField]
         private int mapIndex;
 
         [SerializeField]
@@ -21,6 +20,9 @@ namespace UI.Map
         // Use this for initialization
         void Awake()
         {
+            var systemRepository = DI.DependencyInjector.It().SystemDataRepository;
+            var dataRef = new Domain.Data.DataRef(new Domain.Data.TableId(7), new Domain.Data.RecordId(0), new Domain.Data.FieldId(0));
+            mapIndex = systemRepository.FindInt(dataRef).Val;
             Expression.Map.MapId mapId = new Expression.Map.MapId(mapIndex);
 
             WolfHd2dMapFactory creator = new WolfHd2dMapFactory(mapId);

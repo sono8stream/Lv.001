@@ -5,10 +5,18 @@ namespace Domain.Data
     public class FieldId
     {
         private int value;
+        private string name;
+
+        public FieldId(int value, string name)
+        {
+            this.value = value;
+            this.name = name;
+        }
 
         public FieldId(int value)
         {
             this.value = value;
+            this.name = "";
         }
 
         public override int GetHashCode()

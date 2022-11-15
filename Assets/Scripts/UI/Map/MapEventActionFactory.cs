@@ -89,5 +89,10 @@ namespace UI.Map
         {
             generatedAction = new ChangeVariableIntAction(command.Updaters);
         }
+
+        public void OnVisitMovePositionCommand(MovePositionCommand command)
+        {
+            generatedAction = new MovePositionAction();
+        }
     }
 }

@@ -7,6 +7,7 @@ namespace Infrastructure
 {
     /// <summary>
     /// WolfRPGの1つのDB項目の制約を保持するスキーマクラス
+    /// ウディタのUIでは「タイプの設定」に対応する
     /// </summary>
     public class WolfDatabaseSchema
     {

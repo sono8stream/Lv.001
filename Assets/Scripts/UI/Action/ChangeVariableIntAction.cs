@@ -19,7 +19,7 @@ namespace UI.Action
             this.updaters = updaters;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc/>i
         public override bool Run()
         {
             for (int i = 0; i < updaters.Length; i++)

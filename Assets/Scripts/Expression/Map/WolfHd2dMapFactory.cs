@@ -36,12 +36,11 @@ namespace Expression.Map
             // マップファイルからタイル情報を読み出し
             // タイル情報からテクスチャ読み込み
             // テクスチャとマップファイルからマップ生成
-
-            // 【暫定】ファイル名をシステムDBから取り出す
-
-            string dirPath = $"{Application.streamingAssetsPath}/Data/MapData";
-            string[] fileNames = { "Dungeon.mps", "SampleMapA.mps", "SampleMapB.mps", "TitleMap.mps" };
-            Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader($"{dirPath}/{fileNames[mapId.Value]}");
+            string dirPath = $"{Application.streamingAssetsPath}/Data";
+            var systemDataRepository = DI.DependencyInjector.It().SystemDataRepository;
+            var dataRef = new Domain.Data.DataRef(new Domain.Data.TableId(0), new Domain.Data.RecordId(mapId.Value), new Domain.Data.FieldId(0));
+            string fileName = systemDataRepository.FindString(dataRef).Val;
+            Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader($"{dirPath}/{fileName}");
 
             int tileSetId = reader.ReadInt(0x22, true, out int tmp);
             MapTile.WolfRepository repository = new MapTile.WolfRepository();
@@ -167,9 +166,9 @@ namespace Expression.Map
                         {
                             Vector3 frontPos = frontBlock.transform.localPosition;
                             int frontTile = mapData[i + 1, j];
-                            var frontTileInfo = frontTile >= 100000 ? tileInfoList[frontTile - 100000] : tileInfoList[frontTile + 16];
+                            var frontTileInfo = frontTile >= 100000 ? tileInfoList[frontTile / 100000] : tileInfoList[frontTile + 16];
                             int currentTile = mapData[i, j];
-                            var currentTileInfo = currentTile >= 100000 ? tileInfoList[currentTile - 100000] : tileInfoList[currentTile + 16];
+                            var currentTileInfo = currentTile >= 100000 ? tileInfoList[currentTile / 100000] : tileInfoList[currentTile + 16];
 
                             // 制約照合
                             var frontConstraint = frontTileInfo.neighborConstraints[Direction.Up];
@@ -178,7 +177,7 @@ namespace Expression.Map
                             {
 
                             }
-                            else if(frontConstraint.hasConstraint)
+                            else if (frontConstraint.hasConstraint)
                             {
 
                             }
@@ -548,6 +547,8 @@ namespace Expression.Map
                 // 【暫定】キーをここで直接定義しない
                 string tileFileKey = "Hd2dTileSetting";
                 string json = PlayerPrefs.GetString(tileFileKey);
+                string infoPath = $"{Application.streamingAssetsPath}/UnityData/tileInfoList.txt";
+                json = System.Text.Encoding.Unicode.GetString(Util.Common.FileLoader.LoadSync(infoPath));
                 tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
                 Debug.Log("Loaded tile data");
             }
