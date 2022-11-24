@@ -17,6 +17,8 @@ namespace UI.Map
 
         private Expression.Map.Hd2dMapData mapData;
 
+        public List<ActionProcessor> MapEvents { get; private set; }
+
         // Use this for initialization
         void Awake()
         {
@@ -54,6 +56,8 @@ namespace UI.Map
 
         private void GenerateEventObjects(Expression.Map.Hd2dMapData mapData)
         {
+            MapEvents = new List<ActionProcessor>();
+
             for (int i = 0; i < mapData.EventDataArray.Length; i++)
             {
                 GameObject gameObject = Instantiate(eventObjectOrigin);
@@ -65,6 +69,7 @@ namespace UI.Map
                 {
                     eventObject.SetEventData(mapData.EventDataArray[i]);
                 }
+                MapEvents.Add(eventObject);
 
                 // この処理はカプセル化できるのでEventObjectクラスに委譲したほうがよさそう
                 Texture2D currentTexture = mapData.EventDataArray[i].PageData[0].GetCurrentTexture();
@@ -81,6 +86,34 @@ namespace UI.Map
                     gameObject.GetComponentInChildren<Renderer>().sharedMaterial = mat;
                 }
             }
+        }
+
+        // マップを切り替える
+        public void ChangeMap(Expression.Map.MapId mapId, ActionProcessor calledEvent)
+        {
+            if (mapId.Value == mapIndex)
+            {
+                return;
+            }
+
+            mapIndex = mapId.Value;
+
+            foreach(ActionProcessor e in MapEvents)
+            {
+                if (e == calledEvent)
+                {
+                    continue;
+                }
+
+                Destroy(e.gameObject);
+            }
+
+            // マップ生成
+            WolfHd2dMapFactory creator = new WolfHd2dMapFactory(mapId);
+            mapData = creator.Create();
+
+            GenerateEventObjects(mapData);
+            MapEvents.Add(calledEvent);
         }
     }
 }

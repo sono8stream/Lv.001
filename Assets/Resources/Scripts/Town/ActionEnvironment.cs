@@ -39,6 +39,9 @@ public class ActionEnvironment : MonoBehaviour
         set { selfVar = value; }
     }
 
+    public ActionProcessor Processor { get; private set; }
+    public UI.Map.Hd2dMap Map { get; private set; }
+
     // Use this for initialization
     void Start()
     {
@@ -61,11 +64,13 @@ public class ActionEnvironment : MonoBehaviour
         eventDic.Add("セーブロード", 11);
         eventDic.Add("ゲーム終了", 12);
         eventDic.Add("フラグ", 13);
-        if(selfVar[0]==1)
+        if (selfVar[0] == 1)
         {
             GetComponent<ActionProcessor>().enabled = false;
             GetComponent<SpriteRenderer>().enabled = false;
         }
+        Processor = GetComponent<ActionProcessor>();
+        Map = GameObject.Find("Map").GetComponent<UI.Map.Hd2dMap>();
     }
 
     // Update is called once per frame

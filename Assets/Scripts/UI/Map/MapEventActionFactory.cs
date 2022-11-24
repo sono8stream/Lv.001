@@ -92,7 +92,7 @@ namespace UI.Map
 
         public void OnVisitMovePositionCommand(MovePositionCommand command)
         {
-            generatedAction = new MovePositionAction();
+            generatedAction = new MovePositionAction(actionEnv,command.MapId, command.X, command.Y);
         }
     }
 }

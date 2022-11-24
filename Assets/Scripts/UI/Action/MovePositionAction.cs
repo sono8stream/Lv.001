@@ -11,9 +11,16 @@ namespace UI.Action
     class MovePositionAction : ActionBase
     {
         ActionEnvironment actionEnv;
+        Expression.Map.MapId mapId;
+        int x;
+        int y;
 
-        public MovePositionAction()
+        public MovePositionAction(ActionEnvironment actionEnv, Expression.Map.MapId mapId, int x, int y)
         {
+            this.actionEnv = actionEnv;
+            this.mapId = mapId;
+            this.x = x;
+            this.y = y;
         }
 
         /// <inheritdoc/>
@@ -21,6 +28,8 @@ namespace UI.Action
         {
             // 同じマップ内か判定
             // マップが異なる場合はマップの読み込みを実施
+            actionEnv.Map.ChangeMap(mapId, actionEnv.Processor);
+
             return true;
         }
     }

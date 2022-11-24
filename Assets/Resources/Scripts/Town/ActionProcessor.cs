@@ -34,7 +34,7 @@ public class ActionProcessor : MonoBehaviour
 
     public static bool isProcessing = false;
 
-    Expression.Map.MapEvent.EventData eventData;
+    private Expression.Map.MapEvent.EventData eventData;
 
     // Use this for initialization
     void Start()
@@ -92,7 +92,7 @@ public class ActionProcessor : MonoBehaviour
 
     // イベントコマンドを1行分読み取り実行イベントキューに入れる
     // 一旦この関数をExpression.Map.MapEvent.EventCommandDataから読み取る関数で置き換える
-    // 最終的にはEventCommandDataが持つ処理を呼び出すのみにする
+    // 【暫定】最終的にはEventCommandDataが持つ処理を呼び出すのみにし、廃止
     public void ReadScript()
     {
         events = new List<UnityEvent>();
@@ -375,5 +375,10 @@ public class ActionProcessor : MonoBehaviour
     public void SetEventData(Expression.Map.MapEvent.EventData eventData)
     {
         this.eventData = eventData;
+    }
+
+    public bool IsExecutable(Expression.Map.MapEvent.EventTriggerType triggerType)
+    {
+        return eventData.PageData[0].TriggerType == triggerType;
     }
 }
