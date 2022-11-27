@@ -19,7 +19,7 @@ public class Hd2dPlayerController : MonoBehaviour
     int spriteAniCor = 1;//移動中アニメの変化パターン
     [SerializeField]
     GameObject selectPos;
-    GameObject eventObject;
+    ActionProcessor targetEvent;
 
     [SerializeField]
     Shader shader;
@@ -64,7 +64,7 @@ public class Hd2dPlayerController : MonoBehaviour
         GetComponentInChildren<Renderer>().sharedMaterial = mat;
         SetMeshWait();
 
-        eventObject = null;
+        targetEvent = null;
     }
 
     // Update is called once per frame
@@ -77,6 +77,13 @@ public class Hd2dPlayerController : MonoBehaviour
 
         if (nodePos.Count == 0)
         {
+            // 自動実行イベントを処理する
+            ProcessAutoEvents();
+            if (ActionProcessor.isProcessing)
+            {
+                return;
+            }
+
             ChangeDirection();
 
             // 【暫定】タップで移動を有効にする
@@ -99,7 +106,7 @@ public class Hd2dPlayerController : MonoBehaviour
             else if (Input.GetKey(KeyCode.DownArrow)
                 && CheckIsMovable(curGeneral + Vector2Int.up))
             {
-                    nodePos.Add(transform.position + Vector3.back);
+                nodePos.Add(transform.position + Vector3.back);
             }
             else if (Input.GetKey(KeyCode.X))
             {
@@ -108,17 +115,18 @@ public class Hd2dPlayerController : MonoBehaviour
             }
             else if (Input.GetKey(KeyCode.Z))
             {
-                if (eventObject != null)//イベント実行
+                if (targetEvent != null
+                    && targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.OnCheck))//イベント実行
                 {
                     Vector2Int d
-                        = new Vector2Int((int)(eventObject.transform.position.x - transform.position.x),
-                        (int)(eventObject.transform.position.z - transform.position.z));
+                        = new Vector2Int((int)(targetEvent.transform.position.x - transform.position.x),
+                        (int)(targetEvent.transform.position.z - transform.position.z));
 
                     direction = directionDic[d];
                     spriteAniCor *= -1;
                     SetMeshWait();
-                    eventObject.GetComponent<ActionProcessor>().StartActions();
-                    eventObject = null;
+                    targetEvent.StartActions();
+                    targetEvent = null;
                     selectPos.SetActive(false);
                 }
             }
@@ -240,6 +248,17 @@ public class Hd2dPlayerController : MonoBehaviour
             && movableGrid[pos.y, pos.x].IsMovable;
     }
 
+    void ProcessAutoEvents()
+    {
+        foreach (ActionProcessor processor in map.MapEvents)
+        {
+            if (processor.IsExecutable(Expression.Map.MapEvent.EventTriggerType.Auto))
+            {
+                processor.StartActions();
+            }
+        }
+    }
+
     void ChangeDirection()
     {
         Vector2Int dire;
@@ -306,15 +325,16 @@ public class Hd2dPlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider col)
     {
-        if (col.GetComponent<ActionProcessor>()!=null
-            && col.GetComponent<ActionProcessor>().enabled)
+        ActionProcessor processor = col.GetComponent<ActionProcessor>();
+        if (processor != null
+            && processor.enabled)
         {
-            eventObject = col.gameObject;
+            targetEvent = processor;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        eventObject = null;
+        targetEvent = null;
     }
 }

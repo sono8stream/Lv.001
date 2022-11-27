@@ -86,5 +86,36 @@ namespace UI.Map
                 }
             }
         }
+
+        // マップを切り替える
+        public void ChangeMap(Expression.Map.MapId mapId)
+        {
+            if (mapId.Value == mapIndex)
+            {
+                return;
+            }
+
+            mapIndex = mapId.Value;
+            mapData = DI.DependencyInjector.It().MapDataRepository.Find(mapId);
+
+            // マップ情報クリア
+
+
+
+            // マップ生成
+            SpriteRenderer underRenderer = transform.Find("UnderSprite").GetComponent<SpriteRenderer>();
+
+            Sprite underSprite = Sprite.Create(mapData.UnderTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), Vector2.zero, mapData.PixelPerUnit);
+            underSprite.texture.filterMode = FilterMode.Point;
+            underRenderer.sprite = underSprite;
+
+            SpriteRenderer upperRenderer = transform.Find("UpperSprite").GetComponent<SpriteRenderer>();
+
+            Sprite upperSprite = Sprite.Create(mapData.UpperTexture, new Rect(0, 0, mapData.UnderTexture.width, mapData.UnderTexture.height), Vector2.zero, mapData.PixelPerUnit);
+            upperSprite.texture.filterMode = FilterMode.Point;
+            upperRenderer.sprite = upperSprite;
+
+            GenerateEventObjects(mapData);
+        }
     }
 }
