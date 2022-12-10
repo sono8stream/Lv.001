@@ -15,22 +15,20 @@ namespace UI.Map
         [SerializeField]
         private GameObject eventObjectOrigin;
 
-        private Expression.Map.Hd2dMapData mapData;
+        private Hd2dMapData mapData;
 
         public List<ActionProcessor> MapEvents { get; private set; }
 
         // Use this for initialization
         void Awake()
         {
+            mapIndex = -1;
+
             var systemRepository = DI.DependencyInjector.It().SystemDataRepository;
             var dataRef = new Domain.Data.DataRef(new Domain.Data.TableId(7), new Domain.Data.RecordId(0), new Domain.Data.FieldId(0));
-            mapIndex = systemRepository.FindInt(dataRef).Val;
-            Expression.Map.MapId mapId = new Expression.Map.MapId(mapIndex);
-
-            WolfHd2dMapFactory creator = new WolfHd2dMapFactory(mapId);
-            mapData = creator.Create();
-
-            GenerateEventObjects(mapData);
+            int nextMapIndex = systemRepository.FindInt(dataRef).Val;
+            MapId nextMapId = new MapId(nextMapIndex);
+            ChangeMap(nextMapId, null);
         }
 
         void Start()
@@ -42,7 +40,7 @@ namespace UI.Map
         {
         }
 
-        public Expression.Map.MovableInfo[,] GetMovableInfo()
+        public MovableInfo[,] GetMovableInfo()
         {
             if (mapData == null)
             {
@@ -54,7 +52,7 @@ namespace UI.Map
             }
         }
 
-        private void GenerateEventObjects(Expression.Map.Hd2dMapData mapData)
+        private void GenerateEventObjects(Hd2dMapData mapData)
         {
             MapEvents = new List<ActionProcessor>();
 
@@ -89,7 +87,7 @@ namespace UI.Map
         }
 
         // マップを切り替える
-        public void ChangeMap(Expression.Map.MapId mapId, ActionProcessor calledEvent)
+        public void ChangeMap(MapId mapId, ActionProcessor calledEvent)
         {
             if (mapId.Value == mapIndex)
             {
@@ -98,14 +96,17 @@ namespace UI.Map
 
             mapIndex = mapId.Value;
 
-            foreach(ActionProcessor e in MapEvents)
+            if (MapEvents != null)
             {
-                if (e == calledEvent)
+                foreach (ActionProcessor e in MapEvents)
                 {
-                    continue;
-                }
+                    //if (e == calledEvent)
+                    //{
+                    //    continue;
+                    //}
 
-                Destroy(e.gameObject);
+                    Destroy(e.gameObject);
+                }
             }
 
             // マップ生成
@@ -113,7 +114,7 @@ namespace UI.Map
             mapData = creator.Create();
 
             GenerateEventObjects(mapData);
-            MapEvents.Add(calledEvent);
+            //MapEvents.Add(calledEvent);
         }
     }
 }

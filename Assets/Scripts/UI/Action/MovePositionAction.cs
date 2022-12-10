@@ -26,7 +26,6 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            // 同じマップ内か判定
             // マップが異なる場合はマップの読み込みを実施
             actionEnv.Map.ChangeMap(mapId, actionEnv.Processor);
 
