@@ -29,7 +29,8 @@ namespace Expression.Map.MapEvent
             switch (metaCommand.NumberArgs[0])
             {
                 case 0x00000065:
-                    command = CreateShowTextCommand(metaCommand.StringArgs);
+                    var factory = new CommandFactory.WolfShowTextCommandFactory();
+                    command = factory.Create(metaCommand);
                     break;
                 case 0x00000067:
                     // デバッグ文。処理なし
@@ -100,14 +101,6 @@ namespace Expression.Map.MapEvent
             nextOffset = currentOffset;
 
             return new MetaEventCommand(numberVariables, stringVariables, indentDepth, footer);
-        }
-
-        private EventCommandBase CreateShowTextCommand(string[] stringVariables)
-        {
-            string text = stringVariables[0];
-            Debug.Log($"文章表示：{text}");
-
-            return new MessageCommand(text);
         }
 
         private EventCommandBase CreateChoiceForkCommand(MetaEventCommand metaCommand)
