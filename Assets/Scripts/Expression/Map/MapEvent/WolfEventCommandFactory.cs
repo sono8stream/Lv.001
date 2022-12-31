@@ -29,8 +29,10 @@ namespace Expression.Map.MapEvent
             switch (metaCommand.NumberArgs[0])
             {
                 case 0x00000065:
-                    var factory = new CommandFactory.WolfShowTextCommandFactory();
-                    command = factory.Create(metaCommand);
+                    {
+                        var factory = new CommandFactory.WolfShowTextCommandFactory();
+                        command = factory.Create(metaCommand);
+                    }
                     break;
                 case 0x00000067:
                     // デバッグ文。処理なし
@@ -46,6 +48,12 @@ namespace Expression.Map.MapEvent
                     break;
                 case 0x00000082:
                     command = CreateMovePositionCommand(metaCommand);
+                    break;
+                case 0x00000096:
+                    {
+                        var factory = new CommandFactory.WolfPictureCommandFactory();
+                        command = factory.Create(metaCommand);
+                    }
                     break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);

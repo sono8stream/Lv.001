@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Expression;
 using UI.Action;
 using Expression.Map.MapEvent;
+using Expression.Map.MapEvent.Command;
 
 namespace UI.Map
 {
@@ -93,6 +94,18 @@ namespace UI.Map
         public void OnVisitMovePositionCommand(MovePositionCommand command)
         {
             generatedAction = new MovePositionAction(actionEnv,command.MapId, command.X, command.Y);
+        }
+
+        public void OnVisitShowPictureCommand(ShowPictureCommand command)
+        {
+            string imagePath = $"{Application.streamingAssetsPath}/Data/" + command.FilePath;
+            byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
+            
+            Texture2D texture = new Texture2D(0, 0);
+            texture.LoadImage(baseTexBytes);
+            texture.Apply();
+            generatedAction = new ShowPictureAction(texture, actionEnv, command.PosPattern,
+                texture.width, texture.height, command.PivotX, command.PivotY);
         }
     }
 }

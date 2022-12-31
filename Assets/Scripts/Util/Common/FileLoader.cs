@@ -33,7 +33,7 @@ namespace Util.Common
                     if (async.isDone)
                     {
                         //ê≥èÌèIóπ
-                        Debug.Log("Load DONE!");
+                        //Debug.Log("Load DONE!");
                         break;
                     }
                 }

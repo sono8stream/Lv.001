@@ -17,7 +17,8 @@ public class ActionEnvironment : MonoBehaviour
     public List<GameObject> choiceBoxes;
     public List<GameObject> choiceButtons;//選択肢リスト
     public List<GameObject> windows;//メッセージボックスリスト
-    List<GameObject> images;//画像リスト
+    public Dictionary<int, Image> images;//表示画像リスト
+
     public string ChoiceName { get; set; }
     public string ChoiceNameSub { get; set; }
 

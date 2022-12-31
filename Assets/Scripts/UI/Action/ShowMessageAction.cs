@@ -54,8 +54,6 @@ namespace UI.Action
             text.GetComponent<RectTransform>().sizeDelta = new Vector2(width - 100, height - 50);
             text.SetActive(true);
 
-            // 【暫定】isCompletedをEventCommandsから切り離す
-            actionEnv.IsCompleted = true;
             return true;
         }
     }

@@ -14,5 +14,6 @@ namespace Expression.Map.MapEvent
         public void OnVisitChangeVariableIntCommand(ChangeVariableIntCommand command);
         public void OnVisitBaseCommand(EventCommandBase command);
         public void OnVisitMovePositionCommand(MovePositionCommand command);
+        public void OnVisitShowPictureCommand(Command.ShowPictureCommand command);
     }
 }
