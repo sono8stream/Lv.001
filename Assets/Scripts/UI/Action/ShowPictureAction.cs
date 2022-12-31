@@ -13,23 +13,23 @@ namespace UI.Action
     {
         Texture2D texture;
 
-        PicturePosPattern posPattern;
+        PicturePivotPattern pivotPattern;
         float width, height;
-        Vector2 pivot;
+        Vector2 pos;
 
         ActionEnvironment actionEnv;
 
         Transform imageBox;
 
         public ShowPictureAction(Texture2D texture, ActionEnvironment actionEnv,
-            PicturePosPattern posPattern, float width, float height,
-            float pivotX, float pivotY)
+            PicturePivotPattern pivotPattern, float width, float height,
+            float x, float y)
         {
             this.texture = texture;
-            this.posPattern = posPattern;
+            this.pivotPattern = pivotPattern;
             this.width = width;
             this.height = height;
-            this.pivot = new Vector2(pivotX, pivotY);
+            this.pos = new Vector2(x, y);
 
             this.actionEnv = actionEnv;
             imageBox = actionEnv.canvas.transform.Find("Image Box");
@@ -46,49 +46,58 @@ namespace UI.Action
             // 位置・回転・スケール・アンカーなど
             RectTransform rectTransform = image.AddComponent<RectTransform>();
             rectTransform.sizeDelta = new Vector2(texture.width, texture.height);
-            rectTransform.localScale = Vector3.one;
-            rectTransform.localPosition = Vector3.zero;
+            rectTransform.pivot = GetPivot();
+            rectTransform.localScale = Vector3.one * 6;
+            rectTransform.localPosition = GetPos();
 
             // スプライト変更
             Image img = image.AddComponent<Image>();
             img.sprite = Sprite.Create(texture,
                 new Rect(0, 0, texture.width, texture.height),
-                pivot);
-            img.rectTransform.position = GetPos();
+                new Vector2(0.5f, 0.5f));
 
             return true;
         }
 
-        private Vector2 GetPos()
+        private Vector2 GetPivot()
         {
             float x = 0;
             float y = 0;
             Vector2 canvasSize = actionEnv.canvas.GetComponent<RectTransform>().sizeDelta;
-            switch (posPattern)
+            switch (pivotPattern)
             {
-                case PicturePosPattern.LeftTop:
+                case PicturePivotPattern.LeftTop:
+                    x = 0;
+                    y = 1;
+                    break;
+                case PicturePivotPattern.LeftBottom:
                     x = 0;
                     y = 0;
                     break;
-                case PicturePosPattern.LeftBottom:
-                    x = 0;
-                    y = canvasSize.y;
+                case PicturePivotPattern.RightTop:
+                    x = 1;
+                    y = 1;
                     break;
-                case PicturePosPattern.RightTop:
-                    x = canvasSize.x;
+                case PicturePivotPattern.RightBottom:
+                    x = 1;
                     y = 0;
-                    break;
-                case PicturePosPattern.RightBottom:
-                    x = canvasSize.x;
-                    y = canvasSize.y;
                     break;
                 default:
                     x = 0;
-                    y = 0;
+                    y = 1;
                     break;
             }
 
             return new Vector2(x, y);
+        }
+
+        private Vector2 GetPos()
+        {
+            Vector2 canvasSize = actionEnv.canvas.GetComponent<RectTransform>().sizeDelta;
+            float xLeft = -canvasSize.x * 0.5f;
+            float yTop = canvasSize.y * 0.5f;
+
+            return new Vector2(xLeft + pos.x, yTop - pos.y);
         }
     }
 }

@@ -104,8 +104,8 @@ namespace UI.Map
             Texture2D texture = new Texture2D(0, 0);
             texture.LoadImage(baseTexBytes);
             texture.Apply();
-            generatedAction = new ShowPictureAction(texture, actionEnv, command.PosPattern,
-                texture.width, texture.height, command.PivotX, command.PivotY);
+            generatedAction = new ShowPictureAction(texture, actionEnv, command.PivotPattern,
+                texture.width, texture.height, command.X, command.Y);
         }
     }
 }
