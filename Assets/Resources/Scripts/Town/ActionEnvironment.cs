@@ -72,6 +72,7 @@ public class ActionEnvironment : MonoBehaviour
         }
         Processor = GetComponent<ActionProcessor>();
         Map = GameObject.Find("Map").GetComponent<UI.Map.Hd2dMap>();
+        images = new Dictionary<int, Image>();
     }
 
     // Update is called once per frame
@@ -810,5 +811,25 @@ public class ActionEnvironment : MonoBehaviour
         isCompleted = true;
     }
 
+    public void RegisterImage(int id, Image image)
+    {
+        if (images.ContainsKey(id))
+        {
+            Destroy(images[id].gameObject);
+            images[id] = image;
+        }
+        else
+        {
+            images.Add(id, image);
+        }
+    }
+
+    public void RemoveImage(int id)
+    {
+        if (images.ContainsKey(id))
+        {
+            Destroy(images[id].gameObject);
+        }
+    }
 
 }

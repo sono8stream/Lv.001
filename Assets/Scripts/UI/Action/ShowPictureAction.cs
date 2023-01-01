@@ -11,24 +11,24 @@ namespace UI.Action
 {
     class ShowPictureAction : ActionBase
     {
+        int pictureId;
         Texture2D texture;
 
         PicturePivotPattern pivotPattern;
-        float width, height;
+        float scale;
         Vector2 pos;
 
         ActionEnvironment actionEnv;
 
         Transform imageBox;
 
-        public ShowPictureAction(Texture2D texture, ActionEnvironment actionEnv,
-            PicturePivotPattern pivotPattern, float width, float height,
-            float x, float y)
+        public ShowPictureAction(int pictureId,Texture2D texture, ActionEnvironment actionEnv,
+            PicturePivotPattern pivotPattern, float x, float y, float scale)
         {
+            this.pictureId = pictureId;
             this.texture = texture;
             this.pivotPattern = pivotPattern;
-            this.width = width;
-            this.height = height;
+            this.scale = scale;
             this.pos = new Vector2(x, y);
 
             this.actionEnv = actionEnv;
@@ -47,7 +47,7 @@ namespace UI.Action
             RectTransform rectTransform = image.AddComponent<RectTransform>();
             rectTransform.sizeDelta = new Vector2(texture.width, texture.height);
             rectTransform.pivot = GetPivot();
-            rectTransform.localScale = Vector3.one * 6;
+            rectTransform.localScale = Vector3.one * 6 * scale;
             rectTransform.localPosition = GetPos();
 
             // スプライト変更
@@ -55,6 +55,8 @@ namespace UI.Action
             img.sprite = Sprite.Create(texture,
                 new Rect(0, 0, texture.width, texture.height),
                 new Vector2(0.5f, 0.5f));
+
+            actionEnv.RegisterImage(pictureId, img);
 
             return true;
         }
