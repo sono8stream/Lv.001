@@ -101,11 +101,6 @@ namespace UI.Map
             {
                 foreach (ActionProcessor e in MapEvents)
                 {
-                    //if (e == calledEvent)
-                    //{
-                    //    continue;
-                    //}
-
                     Destroy(e.gameObject);
                 }
             }
@@ -115,7 +110,6 @@ namespace UI.Map
             mapData = creator.Create();
 
             GenerateEventObjects(mapData);
-            //MapEvents.Add(calledEvent);
         }
     }
 }
