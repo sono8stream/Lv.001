@@ -335,11 +335,11 @@ public class ActionProcessor : MonoBehaviour
         //EventCommands.isProcessing = true;
     }
 
-    public void StartActions()
+    public void StartActions(ActionProcessor processor)
     {
         isProcessing = true;
         UI.Map.MapEventActionFactory factory = new UI.Map.MapEventActionFactory(actionEnvironment);
-        currentAction = factory.CreateActionFrom(eventData.PageData[0].CommandDataArray);
+        currentAction = factory.CreateActionFrom(processor.eventData.PageData[0].CommandDataArray);
         currentAction.OnStart();
     }
 
@@ -366,9 +366,28 @@ public class ActionProcessor : MonoBehaviour
         }
     }
 
-    public void SetEventData(Expression.Map.MapEvent.EventData eventData)
+    /// <summary>
+    /// この処理はEventObject側で持たせる
+    /// </summary>
+    /// <param name="eventData"></param>
+    /// <param name="spriteShader"></param>
+    public void SetEventData(Expression.Map.MapEvent.EventData eventData, Shader spriteShader)
     {
         this.eventData = eventData;
+
+        Texture2D currentTexture = eventData.PageData[0].GetCurrentTexture();
+
+        if (currentTexture == null)
+        {
+            gameObject.GetComponentInChildren<MeshRenderer>().enabled = false;
+        }
+        else
+        {
+            Material mat = new Material(spriteShader);
+            mat.mainTexture = currentTexture;
+            mat.mainTexture.filterMode = FilterMode.Point;
+            gameObject.GetComponentInChildren<Renderer>().sharedMaterial = mat;
+        }
     }
 
     public bool IsExecutable(Expression.Map.MapEvent.EventTriggerType triggerType)

@@ -5,6 +5,9 @@ using Expression;
 
 namespace UI.Map
 {
+    /// <summary>
+    /// 【暫定】Hd2dMapに置き換え可能。重複処理があるが、共通化されていないため利用不可能。使用しないよう注意
+    /// </summary>
     public class Map : MonoBehaviour
     {
         [SerializeField]
@@ -68,21 +71,7 @@ namespace UI.Map
                 ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
                 if (eventObject)
                 {
-                    eventObject.SetEventData(mapData.EventDataArray[i]);
-                }
-
-                // この処理はカプセル化できるのでEventObjectクラスに委譲したほうがよさそう
-                Texture2D currentTexture = mapData.EventDataArray[i].PageData[0].GetCurrentTexture();
-                SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-                if (currentTexture == null)
-                {
-                    spriteRenderer.sprite = null;
-                }
-                else
-                {
-                    Sprite sprite = Sprite.Create(currentTexture, new Rect(0, 0, currentTexture.width, currentTexture.height), new Vector2(0.5f, 0.5f), mapData.PixelPerUnit);
-                    sprite.texture.filterMode = FilterMode.Point;
-                    spriteRenderer.sprite = sprite;
+                    eventObject.SetEventData(mapData.EventDataArray[i], null);
                 }
             }
         }

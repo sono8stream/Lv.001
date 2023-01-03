@@ -29,6 +29,8 @@ public class Hd2dPlayerController : MonoBehaviour
     MovableInfo[,] movableGrid;
     int[,] mapCostData;
 
+    ActionProcessor processor;
+
     // Use this for initialization
     void Awake()
     {
@@ -65,6 +67,7 @@ public class Hd2dPlayerController : MonoBehaviour
         SetMeshWait();
 
         targetEvent = null;
+        processor = GameObject.Find("ActionProcessor").GetComponent<ActionProcessor>();
     }
 
     // Update is called once per frame
@@ -110,7 +113,8 @@ public class Hd2dPlayerController : MonoBehaviour
             }
             else if (Input.GetKey(KeyCode.X))
             {
-                GetComponent<ActionProcessor>().StartActions();
+                // 【暫定】メニュー表示処理を実行
+                //GetComponent<ActionProcessor>().StartActions();
                 return;
             }
             else if (Input.GetKey(KeyCode.Z))
@@ -125,7 +129,7 @@ public class Hd2dPlayerController : MonoBehaviour
                     direction = directionDic[d];
                     spriteAniCor *= -1;
                     SetMeshWait();
-                    targetEvent.StartActions();
+                    processor.StartActions(targetEvent);
                     targetEvent = null;
                     selectPos.SetActive(false);
                 }
@@ -250,11 +254,11 @@ public class Hd2dPlayerController : MonoBehaviour
 
     void ProcessAutoEvents()
     {
-        foreach (ActionProcessor processor in map.MapEvents)
+        foreach (ActionProcessor targetEvent in map.MapEvents)
         {
-            if (processor.IsExecutable(Expression.Map.MapEvent.EventTriggerType.Auto))
+            if (targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.Auto))
             {
-                processor.StartActions();
+                processor.StartActions(targetEvent);
             }
         }
     }

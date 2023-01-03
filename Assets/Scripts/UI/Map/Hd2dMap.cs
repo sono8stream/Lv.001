@@ -66,23 +66,8 @@ namespace UI.Map
                 ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
                 if (eventObject)
                 {
-                    eventObject.SetEventData(mapData.EventDataArray[i]);
-                }
-                MapEvents.Add(eventObject);
-
-                // この処理はカプセル化できるのでEventObjectクラスに委譲したほうがよさそう
-                Texture2D currentTexture = mapData.EventDataArray[i].PageData[0].GetCurrentTexture();
-
-                if (currentTexture == null)
-                {
-                    gameObject.GetComponentInChildren<MeshRenderer>().enabled = false;
-                }
-                else
-                {
-                    Material mat = new Material(spriteShader);
-                    mat.mainTexture = currentTexture;
-                    mat.mainTexture.filterMode = FilterMode.Point;
-                    gameObject.GetComponentInChildren<Renderer>().sharedMaterial = mat;
+                    eventObject.SetEventData(mapData.EventDataArray[i], spriteShader);
+                    MapEvents.Add(eventObject);
                 }
             }
         }
