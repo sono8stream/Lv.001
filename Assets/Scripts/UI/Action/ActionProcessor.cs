@@ -19,24 +19,8 @@ namespace UI.Action
         ActionEnvironment actionEnvironment;// イベントを実行するためのコマンドを保持
         List<UnityEvent> events;
         UI.Action.ActionBase currentAction;
-        [SerializeField]
-        bool canThrough;
-        public bool CanThrough
-        {
-            get { return canThrough; }
-            set { canThrough = value; }
-        }
-        [SerializeField]
-        Sprite[] sprites;
-        [SerializeField]
-        bool isAnimating;
-        int aniLimit = 60;
-        int aniCount;
-        int spriteCount;
 
         public static bool isProcessing = false;
-
-        private Expression.Map.MapEvent.EventData eventData;
 
         // Use this for initialization
         void Start()
@@ -46,15 +30,6 @@ namespace UI.Action
             events = new List<UnityEvent>();
             actionEnvironment.actNo = 0;
             actionEnvironment.IsCompleted = false;
-            if (gameObject.name.Contains("Character"))
-            {
-                Debug.Log(gameObject.name[9] - '1');
-                sprites = PlayerData.Instance.characters[gameObject.name[9] - '1'].sprite;
-                Debug.Log(PlayerData.Instance.characters[gameObject.name[9] - '1'].sprite);
-                GetComponent<SpriteRenderer>().sprite = sprites[0];
-            }
-            aniCount = 0;
-            spriteCount = 0;
         }
 
         // Update is called once per frame
@@ -66,22 +41,6 @@ namespace UI.Action
                 {
                     isProcessing = false;
                     currentAction = null;
-                }
-            }
-
-            if (isAnimating)
-            {
-                aniCount++;
-                if (aniLimit < aniCount)
-                {
-                    aniCount = 0;
-                    spriteCount++;
-                    if (spriteCount >= sprites.Length * 2 - 2)
-                    {
-                        spriteCount = 0;
-                    }
-                    int spriteI = spriteCount >= sprites.Length ? sprites.Length * 2 - 2 - spriteCount : spriteCount;
-                    GetComponent<SpriteRenderer>().sprite = sprites[spriteI];
                 }
             }
         }
@@ -366,35 +325,6 @@ namespace UI.Action
                     break;
                 }
             }
-        }
-
-        /// <summary>
-        /// この処理はEventObject側で持たせる
-        /// </summary>
-        /// <param name="eventData"></param>
-        /// <param name="spriteShader"></param>
-        public void SetEventData(Expression.Map.MapEvent.EventData eventData, Shader spriteShader)
-        {
-            this.eventData = eventData;
-
-            Texture2D currentTexture = eventData.PageData[0].GetCurrentTexture();
-
-            if (currentTexture == null)
-            {
-                gameObject.GetComponentInChildren<MeshRenderer>().enabled = false;
-            }
-            else
-            {
-                Material mat = new Material(spriteShader);
-                mat.mainTexture = currentTexture;
-                mat.mainTexture.filterMode = FilterMode.Point;
-                gameObject.GetComponentInChildren<Renderer>().sharedMaterial = mat;
-            }
-        }
-
-        public bool IsExecutable(Expression.Map.MapEvent.EventTriggerType triggerType)
-        {
-            return eventData.PageData[0].TriggerType == triggerType;
         }
     }
 }

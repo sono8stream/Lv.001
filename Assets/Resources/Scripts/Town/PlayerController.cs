@@ -114,7 +114,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log(nodePos[i]);
                 }
 
-                if (c != null && !c.GetComponent<ActionProcessor>().CanThrough
+                if (c != null && !c.GetComponent<EventObject>().CanThrough
                 && c.GetComponent<ActionProcessor>().enabled)
                 {
                     // イベント実行できるなら最後の座標を削除
