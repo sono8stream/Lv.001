@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UI.Map;
+using UI.Action;
 
 /// <summary>
 /// 【暫定】Hd2dPlayerControllerと重複する処理が共通化しきれておらず、使用できない。廃止予定。

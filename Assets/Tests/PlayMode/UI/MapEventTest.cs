@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Util.Map;
+using UI.Action;
 
 public class MapEventTest
 {

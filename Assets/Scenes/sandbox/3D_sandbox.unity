@@ -2503,8 +2503,15 @@ MonoBehaviour:
   choiceBoxes: []
   choiceButtons: []
   windows: []
+  <ChoiceName>k__BackingField: 
+  <ChoiceNameSub>k__BackingField: 
+  subParam: 
+  isCompleted: 0
   actNo: 0
+  isSelecting: 0
   selfVar: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
+  <Processor>k__BackingField: {fileID: 0}
+  <Map>k__BackingField: {fileID: 0}
 --- !u!114 &61304394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30845,7 +30852,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1249843976}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
+  m_Script: {fileID: 11500000, guid: d7de76768b9b60548a93e573188ae821, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 0}
@@ -50950,7 +50957,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2012009009}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c91c07ef006f0054fa7c4069d6a3f19c, type: 3}
+  m_Script: {fileID: 11500000, guid: 255f06cd1038f074abb03fec643777b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   scripts: []
