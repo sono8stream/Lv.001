@@ -831,6 +831,7 @@ namespace UI.Action
             if (images.ContainsKey(id))
             {
                 Destroy(images[id].gameObject);
+                images.Remove(id);
             }
         }
     }

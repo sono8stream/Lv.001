@@ -27,7 +27,7 @@ namespace UI.Action
         public override bool Run()
         {
             // マップが異なる場合はマップの読み込みを実施
-            actionEnv.Map.ChangeMap(mapId, actionEnv.Processor);
+            actionEnv.Map.ChangeMap(mapId);
 
             return true;
         }

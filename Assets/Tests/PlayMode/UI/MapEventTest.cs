@@ -8,7 +8,6 @@ using UI.Action;
 
 public class MapEventTest
 {
-
     [UnityTest]
     public IEnumerator RaadEventTest()
     {
