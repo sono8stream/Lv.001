@@ -27,7 +27,7 @@ namespace UI.Map
             var systemRepository = DI.DependencyInjector.It().SystemDataRepository;
             var dataRef = new Domain.Data.DataRef(new Domain.Data.TableId(7), new Domain.Data.RecordId(0), new Domain.Data.FieldId(0));
             int nextMapIndex = systemRepository.FindInt(dataRef).Val;
-            //nextMapIndex = 3;
+            nextMapIndex = 1;
             MapId nextMapId = new MapId(nextMapIndex);
             ChangeMap(nextMapId, null);
         }

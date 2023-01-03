@@ -40,7 +40,7 @@ public class ActionProcessor : MonoBehaviour
     void Start()
     {
         line = 0;
-        actionEnvironment = GetComponent<ActionEnvironment>();
+        actionEnvironment = GameObject.Find("ActionEnvironment").GetComponent<ActionEnvironment>();
         events = new List<UnityEvent>();
         actionEnvironment.actNo = 0;
         actionEnvironment.IsCompleted = false;
@@ -82,12 +82,6 @@ public class ActionProcessor : MonoBehaviour
                 GetComponent<SpriteRenderer>().sprite = sprites[spriteI];
             }
         }
-    }
-
-    public void FetchEventCommands()
-    {
-        actionEnvironment = GetComponent<ActionEnvironment>();
-        actionEnvironment.Invoke("Start", 0);
     }
 
     // イベントコマンドを1行分読み取り実行イベントキューに入れる
