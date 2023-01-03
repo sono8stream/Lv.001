@@ -1,37 +1,28 @@
 ﻿using UnityEngine;
-using UnityEngine.Events;
-using System.Collections;
-using UnityEngine.UI;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace UI.Map
 {
     /// <summary>
-    /// イベント情報を保持し、動作制御します
+    /// オブジェクト情報を管理します
     /// </summary>
     public class EventObject : MonoBehaviour
     {
         [SerializeField]
         bool canThrough;
-
         public bool CanThrough
         {
             get { return canThrough; }
             set { canThrough = value; }
         }
-
         [SerializeField]
         Sprite[] sprites;
-
         [SerializeField]
         bool isAnimating;
-
         int aniLimit = 60;
         int aniCount;
         int spriteCount;
 
-        private Expression.Map.MapEvent.EventData eventData;
+        public Expression.Map.MapEvent.EventData EventData { get; private set; }
 
         // Use this for initialization
         void Start()
@@ -60,28 +51,33 @@ namespace UI.Map
             }
         }
 
-        public bool IsExecutable(Expression.Map.MapEvent.EventTriggerType triggerType)
-        {
-            return eventData.PageData[0].TriggerType == triggerType;
-        }
-
+        /// <summary>
+        /// この処理はEventObject側で持たせる
+        /// </summary>
+        /// <param name="eventData"></param>
+        /// <param name="spriteShader"></param>
         public void SetEventData(Expression.Map.MapEvent.EventData eventData, Shader spriteShader)
         {
-            this.eventData = eventData;
+            this.EventData = eventData;
 
             Texture2D currentTexture = eventData.PageData[0].GetCurrentTexture();
 
             if (currentTexture == null)
             {
-                GetComponentInChildren<MeshRenderer>().enabled = false;
+                gameObject.GetComponentInChildren<MeshRenderer>().enabled = false;
             }
             else
             {
                 Material mat = new Material(spriteShader);
                 mat.mainTexture = currentTexture;
                 mat.mainTexture.filterMode = FilterMode.Point;
-                GetComponentInChildren<Renderer>().sharedMaterial = mat;
+                gameObject.GetComponentInChildren<Renderer>().sharedMaterial = mat;
             }
+        }
+
+        public bool IsExecutable(Expression.Map.MapEvent.EventTriggerType triggerType)
+        {
+            return EventData.PageData[0].TriggerType == triggerType;
         }
     }
 }

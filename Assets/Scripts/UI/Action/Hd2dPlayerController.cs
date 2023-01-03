@@ -20,7 +20,7 @@ public class Hd2dPlayerController : MonoBehaviour
     int spriteAniCor = 1;//移動中アニメの変化パターン
     [SerializeField]
     GameObject selectPos;
-    ActionProcessor targetEvent;
+    EventObject targetEvent;
 
     [SerializeField]
     Shader shader;
@@ -255,7 +255,7 @@ public class Hd2dPlayerController : MonoBehaviour
 
     void ProcessAutoEvents()
     {
-        foreach (ActionProcessor targetEvent in map.MapEvents)
+        foreach (EventObject targetEvent in map.MapEvents)
         {
             if (targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.Auto))
             {
@@ -330,11 +330,11 @@ public class Hd2dPlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider col)
     {
-        ActionProcessor processor = col.GetComponent<ActionProcessor>();
-        if (processor != null
+        EventObject target = col.GetComponent<EventObject>();
+        if (target != null
             && processor.enabled)
         {
-            targetEvent = processor;
+            targetEvent = target;
         }
     }
 

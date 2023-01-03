@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Util.Map;
 using UI.Action;
+using UI.Map;
 
 public class MapEventTest
 {
@@ -13,13 +14,15 @@ public class MapEventTest
     {
         GameObject gameObject = new GameObject("Test");
         gameObject.AddComponent<ActionEnvironment>();
+        gameObject.AddComponent<ActionProcessor>();
         gameObject.AddComponent<SpriteRenderer>();
 
-        ActionProcessor eventObject = gameObject.AddComponent<ActionProcessor>();
+        ActionProcessor processor = gameObject.AddComponent<ActionProcessor>();
+        EventObject eventObject = gameObject.AddComponent<EventObject>();
 
         // Start()‘Ò‚¿
         yield return null;
 
-        eventObject.StartActions(eventObject);
+        processor.StartActions(eventObject);
     }
 }

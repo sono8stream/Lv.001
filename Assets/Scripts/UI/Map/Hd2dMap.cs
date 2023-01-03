@@ -18,7 +18,7 @@ namespace UI.Map
 
         private Hd2dMapData mapData;
 
-        public List<ActionProcessor> MapEvents { get; private set; }
+        public List<EventObject> MapEvents { get; private set; }
 
         // Use this for initialization
         void Awake()
@@ -28,7 +28,7 @@ namespace UI.Map
             var systemRepository = DI.DependencyInjector.It().SystemDataRepository;
             var dataRef = new Domain.Data.DataRef(new Domain.Data.TableId(7), new Domain.Data.RecordId(0), new Domain.Data.FieldId(0));
             int nextMapIndex = systemRepository.FindInt(dataRef).Val;
-            //nextMapIndex = 1;
+            nextMapIndex = 1;
             MapId nextMapId = new MapId(nextMapIndex);
             ChangeMap(nextMapId);
         }
@@ -56,7 +56,7 @@ namespace UI.Map
 
         private void GenerateEventObjects(Hd2dMapData mapData)
         {
-            MapEvents = new List<ActionProcessor>();
+            MapEvents = new List<EventObject>();
 
             for (int i = 0; i < mapData.EventDataArray.Length; i++)
             {
@@ -64,7 +64,7 @@ namespace UI.Map
                 Vector2Int pos = new Vector2Int(mapData.EventDataArray[i].PosX, mapData.EventDataArray[i].PosY);
                 gameObject.transform.position = Util.Map.PositionConverter.GetUnityHd2dPos(pos, mapData.Height);
 
-                ActionProcessor eventObject = gameObject.GetComponent<ActionProcessor>();
+                EventObject eventObject = gameObject.GetComponent<EventObject>();
                 if (eventObject)
                 {
                     eventObject.SetEventData(mapData.EventDataArray[i], spriteShader);
@@ -85,7 +85,7 @@ namespace UI.Map
 
             if (MapEvents != null)
             {
-                foreach (ActionProcessor e in MapEvents)
+                foreach (EventObject e in MapEvents)
                 {
                     Destroy(e.gameObject);
                 }

@@ -337,11 +337,11 @@ namespace UI.Action
             //EventCommands.isProcessing = true;
         }
 
-        public void StartActions(ActionProcessor processor)
+        public void StartActions(Map.EventObject eventObject)
         {
             isProcessing = true;
             UI.Map.MapEventActionFactory factory = new UI.Map.MapEventActionFactory(actionEnvironment);
-            currentAction = factory.CreateActionFrom(processor.eventData.PageData[0].CommandDataArray);
+            currentAction = factory.CreateActionFrom(eventObject.EventData.PageData[0].CommandDataArray);
             currentAction.OnStart();
         }
 
