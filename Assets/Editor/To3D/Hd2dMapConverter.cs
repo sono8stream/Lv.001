@@ -48,7 +48,8 @@ namespace Hd2d
         {
             try
             {
-                string json = PlayerPrefs.GetString(saveKey);
+                string infoPath = $"{Application.streamingAssetsPath}/UnityData/tileInfoList.txt";
+                string json = System.Text.Encoding.Unicode.GetString(Util.Common.FileLoader.LoadSync(infoPath));
                 tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
                 for (int i = 0; i < tileInfoList.length; i++)
                 {

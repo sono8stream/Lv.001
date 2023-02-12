@@ -337,10 +337,8 @@ namespace Expression.Map
             try
             {
                 // 【暫定】キーをここで直接定義しない
-                string tileFileKey = "Hd2dTileSetting";
-                string json = PlayerPrefs.GetString(tileFileKey);
                 string infoPath = $"{Application.streamingAssetsPath}/UnityData/tileInfoList.txt";
-                json = System.Text.Encoding.Unicode.GetString(Util.Common.FileLoader.LoadSync(infoPath));
+                string json = System.Text.Encoding.Unicode.GetString(Util.Common.FileLoader.LoadSync(infoPath));
                 tileInfoList = JsonUtility.FromJson<Hd2dTileInfoList>(json);
                 Debug.Log("Loaded tile data");
             }
