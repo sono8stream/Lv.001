@@ -18,6 +18,7 @@ public class Hd2dPlayerController : MonoBehaviour
     int count = 0;
     int spritePat = 3;//スプライトのアニメーションパターン
     int spriteAniCor = 1;//移動中アニメの変化パターン
+
     [SerializeField]
     GameObject selectPos;
     EventObject targetEvent;
@@ -26,6 +27,9 @@ public class Hd2dPlayerController : MonoBehaviour
     Shader shader;
     [SerializeField]
     Texture2D texture;
+
+    [SerializeField]
+    VariableJoystick variableJoyStick;
 
     MovableInfo[,] movableGrid;
     int[,] mapCostData;
@@ -92,49 +96,8 @@ public class Hd2dPlayerController : MonoBehaviour
 
             // 【暫定】タップで移動を有効にする
             Vector2Int curGeneral = new Vector2Int(Mathf.RoundToInt(transform.position.x), movableGrid.GetLength(0) - Mathf.RoundToInt(transform.position.z) - 1);
-            if (Input.GetKey(KeyCode.RightArrow)
-                && CheckIsMovable(curGeneral + Vector2Int.right))
-            {
-                nodePos.Add(transform.position + Vector3.right);
-            }
-            else if (Input.GetKey(KeyCode.UpArrow)
-                && CheckIsMovable(curGeneral + Vector2Int.down))
-            {
-                nodePos.Add(transform.position + Vector3.forward);
-            }
-            else if (Input.GetKey(KeyCode.LeftArrow)
-                && CheckIsMovable(curGeneral + Vector2Int.left))
-            {
-                nodePos.Add(transform.position + Vector3.left);
-            }
-            else if (Input.GetKey(KeyCode.DownArrow)
-                && CheckIsMovable(curGeneral + Vector2Int.up))
-            {
-                nodePos.Add(transform.position + Vector3.back);
-            }
-            else if (Input.GetKey(KeyCode.X))
-            {
-                // 【暫定】メニュー表示処理を実行
-                //GetComponent<ActionProcessor>().StartActions();
-                return;
-            }
-            else if (Input.GetKey(KeyCode.Z))
-            {
-                if (targetEvent != null
-                    && targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.OnCheck))//イベント実行
-                {
-                    Vector2Int d
-                        = new Vector2Int((int)(targetEvent.transform.position.x - transform.position.x),
-                        (int)(targetEvent.transform.position.z - transform.position.z));
-
-                    direction = directionDic[d];
-                    spriteAniCor *= -1;
-                    SetMeshWait();
-                    processor.StartActions(targetEvent);
-                    targetEvent = null;
-                    selectPos.SetActive(false);
-                }
-            }
+            ControlWithKey(curGeneral);
+            ControlWithTouch(curGeneral);
         }
         else //移動情報があるので移動
         {
@@ -308,6 +271,90 @@ public class Hd2dPlayerController : MonoBehaviour
         var dir = GetDirectionFromValue(direction);
         GetComponentInChildren<MeshFilter>().sharedMesh = meshFactory.Create(dir, patternValue);
 
+    }
+
+    private void ControlWithKey(Vector2Int curGeneral)
+    {
+        if (Input.GetKey(KeyCode.RightArrow)
+            && CheckIsMovable(curGeneral + Vector2Int.right))
+        {
+            nodePos.Add(transform.position + Vector3.right);
+        }
+        else if (Input.GetKey(KeyCode.UpArrow)
+            && CheckIsMovable(curGeneral + Vector2Int.down))
+        {
+            nodePos.Add(transform.position + Vector3.forward);
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow)
+            && CheckIsMovable(curGeneral + Vector2Int.left))
+        {
+            nodePos.Add(transform.position + Vector3.left);
+        }
+        else if (Input.GetKey(KeyCode.DownArrow)
+            && CheckIsMovable(curGeneral + Vector2Int.up))
+        {
+            nodePos.Add(transform.position + Vector3.back);
+        }
+        else if (Input.GetKey(KeyCode.X))
+        {
+            // 【暫定】メニュー表示処理を実行
+            //GetComponent<ActionProcessor>().StartActions();
+            return;
+        }
+        else if (Input.GetKey(KeyCode.Z))
+        {
+            if (targetEvent != null
+                && targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.OnCheck))//イベント実行
+            {
+                Vector2Int d
+                    = new Vector2Int((int)(targetEvent.transform.position.x - transform.position.x),
+                    (int)(targetEvent.transform.position.z - transform.position.z));
+
+                direction = directionDic[d];
+                spriteAniCor *= -1;
+                SetMeshWait();
+                processor.StartActions(targetEvent);
+                targetEvent = null;
+                selectPos.SetActive(false);
+            }
+        }
+    }
+
+    private void ControlWithTouch(Vector2Int curGeneral)
+    {
+        float horizonVal = variableJoyStick.Horizontal;
+        float verticalVal = variableJoyStick.Vertical;
+        // 差分が大きい方向を採用
+        if (Mathf.Abs(horizonVal) < Mathf.Abs(verticalVal))
+        {
+            horizonVal = 0;
+        }
+        else
+        {
+            verticalVal = 0;
+        }
+
+        if (horizonVal > 0
+            && CheckIsMovable(curGeneral + Vector2Int.right))
+        {
+            nodePos.Add(transform.position + Vector3.right);
+        }
+        else if (verticalVal > 0
+            && CheckIsMovable(curGeneral + Vector2Int.down))
+        {
+            nodePos.Add(transform.position + Vector3.forward);
+        }
+        else if (horizonVal < 0
+            && CheckIsMovable(curGeneral + Vector2Int.left))
+        {
+            nodePos.Add(transform.position + Vector3.left);
+        }
+        else if (verticalVal < 0
+            && CheckIsMovable(curGeneral + Vector2Int.up))
+        {
+            nodePos.Add(transform.position + Vector3.back);
+        }
+        // 【暫定】タッチでもイベント起動できるようにする
     }
 
     private Direction GetDirectionFromValue(int dir)
