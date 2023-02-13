@@ -4,6 +4,8 @@ using System.Linq;
 using System;
 
 
+// yb’èzAssembly Info‚ğØ‚è•ª‚¯‚Äifdef‚ğíœ
+#if UNITY_EDITOR
 [CustomEditor(typeof(MeshRenderer))]
 public class MyMeshRendererInspector : Editor
 {
@@ -35,3 +37,4 @@ public class MyMeshRendererInspector : Editor
         this.defaultEditor.OnInspectorGUI();
     }
 }
+#endif

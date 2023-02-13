@@ -4,6 +4,8 @@ using UnityEngine;
 
 using UnityEditor;
 
+// 【暫定】Assembly Infoを切り分けてifdefを削除
+#if UNITY_EDITOR
 [CustomEditor(typeof(VariableJoystick))]
 public class VariableJoystickEditor : JoystickEditor
 {
@@ -35,3 +37,4 @@ public class VariableJoystickEditor : JoystickEditor
         EditorGUILayout.PropertyField(joystickType, new GUIContent("Joystick Type", "The type of joystick the variable joystick is current using."));
     }
 }
+#endif

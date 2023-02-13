@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+// 【暫定】Assembly Infoを切り分けてifdefを削除
+#if UNITY_EDITOR
 [CustomEditor(typeof(Joystick), true)]
 public class JoystickEditor : Editor
 {
@@ -62,3 +64,4 @@ public class JoystickEditor : Editor
         EditorGUILayout.ObjectField(handle, new GUIContent("Handle", "The handle's RectTransform component."));
     }
 }
+#endif

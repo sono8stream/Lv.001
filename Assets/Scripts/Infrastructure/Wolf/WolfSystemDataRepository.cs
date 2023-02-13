@@ -17,8 +17,8 @@ namespace Infrastructure
         public WolfSystemDataRepository()
         {
             var loader = new Infrastructure.WolfDatabaseLoader();
-            var projPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDataBase.project";
-            var datPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDataBase.dat";
+            var projPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.project";
+            var datPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.dat";
             loader.LoadDatabase(projPath, datPath, out intDict, out stringDict);
         }
 

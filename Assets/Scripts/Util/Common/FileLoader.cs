@@ -13,11 +13,12 @@ namespace Util.Common
     {
         public static byte[] LoadSync(string path)
         {
+            Debug.Log(path);
             byte[] res = null;
 
             using (var request = UnityWebRequest.Get(path))
             {
-                request.timeout = 5;// タイムアウトを基本的に5秒で設定
+                request.timeout = 30;// タイムアウトを基本的に5秒で設定
                 var async = request.SendWebRequest();
 
                 while (true)
@@ -33,7 +34,7 @@ namespace Util.Common
                     if (async.isDone)
                     {
                         //正常終了
-                        //Debug.Log("Load DONE!");
+                        Debug.Log($"Load DONE! for ${path}");
                         break;
                     }
                 }

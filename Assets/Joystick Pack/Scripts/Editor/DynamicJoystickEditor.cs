@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+// 【暫定】Assembly Infoを切り分けてifdefを削除
+#if UNITY_EDITOR
 [CustomEditor(typeof(DynamicJoystick))]
 public class DynamicJoystickEditor : JoystickEditor
 {
@@ -33,3 +35,4 @@ public class DynamicJoystickEditor : JoystickEditor
         EditorGUILayout.PropertyField(moveThreshold, new GUIContent("Move Threshold", "The distance away from the center input has to be before the joystick begins to move."));
     }
 }
+#endif
