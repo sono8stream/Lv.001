@@ -8,6 +8,7 @@ namespace Expression.Map
     public class Hd2dBlock : MonoBehaviour
     {
         protected Material mat;
+        // 【暫定】UI層の機能なので、分離しておく
         protected Vector2Int[] offsets;
 
         [SerializeField]// SerializeFieldにすることでゲーム開始後も値が保持されるようにする

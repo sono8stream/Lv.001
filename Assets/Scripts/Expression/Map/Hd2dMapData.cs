@@ -7,6 +7,7 @@ namespace Expression.Map
 {
     public class Hd2dMapData:BaseMapData
     {
+        // yb’èzUI‘w‚Ì‹@”\‚È‚Ì‚ÅA•ª—£‚·‚é
         public GameObject BaseObject { get; private set; }
 
         public Hd2dBlock[] Blocks { get; private set; }

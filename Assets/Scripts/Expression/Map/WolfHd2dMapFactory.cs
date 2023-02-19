@@ -16,7 +16,6 @@ namespace Expression.Map
             // 【暫定】パスをここで直接定義しない
             string shaderPath = "Shaders/Hd2dSprite";
             shader = Resources.Load<Shader>(shaderPath);
-            //shader = null;
             if (shader == null)
             {
                 shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
