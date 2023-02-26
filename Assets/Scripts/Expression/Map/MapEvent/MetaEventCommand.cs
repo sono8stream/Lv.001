@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Expression.Map.MapEvent
 {
-    class MetaEventCommand
+    public class MetaEventCommand
     {
         public int[] NumberArgs { get; private set; }
 

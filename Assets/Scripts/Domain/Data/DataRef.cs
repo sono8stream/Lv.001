@@ -21,5 +21,23 @@ namespace Domain.Data
             RecordId = recordId;
             FieldId = fieldId;
         }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as DataRef;
+            if (other == null)
+            {
+                return false;
+            }
+
+            return this.TableId.Equals(other.TableId)
+                && this.RecordId.Equals(other.RecordId)
+                && this.FieldId.Equals(other.FieldId);
+        }
+
+        public override int GetHashCode()
+        {
+            return new { a = TableId.GetHashCode(), b = RecordId.GetHashCode(), c = FieldId.GetHashCode() }.GetHashCode();
+        }
     }
 }

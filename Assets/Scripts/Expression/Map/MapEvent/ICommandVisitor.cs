@@ -12,7 +12,9 @@ namespace Expression.Map.MapEvent
         public void OnVisitForkEndCommand(ForkEndCommand command);
         public void OnVisitForkByVariableIntCommand(ForkByVariableIntCommand command);
         public void OnVisitChangeVariableIntCommand(ChangeVariableIntCommand command);
-
         public void OnVisitBaseCommand(EventCommandBase command);
+        public void OnVisitMovePositionCommand(MovePositionCommand command);
+        public void OnVisitShowPictureCommand(Command.ShowPictureCommand command);
+        public void OnVisitRemovePictureCommand(Command.RemovePictureCommand command);
     }
 }

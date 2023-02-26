@@ -11,14 +11,17 @@ namespace Expression.Map.MapEvent
 
         private bool HaveDirection { get; set; }
 
+        public EventTriggerType TriggerType { get; private set; }
+
         public EventCommandBase[] CommandDataArray
         { get; private set; }
 
-        public EventPageData(Texture2D texture, Direction initDirection, bool haveDirection, EventCommandBase[] commandDataArray)
+        public EventPageData(Texture2D texture, Direction initDirection, bool haveDirection,EventTriggerType triggerType, EventCommandBase[] commandDataArray)
         {
             Texture = texture;
             Direction = initDirection;
             HaveDirection = haveDirection;
+            TriggerType = triggerType;
             CommandDataArray = commandDataArray;
         }
 

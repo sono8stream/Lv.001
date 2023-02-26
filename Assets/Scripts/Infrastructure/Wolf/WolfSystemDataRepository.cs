@@ -11,14 +11,21 @@ namespace Infrastructure
     /// </summary>
     public class WolfSystemDataRepository : ISystemDataRepository
     {
-        public DataRecord Find(RecordId id)
+        private Dictionary<DataRef, int> intDict;
+        private Dictionary<DataRef, string> stringDict;
+
+        public WolfSystemDataRepository()
         {
-            return null;
+            var loader = new Infrastructure.WolfDatabaseLoader();
+            var projPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.project";
+            var datPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.dat";
+            loader.LoadDatabase(projPath, datPath, out intDict, out stringDict);
         }
 
         public DataField<int> FindInt(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            int val = intDict.ContainsKey(dataRef) ? intDict[dataRef] : 0;
+            return new DataField<int>(dataRef.FieldId, val);
         }
 
         public void SetInt(DataRef dataRef, int value)
@@ -28,7 +35,12 @@ namespace Infrastructure
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            string val = stringDict.ContainsKey(dataRef) ? stringDict[dataRef] : "";
+            if (stringDict.ContainsKey(dataRef))
+            {
+                val = stringDict[dataRef];
+            }
+            return new DataField<string>(dataRef.FieldId, val);
         }
 
         public void SetString(DataRef dataRef, string value)

@@ -14,6 +14,8 @@ namespace DI
 
         public IMapDataRepository MapDataRepository { get; private set; }
 
+        public IBaseMapDataRepository BaseMapDataRepository { get; private set; }
+
         public IExpressionDataRepository ExpressionDataRpository { get; private set; }
 
         private DependencyInjector() { }
@@ -30,6 +32,7 @@ namespace DI
                 instance.PlayDataRepository = new WolfPlayDataRepository();
                 instance.MapDataRepository = new WolfMapDataRepository();
                 instance.ExpressionDataRpository = new WolfExpressionDataRepository();
+                instance.BaseMapDataRepository = new WolfBaseMapDataRepository();
             }
 
             return instance;

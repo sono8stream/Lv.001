@@ -1,7 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UI.Map;
+using UI.Action;
 
+/// <summary>
+/// 【暫定】Hd2dPlayerControllerと重複する処理が共通化しきれておらず、使用できない。廃止予定。
+/// </summary>
 public class PlayerController : MonoBehaviour
 {
 
@@ -109,7 +114,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log(nodePos[i]);
                 }
 
-                if (c != null && !c.GetComponent<ActionProcessor>().CanThrough
+                if (c != null && !c.GetComponent<EventObject>().CanThrough
                 && c.GetComponent<ActionProcessor>().enabled)
                 {
                     // イベント実行できるなら最後の座標を削除
@@ -167,7 +172,7 @@ public class PlayerController : MonoBehaviour
             }
             else if (Input.GetKey(KeyCode.X))
             {
-                GetComponent<ActionProcessor>().StartActions();
+                //GetComponent<ActionProcessor>().StartActions();
                 return;
             }
             else if (eventObject != null)//イベント実行
@@ -187,7 +192,7 @@ public class PlayerController : MonoBehaviour
                 }
                 spriteAniCor *= -1;
                 GetComponentInChildren<SpriteRenderer>().sprite = sprites[spritePat * direction + 1];
-                eventObject.GetComponent<ActionProcessor>().StartActions();
+                //eventObject.GetComponent<ActionProcessor>().StartActions();
                 eventObject = null;
                 selectPos.SetActive(false);
             }
@@ -197,7 +202,7 @@ public class PlayerController : MonoBehaviour
                 if (c != null && c.GetComponent<ActionProcessor>().enabled)
                 {
                     eventObject = c.gameObject;
-                    eventObject.GetComponent<ActionProcessor>().StartActions();
+                    //eventObject.GetComponent<ActionProcessor>().StartActions();
                     eventObject = null;
                 }
             }

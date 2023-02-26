@@ -4,22 +4,25 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Util.Map;
+using UI.Action;
+using UI.Map;
 
 public class MapEventTest
 {
-
     [UnityTest]
     public IEnumerator RaadEventTest()
     {
         GameObject gameObject = new GameObject("Test");
         gameObject.AddComponent<ActionEnvironment>();
+        gameObject.AddComponent<ActionProcessor>();
         gameObject.AddComponent<SpriteRenderer>();
 
-        ActionProcessor eventObject = gameObject.AddComponent<ActionProcessor>();
+        ActionProcessor processor = gameObject.AddComponent<ActionProcessor>();
+        EventObject eventObject = gameObject.AddComponent<EventObject>();
 
         // Start()‘Ò‚¿
         yield return null;
 
-        eventObject.StartActions();
+        processor.StartActions(eventObject);
     }
 }

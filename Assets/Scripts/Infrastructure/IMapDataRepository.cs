@@ -10,5 +10,6 @@ namespace Infrastructure
     /// </summary>
     public interface IMapDataRepository : IRepository<MapData, MapId>
     {
+        public int GetCount();
     }
 }

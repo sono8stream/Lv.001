@@ -33,6 +33,9 @@ namespace UI.Action
             height = textSizeY * choiceStrings.Length;
 
             this.actionEnv = actionEnv;
+
+            UnityEngine.Assertions.Assert.IsNotNull(GameObject.FindObjectOfType<EventSystem>(),
+                "EventSystemがシーン内で有効になっていません");
         }
 
         /// <inheritdoc/>
