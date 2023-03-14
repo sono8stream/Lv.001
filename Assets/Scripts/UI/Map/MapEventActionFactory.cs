@@ -111,5 +111,11 @@ namespace UI.Map
         {
             generatedAction = new RemovePictureAction(command.Id, actionEnv);
         }
+
+        public void OnVisitCallEventCommand(CallWolfEventCommand command)
+        {
+            // –¢ŽÀ‘•
+            generatedAction = new ActionBase();
+        }
     }
 }
