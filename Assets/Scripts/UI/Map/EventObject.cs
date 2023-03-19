@@ -80,5 +80,10 @@ namespace UI.Map
         {
             return EventData.PageData[0].TriggerType == triggerType;
         }
+
+        public bool CanPass()
+        {
+            return EventData.PageData[0].CanPass();
+        }
     }
 }

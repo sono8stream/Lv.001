@@ -94,7 +94,6 @@ public class Hd2dPlayerController : MonoBehaviour
 
             ChangeDirection();
 
-            // 【暫定】タップで移動を有効にする
             Vector2Int curGeneral = new Vector2Int(Mathf.RoundToInt(transform.position.x), movableGrid.GetLength(0) - Mathf.RoundToInt(transform.position.z) - 1);
             ControlWithKey(curGeneral);
             ControlWithTouch(curGeneral);
@@ -211,9 +210,34 @@ public class Hd2dPlayerController : MonoBehaviour
 
     bool CheckIsMovable(Vector2Int pos)
     {
-        return 0 <= pos.x && pos.x < movableGrid.GetLength(1)
+        if(0 <= pos.x && pos.x < movableGrid.GetLength(1)
             && 0 <= pos.y && pos.y < movableGrid.GetLength(0)
-            && movableGrid[pos.y, pos.x].IsMovable;
+            && movableGrid[pos.y, pos.x].IsMovable)
+        {
+            if (targetEvent == null)
+            {
+                return true;
+            }
+            else
+            {
+                // 進行方向にすり抜けられないイベントがある場合はスキップ
+                Vector2Int curGeneral = new Vector2Int(Mathf.RoundToInt(targetEvent.transform.position.x), movableGrid.GetLength(0) - Mathf.RoundToInt(targetEvent.transform.position.z) - 1);
+                if (!targetEvent.CanPass()
+                    && pos == curGeneral)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            // そもそも移動できない場合
+            return false;
+        }
     }
 
     void ProcessAutoEvents()
@@ -328,6 +352,19 @@ public class Hd2dPlayerController : MonoBehaviour
         // 特に入力無しならスキップ
         if (Mathf.Abs(horizonVal) == 0 && Mathf.Abs(verticalVal) == 0)
         {
+            if (Input.GetMouseButtonUp(0))//クリックされたとき、その座標まで主人公を移動
+            {
+                Vector2Int d
+                    = new Vector2Int((int)(targetEvent.transform.position.x - transform.position.x),
+                    (int)(targetEvent.transform.position.z - transform.position.z));
+
+                direction = directionDic[d];
+                spriteAniCor *= -1;
+                SetMeshWait();
+                processor.StartActions(targetEvent);
+                targetEvent = null;
+                selectPos.SetActive(false);
+            }
             return;
         }
 
@@ -335,7 +372,7 @@ public class Hd2dPlayerController : MonoBehaviour
         float minAbsVal = Mathf.Min(Mathf.Abs(horizonVal), Mathf.Abs(verticalVal));
         float maxAbsVal = Mathf.Max(Mathf.Abs(horizonVal), Mathf.Abs(verticalVal));
         // 30°以上になるならスキップ
-        if (minAbsVal / maxAbsVal > Mathf.Tan(20 * Mathf.PI / 180))
+        if (minAbsVal / maxAbsVal > Mathf.Tan(30 * Mathf.PI / 180))
         {
             return;
         }
@@ -387,7 +424,6 @@ public class Hd2dPlayerController : MonoBehaviour
                 return Direction.Up;
             default:
                 return Direction.Down;
-
         }
     }
 
