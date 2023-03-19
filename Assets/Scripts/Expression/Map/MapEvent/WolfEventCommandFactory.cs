@@ -62,7 +62,10 @@ namespace Expression.Map.MapEvent
                     command = CreateForkEndCommand(metaCommand);
                     break;
                 case 0x000000D2:
-                    CreateCallEventByIdCommand(currentOffset, out currentOffset);
+                    {
+                        var factory = new CommandFactory.WolfCallEventByIdCommandFactory();
+                        command = factory.Create(metaCommand);
+                    }
                     break;
                 default:
                     if (metaCommand.FooterValue == 1)
@@ -86,13 +89,6 @@ namespace Expression.Map.MapEvent
             for (int i = 0; i < numberVariableCount; i++)
             {
                 numberVariables[i] = reader.ReadInt(currentOffset, true, out currentOffset);
-
-                if (i == 0 && numberVariables[i] == 0x000000D2)
-                {
-                    // イベント呼び出しコマンドは特殊な配置なので切り抜け、個別処理で読み込ませる
-                    nextOffset = currentOffset;
-                    return new MetaEventCommand(numberVariables, null, 0, 0);
-                }
             }
 
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -350,52 +346,6 @@ namespace Expression.Map.MapEvent
             Debug.Log($"分岐終端");
 
             return new ForkEndCommand(metaCommand.IndentDepth);
-        }
-
-        // イベントコマンドの取得は未済み
-        private EventCommandBase CreateCallEventByIdCommand(int offset, out int nextOffset)
-        {
-            int currentOffset = offset;
-            int eventId = reader.ReadInt(currentOffset, true, out currentOffset);
-            Debug.Log($"イベント{eventId.ToString()}呼び出し");
-
-            int argsParam = reader.ReadInt(currentOffset, true, out currentOffset);
-            int numberArgCount = argsParam % (1 << 4);
-            int stringArgCount = argsParam / (1 << 4) % (1 << 4);
-            int stringArgVariableFlag = argsParam / (1 << 12) % (1 << 4);
-            int acceptReturnValueFlag = argsParam / (1 << 24) % (1 << 8);
-
-            for (int i = 0; i < numberArgCount; i++)
-            {
-                int numberArg = reader.ReadInt(currentOffset, true, out currentOffset);
-                //Debug.Log($"数値引数{i.ToString()}：{numberArg.ToString()}");
-            }
-
-            for (int i = 0; i < stringArgCount; i++)
-            {
-                int stringArgVariableValue = reader.ReadInt(currentOffset, true, out currentOffset);
-                //Debug.Log($"文字列引数呼び出し値{i.ToString()}：{stringArgVariableValue.ToString()}");
-            }
-
-            if (acceptReturnValueFlag > 0)
-            {
-                int returnValueAddress = reader.ReadInt(currentOffset, true, out currentOffset);
-            }
-
-            int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
-            int stringVariableCount = reader.ReadByte(currentOffset, out currentOffset);
-
-            for (int i = 0; i < stringVariableCount; i++)
-            {
-                string text = reader.ReadString(currentOffset, out currentOffset);
-                //Debug.Log($"文字データ：{text}");
-            }
-
-            // フッタはスキップ
-            int ft = reader.ReadByte(currentOffset, out currentOffset);
-
-            nextOffset = currentOffset;
-            return null;
         }
 
         // 【暫定】モデル定義までデータを空読み

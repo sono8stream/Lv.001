@@ -16,13 +16,17 @@ namespace Expression.Map.MapEvent
         public EventCommandBase[] CommandDataArray
         { get; private set; }
 
-        public EventPageData(Texture2D texture, Direction initDirection, bool haveDirection,EventTriggerType triggerType, EventCommandBase[] commandDataArray)
+        public EventMoveData MoveData { get; private set; }
+
+        public EventPageData(Texture2D texture, Direction initDirection, bool haveDirection,
+            EventTriggerType triggerType, EventCommandBase[] commandDataArray, EventMoveData moveData)
         {
             Texture = texture;
             Direction = initDirection;
             HaveDirection = haveDirection;
             TriggerType = triggerType;
             CommandDataArray = commandDataArray;
+            MoveData = moveData;
         }
 
         // 現在の方向に応じた画像を返す
@@ -82,6 +86,18 @@ namespace Expression.Map.MapEvent
             else
             {
                 return Texture;
+            }
+        }
+
+        public bool CanPass()
+        {
+            if (HaveDirection)
+            {
+                return MoveData.CanPass;
+            }
+            else
+            {
+                return true;
             }
         }
     }

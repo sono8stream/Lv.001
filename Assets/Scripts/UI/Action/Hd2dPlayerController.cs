@@ -324,6 +324,22 @@ public class Hd2dPlayerController : MonoBehaviour
     {
         float horizonVal = variableJoyStick.Horizontal;
         float verticalVal = variableJoyStick.Vertical;
+
+        // 特に入力無しならスキップ
+        if (Mathf.Abs(horizonVal) == 0 && Mathf.Abs(verticalVal) == 0)
+        {
+            return;
+        }
+
+        // 中間値の場合はスキップ
+        float minAbsVal = Mathf.Min(Mathf.Abs(horizonVal), Mathf.Abs(verticalVal));
+        float maxAbsVal = Mathf.Max(Mathf.Abs(horizonVal), Mathf.Abs(verticalVal));
+        // 30°以上になるならスキップ
+        if (minAbsVal / maxAbsVal > Mathf.Tan(20 * Mathf.PI / 180))
+        {
+            return;
+        }
+
         // 差分が大きい方向を採用
         if (Mathf.Abs(horizonVal) < Mathf.Abs(verticalVal))
         {

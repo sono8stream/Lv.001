@@ -60,6 +60,7 @@ namespace UI.Map
         {
             this.EventData = eventData;
 
+            // 【暫定】イベントページ決め打ちを修正
             Texture2D currentTexture = eventData.PageData[0].GetCurrentTexture();
 
             if (currentTexture == null)

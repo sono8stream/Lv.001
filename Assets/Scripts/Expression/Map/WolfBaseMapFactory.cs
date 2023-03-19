@@ -87,7 +87,7 @@ namespace Expression.Map
             int triggerFlagRight3 = reader.ReadInt(offset, true, out offset);
             int triggerFlagRight4 = reader.ReadInt(offset, true, out offset);
 
-            ReadEventMoveRoute(reader, offset, out offset);
+            MapEvent.EventMoveData moveData = ReadEventMoveRoute(reader, offset, out offset);
 
             int eventCommandCount = reader.ReadInt(offset, true, out offset);
             Debug.Log($"イベントコマンド数：{eventCommandCount}");
@@ -140,7 +140,7 @@ namespace Expression.Map
             }
             Debug.Log(haveDirection);
 
-            return new MapEvent.EventPageData(texture, direction, haveDirection, triggerType, commands);
+            return new MapEvent.EventPageData(texture, direction, haveDirection, triggerType, commands, moveData);
         }
 
         private Direction ConvertDirectionValueToDirection(int directionVal)
@@ -190,13 +190,14 @@ namespace Expression.Map
         }
 
         // 【暫定】モデル定義までデータを空読み
-        private void ReadEventMoveRoute(Util.Wolf.WolfDataReader reader, int offset, out int nextOffset)
+        private MapEvent.EventMoveData ReadEventMoveRoute(Util.Wolf.WolfDataReader reader, int offset, out int nextOffset)
         {
             int animationSpeed = reader.ReadByte(offset, out offset);
             int moveSpeed = reader.ReadByte(offset, out offset);
             int moveFrequency = reader.ReadByte(offset, out offset);
             int moveType = reader.ReadByte(offset, out offset);
             int optionType = reader.ReadByte(offset, out offset);
+            bool canPass = (optionType & 8) > 0;
             int moveFlag = reader.ReadByte(offset, out offset);
             int commandCount = reader.ReadInt(offset, true, out offset);
             Debug.Log($"移動コマンド数：{commandCount}");
@@ -220,6 +221,7 @@ namespace Expression.Map
             }
 
             nextOffset = offset;
+            return new MapEvent.EventMoveData(canPass);
         }
 
         // 【暫定】詳細定義していないコマンドは空読み

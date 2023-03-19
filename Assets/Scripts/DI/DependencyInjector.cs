@@ -18,6 +18,8 @@ namespace DI
 
         public IExpressionDataRepository ExpressionDataRpository { get; private set; }
 
+        public Expression.Map.MapEvent.ICommonEventCommandsRepository CommonEventCommandsRepository { get; private set; }
+
         private DependencyInjector() { }
 
         public static DependencyInjector It()
@@ -25,7 +27,7 @@ namespace DI
             if (instance == null)
             {
                 // ŠÂ‹«‚É‰‚¶‚ÄˆË‘¶ŠÖŒW‚ğ’“ü‚·‚é
-                // ˆË‘¶ŠÖŒW‚ª‚ ‚é‚Ì‚ÅC‚±‚Ì‡‚É‰Šú‰»
+                // ˆË‘¶ŠÖŒW‚ª‚ ‚é‚Ì‚ÅC‚±‚Ì‡‚É‰Šú‰»‚·‚é‚±‚Æ
                 instance = new DependencyInjector();
                 instance.SystemDataRepository = new WolfSystemDataRepository();
                 instance.MasterDataRepository = new WolfMasterDataRepository();
@@ -33,6 +35,7 @@ namespace DI
                 instance.MapDataRepository = new WolfMapDataRepository();
                 instance.ExpressionDataRpository = new WolfExpressionDataRepository();
                 instance.BaseMapDataRepository = new WolfBaseMapDataRepository();
+                instance.CommonEventCommandsRepository = new WolfCommonEventCommandsRepository();
             }
 
             return instance;

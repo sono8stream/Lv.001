@@ -21,6 +21,17 @@ namespace Util.Wolf
             return res;
         }
 
+        public byte[] ReadBytes(int offset,int size, out int nextOffset)
+        {
+            byte[] res = new byte[size];
+            for(int i = 0; i < size; i++)
+            {
+                res[i] = bytes[offset + i];
+            }
+            nextOffset = offset + size;
+            return res;
+        }
+
         public int ReadInt(int offset, bool isLittleEndian, out int nextOffset)
         {
             if (offset < 0 || offset + 4 > bytes.Length)

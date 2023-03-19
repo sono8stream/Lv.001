@@ -9,7 +9,7 @@ namespace Expression.Map.MapEvent.Command
 
         public string[] StringArgs { get; private set; }
 
-        public CallWolfEventCommand(int[] numberArgs,string[] stringArgs)
+        public CallWolfEventCommand(int[] numberArgs, string[] stringArgs)
         {
             NumberArgs = numberArgs;
             StringArgs = stringArgs;
