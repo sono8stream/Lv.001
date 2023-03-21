@@ -21,6 +21,8 @@ public class Hd2dPlayerController : MonoBehaviour
 
     [SerializeField]
     GameObject selectPos;
+
+    [SerializeField]
     EventObject targetEvent;
 
     [SerializeField]
@@ -352,7 +354,7 @@ public class Hd2dPlayerController : MonoBehaviour
         // 特に入力無しならスキップ
         if (Mathf.Abs(horizonVal) == 0 && Mathf.Abs(verticalVal) == 0)
         {
-            if (Input.GetMouseButtonUp(0))//クリックされたとき、その座標まで主人公を移動
+            if (Input.GetMouseButtonUp(0) && targetEvent != null)//クリックされたとき、その座標まで主人公を移動
             {
                 Vector2Int d
                     = new Vector2Int((int)(targetEvent.transform.position.x - transform.position.x),
@@ -439,6 +441,10 @@ public class Hd2dPlayerController : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        targetEvent = null;
+        EventObject target = other.GetComponent<EventObject>();
+        if (target == targetEvent)
+        {
+            targetEvent = null;
+        }
     }
 }
