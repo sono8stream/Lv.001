@@ -91,13 +91,13 @@ namespace Expression.Map.MapEvent
 
         public bool CanPass()
         {
-            if (HaveDirection)
+            if (Texture == null)
             {
-                return MoveData.CanPass;
+                return true;
             }
             else
             {
-                return true;
+                return MoveData.CanPass;
             }
         }
     }
