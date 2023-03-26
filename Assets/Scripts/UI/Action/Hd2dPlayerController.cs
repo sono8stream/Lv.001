@@ -340,7 +340,6 @@ public class Hd2dPlayerController : MonoBehaviour
                 spriteAniCor *= -1;
                 SetMeshWait();
                 processor.StartActions(targetEvent);
-                targetEvent = null;
                 selectPos.SetActive(false);
             }
         }
@@ -364,7 +363,6 @@ public class Hd2dPlayerController : MonoBehaviour
                 spriteAniCor *= -1;
                 SetMeshWait();
                 processor.StartActions(targetEvent);
-                targetEvent = null;
                 selectPos.SetActive(false);
             }
             return;

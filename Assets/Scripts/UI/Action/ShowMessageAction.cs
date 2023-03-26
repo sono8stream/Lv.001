@@ -18,7 +18,7 @@ namespace UI.Action
         ActionEnvironment actionEnv;
 
         public ShowMessageAction(string message, ActionEnvironment actionEnv,
-            float x = 0, float y = -690, float width = 1060, float height = 500)
+            float x = 0, float y = -506, float width = 1680, float height = 400)
         {
             isCompleted = false;
             this.message = message;

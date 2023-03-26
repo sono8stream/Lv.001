@@ -8,6 +8,9 @@ namespace Expression.Map.MapEvent
         public IDataAccessor<int> LeftHandAccessor { get; private set; }
         public IDataAccessor<int> RightHandAccessor { get; private set; }
 
+        public IDataAccessorFactory<int> LeftHandAccessorFactory { get; private set; }
+        public IDataAccessorFactory<int> RightHandAccessorFactory { get; private set; }
+
         public OperatorType OperatorType { get; private set; }
 
         public ConditionInt(IDataAccessor<int> leftHandAccessor,
