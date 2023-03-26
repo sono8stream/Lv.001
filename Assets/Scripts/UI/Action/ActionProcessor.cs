@@ -299,7 +299,9 @@ namespace UI.Action
         public void StartActions(Map.EventObject eventObject)
         {
             isProcessing = true;
-            UI.Map.MapEventActionFactory factory = new UI.Map.MapEventActionFactory(actionEnvironment);
+            Expression.Map.MapEvent.CommandVisitContext context
+                = new Expression.Map.MapEvent.CommandVisitContext(actionEnvironment.Map.MapId, eventObject.EventData.Id);
+            Map.MapEventActionFactory factory = new Map.MapEventActionFactory(actionEnvironment, context);
             currentAction = factory.CreateActionFrom(eventObject.EventData.PageData[0].CommandDataArray);
             currentAction.OnStart();
         }

@@ -15,13 +15,16 @@ namespace UI.Action
         ActionControl controlInfo;
         int indentDepth;
         Expression.Map.MapEvent.ConditionInt[] conditions;
+        Expression.Map.MapEvent.CommandVisitContext context;
 
         public ForkByVariableIntAction(ActionControl controlInfo, int indentDepth,
-            Expression.Map.MapEvent.ConditionInt[] conditions)
+            Expression.Map.MapEvent.ConditionInt[] conditions,
+            Expression.Map.MapEvent.CommandVisitContext context)
         {
             this.controlInfo = controlInfo;
             this.indentDepth = indentDepth;
             this.conditions = conditions;
+            this.context = context;
         }
 
         /// <inheritdoc/>
@@ -30,7 +33,7 @@ namespace UI.Action
             int forkId = -1;
             for (int i = 0; i < conditions.Length; i++)
             {
-                if (conditions[i].CheckIsTrue())
+                if (conditions[i].CheckIsTrue(context))
                 {
                     forkId = i + 1;
                 }

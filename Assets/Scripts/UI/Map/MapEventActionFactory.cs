@@ -21,9 +21,12 @@ namespace UI.Map
 
         private ActionControl controlInfo;
 
-        public MapEventActionFactory(ActionEnvironment actionEnv)
+        private CommandVisitContext commandVisitContext;
+
+        public MapEventActionFactory(ActionEnvironment actionEnv,CommandVisitContext commandVisitContext)
         {
             this.actionEnv = actionEnv;
+            this.commandVisitContext = commandVisitContext;
         }
 
         /// <summary>
@@ -83,7 +86,8 @@ namespace UI.Map
 
         public void OnVisitForkByVariableIntCommand(ForkByVariableIntCommand command)
         {
-            generatedAction = new ForkByVariableIntAction(controlInfo, command.IndentDepth, command.Conditions);
+            generatedAction = new ForkByVariableIntAction(controlInfo, command.IndentDepth,
+                command.Conditions, commandVisitContext);
         }
 
         public void OnVisitChangeVariableIntCommand(ChangeVariableIntCommand command)

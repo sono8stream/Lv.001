@@ -144,21 +144,15 @@ namespace Expression.Map.MapEvent
 
         private ConditionInt GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
         {
-            Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(flagLeft);
+            Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, flagLeft);
 
-            Common.IDataAccessor<int> rightAccessor;
-            if ((rightAndCompareParams >> 4) == 0)
-            {
-                rightAccessor = new Common.ConstDataAccessor<int>(flagRight);
-            }
-            else
-            {
-                rightAccessor = GenerateIntAccessor(flagLeft);
-            }
+            Common.IDataAccessorFactory<int> rightAccessorFactory;
+            bool isConst = (rightAndCompareParams >> 4) == 0;
+            rightAccessorFactory = new Command.WolfIntAccessorFactory(isConst, flagRight);
 
             OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
 
-            var condition = new ConditionInt(leftAccessor, rightAccessor, operatorType);
+            var condition = new ConditionInt(leftAccessorFactory, rightAccessorFactory, operatorType);
             return condition;
         }
 

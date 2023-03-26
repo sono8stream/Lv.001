@@ -5,15 +5,23 @@ namespace Expression.Map.MapEvent.Command
 {
     public class WolfIntAccessorFactory : Common.IDataAccessorFactory<int>
     {
+        private bool isConstValue;
         private int rawVal;
 
-        public WolfIntAccessorFactory(int rawVal)
+        public WolfIntAccessorFactory(bool isConstValue, int rawVal)
         {
+            this.isConstValue = isConstValue;
             this.rawVal = rawVal;
         }
 
-        public Common.IDataAccessor<int> Create()
+        public Common.IDataAccessor<int> Create(CommandVisitContext context)
         {
+            // そのまま値を使用する場合
+            if (isConstValue)
+            {
+                return new Common.ConstDataAccessor<int>(rawVal);
+            }
+
             if (rawVal >= 1300000000)
             {
                 // システムDB読み出し
@@ -69,13 +77,13 @@ namespace Expression.Map.MapEvent.Command
             else if (rawVal >= 1100000)
             {
                 // 実行中のマップイベントのセルフ変数呼び出し
-                //var repository = DI.DependencyInjector.It().ExpressionDataRpository;
-                //Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                //    new Domain.Data.TableId(mapId.Value, ""),
-                //    new Domain.Data.RecordId(eventId.Value, ""),
-                //    new Domain.Data.FieldId(rawVal % 10, "")
-                //    );
-                //return new Common.RepositoryIntAccessor(repository, dataRef);
+                var repository = DI.DependencyInjector.It().ExpressionDataRpository;
+                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                    new Domain.Data.TableId(context.MapId.Value, ""),
+                    new Domain.Data.RecordId(context.EventId.Value, ""),
+                    new Domain.Data.FieldId(rawVal % 10, "")
+                    );
+                return new Common.RepositoryIntAccessor(repository, dataRef);
             }
             else if (rawVal >= 1000000)
             {
