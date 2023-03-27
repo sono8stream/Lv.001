@@ -92,7 +92,7 @@ namespace UI.Map
 
         public void OnVisitChangeVariableIntCommand(ChangeVariableIntCommand command)
         {
-            generatedAction = new ChangeVariableIntAction(command.Updaters);
+            generatedAction = new ChangeVariableIntAction(command.Updaters, commandVisitContext);
         }
 
         public void OnVisitMovePositionCommand(MovePositionCommand command)

@@ -5,29 +5,30 @@ namespace Expression.Map.MapEvent
 {
     public class UpdaterInt
     {
-        public IDataAccessor<int> LeftHandAccessor { get; private set; }
-        public IDataAccessor<int> RightHandAccessor1 { get; private set; }
-        public IDataAccessor<int> RightHandAccessor2 { get; private set; }
+        public IDataAccessorFactory<int> LeftHandAccessorFactory { get; private set; }
+        public IDataAccessorFactory<int> RightHandAccessor1Factory { get; private set; }
+        public IDataAccessorFactory<int> RightHandAccessor2Factory { get; private set; }
+
         public OperatorType AssignOperatorType { get; private set; }
         public OperatorType RightOperatorType { get; private set; }
 
-        public UpdaterInt(IDataAccessor<int> leftHandAccessor,
-            IDataAccessor<int> rightHandAccessor1,
-            IDataAccessor<int> rightHandAccessor2,
+        public UpdaterInt(IDataAccessorFactory<int> leftHandAccessorFactory,
+            IDataAccessorFactory<int> rightHandAccessor1Factory,
+            IDataAccessorFactory<int> rightHandAccessor2Factory,
             OperatorType assignOperatorType,
              OperatorType rightOperatorType)
         {
-            LeftHandAccessor = leftHandAccessor;
-            RightHandAccessor1 = rightHandAccessor1;
-            RightHandAccessor2 = rightHandAccessor2;
+            LeftHandAccessorFactory = leftHandAccessorFactory;
+            RightHandAccessor1Factory = rightHandAccessor1Factory;
+            RightHandAccessor2Factory = rightHandAccessor2Factory;
             AssignOperatorType = assignOperatorType;
             RightOperatorType = rightOperatorType;
         }
 
-        public void Update()
+        public void Update(CommandVisitContext context)
         {
-            int rightValue1 = RightHandAccessor1.Get();
-            int rightValue2 = RightHandAccessor2.Get();
+            int rightValue1 = RightHandAccessor1Factory.Create(context).Get();
+            int rightValue2 = RightHandAccessor2Factory.Create(context).Get();
 
             int assignValue = 0;
 
@@ -50,7 +51,7 @@ namespace Expression.Map.MapEvent
             }
 
             // 【暫定】全ての代入演算子に対応させる
-            int leftValue = LeftHandAccessor.Get();
+            int leftValue = LeftHandAccessorFactory.Create(context).Get();
             switch (AssignOperatorType)
             {
                 case OperatorType.NormalAssign:
@@ -71,7 +72,7 @@ namespace Expression.Map.MapEvent
                     break;
             }
 
-            LeftHandAccessor.Set(assignValue);
+            LeftHandAccessorFactory.Create(context).Set(assignValue);
         }
     }
 }

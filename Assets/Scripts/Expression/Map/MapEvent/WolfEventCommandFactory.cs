@@ -241,15 +241,14 @@ namespace Expression.Map.MapEvent
             Debug.Log(operatorType);
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
-            // 【暫定】正式な計算処理に対応させる．連続計算，可変DB対応など
-            Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(leftParamRef);
-            Common.IDataAccessor<int> rightAccessor1 = GenerateIntAccessor(rightParamRef1);
-            Common.IDataAccessor<int> rightAccessor2 = GenerateIntAccessor(rightParamRef2);
+            Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, leftParamRef);
+            Common.IDataAccessorFactory<int> rightAccessor1Factory = new Command.WolfIntAccessorFactory(false, rightParamRef1);
+            Common.IDataAccessorFactory<int> rightAccessor2Factory = new Command.WolfIntAccessorFactory(false, rightParamRef2);
             OperatorType assignType = GetAssignOperator(operatorType % 0x10);
             OperatorType rightOperatorType = GetCalculateOperator(operatorType / 0x10);
 
             UpdaterInt[] updaters = new UpdaterInt[1];
-            updaters[0] = new UpdaterInt(leftAccessor, rightAccessor1, rightAccessor2,
+            updaters[0] = new UpdaterInt(leftAccessorFactory, rightAccessor1Factory, rightAccessor2Factory,
                 assignType, rightOperatorType);
 
             return new ChangeVariableIntCommand(updaters);
