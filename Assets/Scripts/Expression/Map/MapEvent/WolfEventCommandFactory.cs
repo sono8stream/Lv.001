@@ -7,15 +7,11 @@ namespace Expression.Map.MapEvent
     public class WolfEventCommandFactory
     {
         WolfDataReader reader;
-        MapId mapId;
-        EventId eventId;
         int startOffset;
 
-        public WolfEventCommandFactory(WolfDataReader reader, MapId mapId, EventId eventId, int startOffset)
+        public WolfEventCommandFactory(WolfDataReader reader, int startOffset)
         {
             this.reader = reader;
-            this.mapId = mapId;
-            this.eventId = eventId;
             this.startOffset = startOffset;
         }
 
