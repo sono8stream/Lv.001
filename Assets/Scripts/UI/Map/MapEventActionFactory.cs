@@ -23,7 +23,7 @@ namespace UI.Map
 
         private CommandVisitContext commandVisitContext;
 
-        public MapEventActionFactory(ActionEnvironment actionEnv,CommandVisitContext commandVisitContext)
+        public MapEventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext)
         {
             this.actionEnv = actionEnv;
             this.commandVisitContext = commandVisitContext;
@@ -97,14 +97,14 @@ namespace UI.Map
 
         public void OnVisitMovePositionCommand(MovePositionCommand command)
         {
-            generatedAction = new MovePositionAction(actionEnv,command.MapId, command.X, command.Y);
+            generatedAction = new MovePositionAction(actionEnv, command.MapId, command.X, command.Y);
         }
 
         public void OnVisitShowPictureCommand(ShowPictureCommand command)
         {
             string imagePath = $"{Application.streamingAssetsPath}/Data/" + command.FilePath;
             byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
-            
+
             Texture2D texture = new Texture2D(0, 0);
             texture.LoadImage(baseTexBytes);
             texture.Apply();
@@ -116,10 +116,12 @@ namespace UI.Map
             generatedAction = new RemovePictureAction(command.Id, actionEnv);
         }
 
-        public void OnVisitCallEventCommand(CallWolfEventCommand command)
+        public void OnVisitCallEventCommand(CallEventCommand command)
         {
-            // –¢ŽÀ‘•
-            generatedAction = new ActionBase();
+            IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
+            EventCommandBase[] commands = accessor.GetEvent();
+            var nextFactory = new MapEventActionFactory(actionEnv, commandVisitContext);
+            generatedAction = nextFactory.CreateActionFrom(commands);
         }
     }
 }
