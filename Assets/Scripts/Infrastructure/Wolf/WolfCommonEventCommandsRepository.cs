@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Expression.Map.MapEvent;
+using Expression.Event;
 using UnityEngine;
 using Util.Wolf;
 
@@ -13,11 +14,11 @@ namespace Infrastructure
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/BasicData/CommonEvent.dat";
 
-        List<EventCommandBase[]> commandsList;
+        List<CommonEvent> commandsList;
 
         public WolfCommonEventCommandsRepository()
         {
-            commandsList = new List<EventCommandBase[]>();
+            commandsList = new List<CommonEvent>();
             ReadCommonEvents();
         }
 
@@ -25,7 +26,7 @@ namespace Infrastructure
         {
             if (0 <= commonEventId && commonEventId < commandsList.Count)
             {
-                return commandsList[commonEventId];
+                return commandsList[commonEventId].EventCommands;
             }
 
             return new EventCommandBase[0];
@@ -44,10 +45,12 @@ namespace Infrastructure
             }
         }
 
-        private EventCommandBase[] ReadCommonEvent(WolfDataReader reader, ref int offset)
+        private CommonEvent ReadCommonEvent(WolfDataReader reader, ref int offset)
         {
             reader.ReadByte(offset, out offset);// ヘッダーはスキップ
-            int eventId = reader.ReadInt(offset, true, out offset);
+            int eventIdRaw = reader.ReadInt(offset, true, out offset);
+            CommonEventId eventId = new CommonEventId(eventIdRaw);
+
             int conditionType = reader.ReadByte(offset, out offset);
             int conditionLeftValue = reader.ReadInt(offset, true, out offset);
             int conditionRightValue = reader.ReadInt(offset, true, out offset);
@@ -89,7 +92,7 @@ namespace Infrastructure
             int argSpecifyTypeCount = reader.ReadInt(offset, true, out offset);
             // 数値引数の特殊指定
             int[] argSpecifyTypes = new int[argSpecifyTypeCount];
-            for(int i = 0; i < argSpecifyTypeCount; i++)
+            for (int i = 0; i < argSpecifyTypeCount; i++)
             {
                 argSpecifyTypes[i] = reader.ReadByte(offset, out offset);
             }
@@ -120,7 +123,7 @@ namespace Infrastructure
             // 引数初期値
             int argInitValueCount = reader.ReadInt(offset, true, out offset);
             int[] argInitValues = new int[argInitValueCount];
-            for(int i = 0; i < argInitValueCount; i++)
+            for (int i = 0; i < argInitValueCount; i++)
             {
                 argInitValues[i] = reader.ReadInt(offset, true, out offset);
             }
@@ -130,7 +133,7 @@ namespace Infrastructure
             int color = reader.ReadInt(offset, true, out offset);
 
             // セルフ変数名
-            for(int i = 0; i < 100; i++)
+            for (int i = 0; i < 100; i++)
             {
                 reader.ReadString(offset, out offset);
             }
@@ -146,7 +149,13 @@ namespace Infrastructure
 
             dummy = reader.ReadByte(offset, out offset);
 
-            return commands;
+            var commonEvent = new CommonEvent(eventId, commands);
+            return commonEvent;
+        }
+
+        public int GetCount()
+        {
+            return commandsList.Count;
         }
     }
 }

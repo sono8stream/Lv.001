@@ -77,7 +77,7 @@ namespace Expression.Map.MapEvent.Command
             else if (rawVal >= 1100000)
             {
                 // 実行中のマップイベントのセルフ変数呼び出し
-                var repository = DI.DependencyInjector.It().ExpressionDataRpository;
+                var repository = DI.DependencyInjector.It().MapEventStateRpository;
                 Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
                     new Domain.Data.TableId(context.MapId.Value, ""),
                     new Domain.Data.RecordId(context.EventId.Value, ""),

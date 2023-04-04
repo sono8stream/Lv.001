@@ -10,5 +10,7 @@ namespace Expression.Map.MapEvent
     public interface ICommonEventCommandsRepository
     {
         public EventCommandBase[] GetCommands(int commonEventId);
+
+        public int GetCount();
     }
 }
