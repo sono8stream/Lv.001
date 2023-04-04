@@ -18,7 +18,7 @@ namespace DI
 
         public IExpressionDataRepository MapEventStateRpository { get; private set; }
 
-        public Expression.Map.MapEvent.ICommonEventCommandsRepository CommonEventCommandsRepository { get; private set; }
+        public Expression.Event.ICommonEventCommandsRepository CommonEventCommandsRepository { get; private set; }
 
         private DependencyInjector() { }
 

@@ -22,14 +22,14 @@ namespace Infrastructure
             ReadCommonEvents();
         }
 
-        public EventCommandBase[] GetCommands(int commonEventId)
+        public CommonEvent GetEvent(int commonEventId)
         {
             if (0 <= commonEventId && commonEventId < commandsList.Count)
             {
-                return commandsList[commonEventId].EventCommands;
+                return commandsList[commonEventId];
             }
 
-            return new EventCommandBase[0];
+            return new CommonEvent(new CommonEventId(commonEventId), new EventCommandBase[0]);
         }
 
         private void ReadCommonEvents()

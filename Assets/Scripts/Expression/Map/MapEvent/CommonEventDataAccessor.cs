@@ -16,7 +16,7 @@ namespace Expression.Map.MapEvent
         public EventCommandBase[] GetEvent()
         {
             var repos = DI.DependencyInjector.It().CommonEventCommandsRepository;
-            return repos.GetCommands(eventId.Value);
+            return repos.GetEvent(eventId.Value).EventCommands;
         }
     }
 }
