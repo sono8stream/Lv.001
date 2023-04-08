@@ -29,9 +29,11 @@ namespace UI.Action
 
         public override void OnVisitCommonEvent(CommonEvent commonEvent)
         {
-            // yb’èzˆø”‚âŒÄ‚Ño‚µ‚Ä‚¢‚éƒCƒxƒ“ƒg”Ô†‚È‚Ç‚ğd‚ß‚é‚æ‚¤AContext‚È‚Ç‚É•t—^‚µ‚Ä‚¨‚­
+            // yb’èzˆø”‚È‚Ç‚àContext‚É•t—^‚µ‚Ä‚¨‚­
+            commandVisitContext.CommonEventId = commonEvent.Id;
             var nextFactory = new Map.MapEventActionFactory(actionEnv, commandVisitContext);
             generatedAction = nextFactory.CreateActionFrom(commonEvent.EventCommands);
+            commandVisitContext.CommonEventId = null;
         }
 
         public override void OnVisitMapEvent(EventData mapEvent)
