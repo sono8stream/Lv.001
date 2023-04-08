@@ -2,7 +2,7 @@ using System;
 
 namespace Expression.Event
 {
-    public class CommonEvent
+    public class CommonEvent : IEvent
     {
         public CommonEventId Id { get; private set; }
 
@@ -17,6 +17,11 @@ namespace Expression.Event
         {
             Id = id;
             EventCommands = eventCommands;
+        }
+
+        public void Visit(EventVisitorBase visitor)
+        {
+            visitor.OnVisitCommonEvent(this);
         }
     }
 }

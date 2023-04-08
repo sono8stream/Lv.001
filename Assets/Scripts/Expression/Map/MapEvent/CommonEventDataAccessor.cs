@@ -13,10 +13,10 @@ namespace Expression.Map.MapEvent
             this.eventId = eventId;
         }
 
-        public EventCommandBase[] GetEvent()
+        public Event.IEvent GetEvent()
         {
             var repos = DI.DependencyInjector.It().CommonEventCommandsRepository;
-            return repos.GetEvent(eventId.Value).EventCommands;
+            return repos.GetEvent(eventId.Value);
         }
     }
 }

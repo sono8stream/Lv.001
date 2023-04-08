@@ -12,7 +12,7 @@ namespace UI.Map
     /// 一連のイベントコマンドから一つのイベントアクションを生成して返します
     /// 内部で呼び出しの度にgeneratedActionやcontrolInfoを共有するため、使いまわしできないので注意
     /// </summary>
-    public class MapEventActionFactory : Expression.Map.MapEvent.ICommandVisitor
+    public class MapEventActionFactory : ICommandVisitor
     {
         // 生成結果を保持するためにメンバとして持つ。排他に注意
         private ActionBase generatedAction;
@@ -119,9 +119,9 @@ namespace UI.Map
         public void OnVisitCallEventCommand(CallEventCommand command)
         {
             IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
-            EventCommandBase[] commands = accessor.GetEvent();
-            var nextFactory = new MapEventActionFactory(actionEnv, commandVisitContext);
-            generatedAction = nextFactory.CreateActionFrom(commands);
+            // ここでVisitorを介してイベントデータからアクションを生成する
+            var actionCreator = new CommandActionCreator(actionEnv, commandVisitContext);
+            generatedAction = actionCreator.GenerateAction(accessor.GetEvent());
         }
     }
 }

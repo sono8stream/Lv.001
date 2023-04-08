@@ -6,6 +6,6 @@ namespace Expression.Map.MapEvent
 {
     public interface IEventDataAccessor
     {
-        public EventCommandBase[] GetEvent();
+        public Event.IEvent GetEvent();
     }
 }

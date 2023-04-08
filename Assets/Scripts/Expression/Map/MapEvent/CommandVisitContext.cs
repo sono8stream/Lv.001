@@ -5,11 +5,13 @@ namespace Expression.Map.MapEvent
     {
         public MapId MapId { private set; get; }
         public EventId EventId { private set; get; }
+        public Event.CommonEventId CommonEventId { set; get; }
 
         public CommandVisitContext(MapId mapId, EventId eventId)
         {
             MapId = mapId;
             EventId = eventId;
+            CommonEventId = null;
         }
     }
 }

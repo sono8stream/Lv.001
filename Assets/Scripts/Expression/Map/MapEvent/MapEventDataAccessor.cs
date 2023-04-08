@@ -15,10 +15,10 @@ namespace Expression.Map.MapEvent
             this.eventId = eventId;
         }
 
-        public EventCommandBase[] GetEvent()
+        public Event.IEvent GetEvent()
         {
             var repos = DI.DependencyInjector.It().MapDataRepository;
-            return repos.Find(mapId).EventDataArray[eventId.Value].PageData[0].CommandDataArray;
+            return repos.Find(mapId).EventDataArray[eventId.Value];
         }
     }
 }
