@@ -14,22 +14,22 @@ namespace Infrastructure
     {
         private string dirPath = $"{Application.streamingAssetsPath}/Data/BasicData/CommonEvent.dat";
 
-        List<CommonEvent> commandsList;
+        Dictionary<CommonEventId, CommonEvent> commandsDict;
 
         public WolfCommonEventCommandsRepository()
         {
-            commandsList = new List<CommonEvent>();
+            commandsDict = new Dictionary<CommonEventId, CommonEvent>();
             ReadCommonEvents();
         }
 
-        public CommonEvent GetEvent(int commonEventId)
+        public CommonEvent GetEvent(CommonEventId eventId)
         {
-            if (0 <= commonEventId && commonEventId < commandsList.Count)
+            if (commandsDict.ContainsKey(eventId))
             {
-                return commandsList[commonEventId];
+                return commandsDict[eventId];
             }
 
-            return new CommonEvent(new CommonEventId(commonEventId), new EventCommandBase[0]);
+            return new CommonEvent(eventId, new EventCommandBase[0]);
         }
 
         private void ReadCommonEvents()
@@ -38,10 +38,11 @@ namespace Infrastructure
             int offset = 11;// オフセットスキップ
             int eventCount = reader.ReadInt(offset, true, out offset);
 
-            for(int i = 0; i < eventCount; i++)
+            for (int i = 0; i < eventCount; i++)
             {
                 // イベントを読み出す
-                commandsList.Add(ReadCommonEvent(reader, ref offset));
+                var id = new CommonEventId(i);
+                commandsDict.Add(id, ReadCommonEvent(reader, ref offset));
             }
         }
 
@@ -155,7 +156,7 @@ namespace Infrastructure
 
         public int GetCount()
         {
-            return commandsList.Count;
+            return commandsDict.Count;
         }
     }
 }

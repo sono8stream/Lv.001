@@ -42,6 +42,25 @@ namespace Expression.Map.MapEvent.Command
                     );
                 return new Common.RepositoryStringAccessor(repository, dataRef);
             }
+            else if (rawStr.StartsWith("\\cself["))
+            {
+                // 実行中のコモンイベントのセルフ変数呼び出し
+                // []内を取得
+                string fieldStr = rawStr.Substring("\\self[".Length, rawStr.Length - "\\self[]".Length);
+                if (int.TryParse(fieldStr, out int variableId))
+                {
+                    // ID変換できない場合は定数として返す
+                    new Common.ConstDataAccessor<string>(rawStr);
+                }
+                if (context.CommonEventId == null)
+                {
+                    // コモンイベントから呼び出されていない場合は0を返す
+                    new Common.ConstDataAccessor<string>("0");
+                }
+
+                return new Event.CommonEventStringAccessor(
+                    context.CommonEventId, variableId);
+            }
 
             // 特殊条件以外の場合、定数を取得
             return new Common.ConstDataAccessor<string>(rawStr);

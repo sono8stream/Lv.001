@@ -17,6 +17,9 @@ namespace Expression.Event
         {
             Id = id;
             EventCommands = eventCommands;
+
+            NumberVariables = new int[95];
+            StringVariables = new string[5];
         }
 
         public void Visit(EventVisitorBase visitor)

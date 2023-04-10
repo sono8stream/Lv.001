@@ -9,7 +9,7 @@ namespace Expression.Event
     /// </summary>
     public interface ICommonEventCommandsRepository
     {
-        public CommonEvent GetEvent(int commonEventId);
+        public CommonEvent GetEvent(CommonEventId eventId);
 
         public int GetCount();
     }

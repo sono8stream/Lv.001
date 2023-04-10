@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-namespace Expression.Map.MapEvent
+namespace Expression.Event
 {
-    public class CommonEventDataAccessor : IEventDataAccessor
+    public class CommonEventDataAccessor : Map.MapEvent.IEventDataAccessor
     {
-        EventId eventId;
+        CommonEventId eventId;
 
-        public CommonEventDataAccessor(EventId eventId)
+        public CommonEventDataAccessor(CommonEventId eventId)
         {
             this.eventId = eventId;
         }
@@ -16,7 +16,7 @@ namespace Expression.Map.MapEvent
         public Event.IEvent GetEvent()
         {
             var repos = DI.DependencyInjector.It().CommonEventCommandsRepository;
-            return repos.GetEvent(eventId.Value);
+            return repos.GetEvent(eventId);
         }
     }
 }

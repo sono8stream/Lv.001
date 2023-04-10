@@ -17,13 +17,13 @@ namespace Expression.Map.MapEvent.Command
             IEventDataAccessor accessor;
             if (rawEventId < 500000)
             {
-                EventId id = new EventId(rawEventId);
+                var id = new EventId(rawEventId);
                 accessor = new MapEventDataAccessor(visitContext.MapId, id);
             }
             else
             {
-                EventId id = new EventId(rawEventId - 500000);
-                accessor = new CommonEventDataAccessor(id);
+                var id = new Event.CommonEventId(rawEventId - 500000);
+                accessor = new Event.CommonEventDataAccessor(id);
             }
 
             return accessor;
