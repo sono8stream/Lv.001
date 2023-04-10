@@ -56,7 +56,8 @@ namespace UI.Map
         public void OnVisitMessageCommand(MessageCommand command)
         {
             List<ActionBase> actions = new List<ActionBase>();
-            actions.Add(new ShowMessageAction(command.MessageText, actionEnv));
+            var accessors = command.GetAccessors(commandVisitContext);
+            actions.Add(new ShowMessageAction(accessors, actionEnv));
             actions.Add(new WaitForInputAction());
             actions.Add(new CloseMessageAction(actionEnv, false));
 

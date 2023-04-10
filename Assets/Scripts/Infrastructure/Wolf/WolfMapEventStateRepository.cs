@@ -69,7 +69,10 @@ namespace Infrastructure
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            DataTable table = variableDict[dataRef.TableId];
+            DataRecord record = table.Records[dataRef.RecordId];
+            return new DataField<string>(dataRef.FieldId,
+                record.IntFields[dataRef.FieldId].Val.ToString());
         }
 
         public void SetString(DataRef dataRef, string value)
