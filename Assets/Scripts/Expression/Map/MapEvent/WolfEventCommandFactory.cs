@@ -51,17 +51,23 @@ namespace Expression.Map.MapEvent
                         command = factory.Create(metaCommand);
                     }
                     break;
-                case 0x00000191:
-                    command = CreateForkBeginCommand(metaCommand);
-                    break;
-                case 0x000001F3:
-                    command = CreateForkEndCommand(metaCommand);
-                    break;
                 case 0x000000D2:
                     {
                         var factory = new CommandFactory.WolfCallEventByIdCommandFactory();
                         command = factory.Create(metaCommand);
                     }
+                    break;
+                case 0x0000012C:
+                    {
+                        var factory = new CommandFactory.WolfCallEventByNameCommandFactory();
+                        command = factory.Create(metaCommand);
+                    }
+                    break;
+                case 0x00000191:
+                    command = CreateForkBeginCommand(metaCommand);
+                    break;
+                case 0x000001F3:
+                    command = CreateForkEndCommand(metaCommand);
                     break;
                 default:
                     if (metaCommand.FooterValue == 1)

@@ -32,10 +32,10 @@ namespace DI
                 instance.SystemDataRepository = new WolfSystemDataRepository();
                 instance.MasterDataRepository = new WolfMasterDataRepository();
                 instance.PlayDataRepository = new WolfPlayDataRepository();
+                instance.CommonEventCommandsRepository = new WolfCommonEventCommandsRepository();
                 instance.MapDataRepository = new WolfMapDataRepository();
                 instance.MapEventStateRpository = new WolfMapEventStateRepository();
                 instance.BaseMapDataRepository = new WolfBaseMapDataRepository();
-                instance.CommonEventCommandsRepository = new WolfCommonEventCommandsRepository();
             }
 
             return instance;

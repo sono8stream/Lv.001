@@ -11,6 +11,8 @@ namespace Expression.Event
     {
         public CommonEvent GetEvent(CommonEventId eventId);
 
+        public CommonEventId GetIdFromName(string name);
+
         public int GetCount();
     }
 }

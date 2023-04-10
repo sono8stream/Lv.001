@@ -6,6 +6,8 @@ namespace Expression.Event
     {
         public CommonEventId Id { get; private set; }
 
+        public string Name { get; private set; } 
+
         // yb’èzEventPageDataŠÜ‚ŞEventCommand‚ğEvent–¼‘O‹óŠÔ‚ÉˆÚ“®‚·‚é
         public Map.MapEvent.EventCommandBase[] EventCommands { get; private set; }
 
@@ -13,9 +15,10 @@ namespace Expression.Event
 
         public string[] StringVariables { get; set; }
 
-        public CommonEvent(CommonEventId id, Map.MapEvent.EventCommandBase[] eventCommands)
+        public CommonEvent(CommonEventId id,string name, Map.MapEvent.EventCommandBase[] eventCommands)
         {
             Id = id;
+            Name = name;
             EventCommands = eventCommands;
 
             NumberVariables = new int[95];

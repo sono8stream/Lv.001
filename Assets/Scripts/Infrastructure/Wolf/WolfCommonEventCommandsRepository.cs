@@ -29,7 +29,7 @@ namespace Infrastructure
                 return commandsDict[eventId];
             }
 
-            return new CommonEvent(eventId, new EventCommandBase[0]);
+            return new CommonEvent(eventId, "無し", new EventCommandBase[0]);
         }
 
         private void ReadCommonEvents()
@@ -150,8 +150,21 @@ namespace Infrastructure
 
             dummy = reader.ReadByte(offset, out offset);
 
-            var commonEvent = new CommonEvent(eventId, commands);
+            var commonEvent = new CommonEvent(eventId, eventName, commands);
             return commonEvent;
+        }
+
+        public CommonEventId GetIdFromName(string name)
+        {
+            foreach(CommonEventId id in commandsDict.Keys)
+            {
+                if (commandsDict[id].Name == name)
+                {
+                    return id;
+                }
+            }
+
+            return null;
         }
 
         public int GetCount()
