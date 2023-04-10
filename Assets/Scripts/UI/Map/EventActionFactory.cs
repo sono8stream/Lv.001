@@ -12,7 +12,7 @@ namespace UI.Map
     /// 一連のイベントコマンドから一つのイベントアクションを生成して返します
     /// 内部で呼び出しの度にgeneratedActionやcontrolInfoを共有するため、使いまわしできないので注意
     /// </summary>
-    public class MapEventActionFactory : ICommandVisitor
+    public class EventActionFactory : ICommandVisitor
     {
         // 生成結果を保持するためにメンバとして持つ。排他に注意
         private ActionBase generatedAction;
@@ -23,7 +23,7 @@ namespace UI.Map
 
         private CommandVisitContext commandVisitContext;
 
-        public MapEventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext)
+        public EventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext)
         {
             this.actionEnv = actionEnv;
             this.commandVisitContext = commandVisitContext;

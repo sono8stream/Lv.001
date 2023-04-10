@@ -301,7 +301,7 @@ namespace UI.Action
             isProcessing = true;
             Expression.Map.MapEvent.CommandVisitContext context
                 = new Expression.Map.MapEvent.CommandVisitContext(actionEnvironment.Map.MapId, eventObject.EventData.Id);
-            Map.MapEventActionFactory factory = new Map.MapEventActionFactory(actionEnvironment, context);
+            Map.EventActionFactory factory = new Map.EventActionFactory(actionEnvironment, context);
             currentAction = factory.CreateActionFrom(eventObject.EventData.PageData[0].CommandDataArray);
             currentAction.OnStart();
         }

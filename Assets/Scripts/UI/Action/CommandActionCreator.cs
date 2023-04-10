@@ -31,14 +31,14 @@ namespace UI.Action
         {
             // ÅyébíËÅzà¯êîÇ»Ç«Ç‡ContextÇ…ïtó^ÇµÇƒÇ®Ç≠
             commandVisitContext.CommonEventId = commonEvent.Id;
-            var nextFactory = new Map.MapEventActionFactory(actionEnv, commandVisitContext);
+            var nextFactory = new Map.EventActionFactory(actionEnv, commandVisitContext);
             generatedAction = nextFactory.CreateActionFrom(commonEvent.EventCommands);
             commandVisitContext.CommonEventId = null;
         }
 
         public override void OnVisitMapEvent(EventData mapEvent)
         {
-            var nextFactory = new Map.MapEventActionFactory(actionEnv, commandVisitContext);
+            var nextFactory = new Map.EventActionFactory(actionEnv, commandVisitContext);
             generatedAction = nextFactory.CreateActionFrom(mapEvent.PageData[0].CommandDataArray);
         }
     }
