@@ -33,7 +33,6 @@ namespace UI.Action
         }
         public Dictionary<string, int> eventDic;
         public int actNo;//処理中のコマンド内での処理の番号
-        bool isSelecting;
         [SerializeField]
         int[] selfVar = new int[10] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public int[] SelfVar
@@ -44,6 +43,8 @@ namespace UI.Action
 
         public ActionProcessor Processor { get; private set; }
         public UI.Map.Hd2dMap Map { get; private set; }
+
+        public UI.Map.Hd2dPlayerController Player { get; private set; }
 
         // Use this for initialization
         void Start()
@@ -74,6 +75,8 @@ namespace UI.Action
             }
             Processor = GetComponent<ActionProcessor>();
             Map = GameObject.Find("Map").GetComponent<UI.Map.Hd2dMap>();
+            Player = GameObject.Find("Player").GetComponent<UI.Map.Hd2dPlayerController>();
+
             images = new Dictionary<int, Image>();
         }
 

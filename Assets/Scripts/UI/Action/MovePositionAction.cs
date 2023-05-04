@@ -28,7 +28,8 @@ namespace UI.Action
         {
             // マップが異なる場合はマップの読み込みを実施
             actionEnv.Map.ChangeMap(mapId);
-
+            var pos = new Vector2Int(x, y);
+            actionEnv.Player.MovePosition(actionEnv.Map, pos);
             return true;
         }
     }

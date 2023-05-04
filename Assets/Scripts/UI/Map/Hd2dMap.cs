@@ -91,11 +91,40 @@ namespace UI.Map
                 }
             }
 
+            if (mapData != null)
+            {
+                Destroy(mapData.BaseObject);
+            }
+
             // É}ÉbÉvê∂ê¨
             WolfHd2dMapFactory creator = new WolfHd2dMapFactory(nextMapId);
             mapData = creator.Create();
 
             GenerateEventObjects(mapData);
+        }
+
+        public int GetWidth()
+        {
+            if (mapData == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return mapData.Width;
+            }
+        }
+
+        public int GetHeight()
+        {
+            if (mapData == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return mapData.Height;
+            }
         }
     }
 }
