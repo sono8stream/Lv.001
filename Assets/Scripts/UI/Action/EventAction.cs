@@ -14,6 +14,7 @@ namespace UI.Action
         ActionBase currentAction;
 
         ActionControl control;
+        Map.EventActionFactory actionFactory;
 
         public EventAction(List<ActionBase> actions, ActionControl control)
         {
