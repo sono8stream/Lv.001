@@ -120,10 +120,17 @@ namespace UI.Map
                     SetMeshWait();
 
                     nodePos.RemoveAt(0);
+
                     if (nodePos.Count == 0)
                     {
                         selectPos.SetActive(false);
                         SetMeshWait();
+                    }
+
+                    if (targetEvent != null
+                        && targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.OnPlayerContact))
+                    {
+                        processor.StartActions(targetEvent);
                     }
                 }
                 else /*if (count < inter)*/
@@ -323,13 +330,13 @@ namespace UI.Map
             {
                 nodePos.Add(transform.position + Vector3.back);
             }
-            else if (Input.GetKey(KeyCode.X))
+            else if (Input.GetKeyDown(KeyCode.X))
             {
                 // 【暫定】メニュー表示処理を実行
                 //GetComponent<ActionProcessor>().StartActions();
                 return;
             }
-            else if (Input.GetKey(KeyCode.Z))
+            else if (Input.GetKeyDown(KeyCode.Z))
             {
                 if (targetEvent != null
                     && targetEvent.IsExecutable(Expression.Map.MapEvent.EventTriggerType.OnCheck))//イベント実行
