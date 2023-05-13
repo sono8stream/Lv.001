@@ -12,15 +12,5 @@ namespace UI.Action
         {
             this.labelString = labelString;
         }
-
-        /// <summary>
-        /// 自分自身が指定されたラベルと対応しているかを判定
-        /// </summary>
-        /// <param name="label">チェックしたいラベル</param>
-        /// <returns></returns>
-        public override bool VerifyLabel(ActionLabel label)
-        {
-            return labelString == label.LabelName;
-        }
     }
 }

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
+using Expression.Event;
 
 namespace UI.Action
 {
@@ -42,7 +38,7 @@ namespace UI.Action
                 choiceBoxes.RemoveAt(boxNo);
             }
 
-            ActionLabel label = new ActionLabel(actionEnv.ChoiceName);
+            CommandLabel label = new CommandLabel(actionEnv.ChoiceName);
             controlInfo.ReserveSkip(label);
             return true;
         }

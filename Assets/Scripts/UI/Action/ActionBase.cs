@@ -31,15 +31,5 @@ namespace UI.Action
         {
 
         }
-
-        /// <summary>
-        /// 自分自身が指定されたラベルと対応しているかを判定
-        /// </summary>
-        /// <param name="label">チェックしたいラベル</param>
-        /// <returns></returns>
-        public virtual bool VerifyLabel(ActionLabel label)
-        {
-            return false;
-        }
     }
 }

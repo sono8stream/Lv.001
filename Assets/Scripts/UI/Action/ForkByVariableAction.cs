@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using Expression;
+﻿using Expression.Event;
 
 namespace UI.Action
 {
@@ -39,7 +31,7 @@ namespace UI.Action
                 }
             }
 
-            ActionLabel label = new ActionLabel($"{indentDepth}.{forkId}");
+            CommandLabel label = new CommandLabel($"{indentDepth}.{forkId}");
             controlInfo.ReserveSkip(label);
             return true;
         }

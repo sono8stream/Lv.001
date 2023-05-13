@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using Expression.Event;
+using Expression.Map.MapEvent;
 
 namespace UI.Action
 {
@@ -11,7 +13,7 @@ namespace UI.Action
 
         public bool IsSkipMode { get; private set; }
 
-        public ActionLabel SkipLabel { get; private set; }
+        public CommandLabel SkipLabel { get; private set; }
 
         public ActionControl()
         {
@@ -31,7 +33,7 @@ namespace UI.Action
         /// <summary>
         /// 特定のアクションまでスキップするための予約を行う
         /// </summary>
-        public void ReserveSkip(ActionLabel label)
+        public void ReserveSkip(CommandLabel label)
         {
             if (label == null)
             {
@@ -42,18 +44,17 @@ namespace UI.Action
             SkipLabel = label;
         }
 
-
-        public void TransitToNext(List<ActionBase> actions)
+        public void TransitToNext(EventCommandBase[] commands)
         {
             if (IsSkipMode)
             {
                 // スキップ要求があるのでラベルまでスキップさせる
                 // 基本は次以降のアクションを優先するが、存在しない場合は通常通り進める
                 int nextActNo = CurrentActNo;
-                for (int i = 1; i < actions.Count; i++)
+                for (int i = 1; i < commands.Length; i++)
                 {
-                    int now = (CurrentActNo + i) % actions.Count;
-                    if (actions[now].VerifyLabel(SkipLabel))
+                    int now = (CurrentActNo + i) % commands.Length;
+                    if (commands[now].VerifyLabel(SkipLabel))
                     {
                         nextActNo = now;
                         break;

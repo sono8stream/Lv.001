@@ -12,7 +12,7 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            return Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Z);
+            return Input.GetMouseButtonUp(0) || Input.GetKeyDown(KeyCode.Z);
         }
     }
 }

@@ -50,8 +50,8 @@ namespace UI.Action
             isProcessing = true;
             Expression.Map.MapEvent.CommandVisitContext context
                 = new Expression.Map.MapEvent.CommandVisitContext(actionEnvironment.Map.MapId, eventObject.EventData.Id);
-            Map.EventActionFactory factory = new Map.EventActionFactory(actionEnvironment, context);
-            currentAction = factory.CreateActionFrom(eventObject.EventData.PageData[0].CommandDataArray);
+            var factory = new EventActionFactory(actionEnvironment, context);
+            currentAction = factory.GenerateAction(eventObject.EventData);
             currentAction.OnStart();
         }
     }
