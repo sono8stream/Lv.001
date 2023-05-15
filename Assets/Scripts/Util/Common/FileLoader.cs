@@ -27,6 +27,7 @@ namespace Util.Common
                         || request.result == UnityWebRequest.Result.ConnectionError)
                     {
                         //ÉGÉâÅ[
+                        Debug.LogError(path);
                         Debug.LogError(request.error);
                         break;
                     }

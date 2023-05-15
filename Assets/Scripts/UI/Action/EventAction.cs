@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Expression.Map.MapEvent;
 
 namespace UI.Action
 {
@@ -9,16 +10,21 @@ namespace UI.Action
     /// </summary>
     public class EventAction : ActionBase
     {
-        List<ActionBase> actions;
+        EventCommandBase[] commands;
+
         // 現在アクションの保持用。制御中にジャンプしても参照を保持できる
         ActionBase currentAction;
 
         ActionControl control;
+        Map.CommandActionFactory actionFactory;
 
-        public EventAction(List<ActionBase> actions, ActionControl control)
+        public EventAction(EventCommandBase[] commands,
+            ActionEnvironment actionEnv,
+            CommandVisitContext context)
         {
-            this.actions = actions;
-            this.control = control;
+            this.commands = commands;
+            this.control = new ActionControl();
+            this.actionFactory = new Map.CommandActionFactory(actionEnv, context,control);
         }
 
         /// <inheritdoc/>
@@ -35,7 +41,7 @@ namespace UI.Action
             {
                 currentAction.OnEnd();
 
-                control.TransitToNext(actions);
+                control.TransitToNext(commands);
 
                 TryToStartCurrentAction();
             }
@@ -55,9 +61,10 @@ namespace UI.Action
         private void TryToStartCurrentAction()
         {
             currentAction = null;
-            if (control.CurrentActNo < actions.Count)
+            if (control.CurrentActNo < commands.Length)
             {
-                currentAction = actions[control.CurrentActNo];
+                commands[control.CurrentActNo].Visit(actionFactory);
+                currentAction = actionFactory.GeneratedAction;
                 currentAction.OnStart();
             }
         }

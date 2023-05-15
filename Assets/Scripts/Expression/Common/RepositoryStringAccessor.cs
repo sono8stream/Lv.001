@@ -19,7 +19,7 @@ namespace Expression.Common
 
         public string Get()
         {
-            Domain.Data.DataField<string> field=repository.FindString(dataRef);
+            Domain.Data.DataField<string> field = repository.FindString(dataRef);
             return field != null ? field.Val : "";
         }
 

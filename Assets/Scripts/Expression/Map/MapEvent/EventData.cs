@@ -1,8 +1,9 @@
+using Expression.Event;
 using System;
 
 namespace Expression.Map.MapEvent
 {
-    public class EventData
+    public class EventData : Event.IEvent
     {
         public EventId Id { get; private set; }
 
@@ -18,6 +19,11 @@ namespace Expression.Map.MapEvent
             PosX = posX;
             PosY = posY;
             PageData = pageData;
+        }
+
+        public void Visit(EventVisitorBase visitor)
+        {
+            visitor.OnVisitMapEvent(this);
         }
     }
 }

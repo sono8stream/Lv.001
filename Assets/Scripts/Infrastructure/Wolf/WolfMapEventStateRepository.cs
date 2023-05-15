@@ -7,25 +7,23 @@ using Expression.Map;
 namespace Infrastructure
 {
     /// <summary>
-    /// WolfRPGのゲーム表現データを読み出すためのリポジトリ
-    /// マップイベントのシステム変数、主人公の現在位置など
+    /// WolfRPGのマップイベントの変数を保持します
     /// </summary>
-    public class WolfExpressionDataRepository : IExpressionDataRepository
+    public class WolfMapEventStateRepository : IExpressionDataRepository
     {
-        private Dictionary<TableId, DataTable> mapVariableDict;
+        private Dictionary<TableId, DataTable> variableDict;
 
-        public WolfExpressionDataRepository()
+        public WolfMapEventStateRepository()
         {
-            mapVariableDict = new Dictionary<TableId, DataTable>();
+            variableDict = new Dictionary<TableId, DataTable>();
             IMapDataRepository mapDataRepository = DI.DependencyInjector.It().MapDataRepository;
 
-            // 【暫定】システム変数を登録するまでマップ情報のIDは決め打ちとする
-            for(int i = 0; i < mapDataRepository.GetCount(); i++)
+            for (int i = 0; i < mapDataRepository.GetCount(); i++)
             {
                 var mapId = new MapId(i);
                 MapData mapData = mapDataRepository.Find(mapId);
                 int eventCount = mapData.EventDataArray.Length;
-                
+
                 var mapVariableRecords = new Dictionary<RecordId, DataRecord>();
 
                 for (int j = 0; j < eventCount; j++)
@@ -35,7 +33,7 @@ namespace Infrastructure
                     for (int k = 0; k < 10; k++)
                     {
                         var fieldId = new FieldId(k);
-                        intFields.Add(fieldId, new DataField<int>(fieldId,0));
+                        intFields.Add(fieldId, new DataField<int>(fieldId, 0));
                     }
                     var stringFields = new Dictionary<FieldId, DataField<string>>();
 
@@ -46,7 +44,7 @@ namespace Infrastructure
 
                 var tableId = new TableId(i);
                 var mapVariableTable = new DataTable(tableId, mapVariableRecords);
-                mapVariableDict.Add(tableId, mapVariableTable);
+                variableDict.Add(tableId, mapVariableTable);
             }
         }
 
@@ -57,21 +55,24 @@ namespace Infrastructure
 
         public DataField<int> FindInt(DataRef dataRef)
         {
-            DataTable table = mapVariableDict[dataRef.TableId];
+            DataTable table = variableDict[dataRef.TableId];
             DataRecord record = table.Records[dataRef.RecordId];
             return record.IntFields[dataRef.FieldId];
         }
 
         public void SetInt(DataRef dataRef, int value)
         {
-            DataTable table = mapVariableDict[dataRef.TableId];
+            DataTable table = variableDict[dataRef.TableId];
             DataRecord record = table.Records[dataRef.RecordId];
             record.IntFields[dataRef.FieldId].Val = value;
         }
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            DataTable table = variableDict[dataRef.TableId];
+            DataRecord record = table.Records[dataRef.RecordId];
+            return new DataField<string>(dataRef.FieldId,
+                record.IntFields[dataRef.FieldId].Val.ToString());
         }
 
         public void SetString(DataRef dataRef, string value)

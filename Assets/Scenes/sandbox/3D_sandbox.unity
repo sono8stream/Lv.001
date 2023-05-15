@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.47976935, g: 0.5242458, b: 0.5931065, a: 1}
+  m_IndirectSpecularColor: {r: 0.4797694, g: 0.524246, b: 0.5931081, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2476,7 +2476,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 61304395}
-  - component: {fileID: 61304393}
   - component: {fileID: 61304396}
   - component: {fileID: 61304394}
   - component: {fileID: 61304397}
@@ -2487,18 +2486,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &61304393
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 61304392}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b3f1fee255af9e419915bd50455c2ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &61304394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2513,6 +2500,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   map: {fileID: 1905029254}
   selectPos: {fileID: 691959521}
+  targetEvent: {fileID: 0}
   shader: {fileID: 4800000, guid: e10b6128ef33b4a49914ab2e669d3223, type: 3}
   texture: {fileID: 2800000, guid: 9cf84f751d3bd7e4c9e4321b5e60812a, type: 3}
   variableJoyStick: {fileID: 309155097}

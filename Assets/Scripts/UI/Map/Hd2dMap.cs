@@ -8,7 +8,7 @@ namespace UI.Map
 {
     public class Hd2dMap : MonoBehaviour
     {
-        private int mapIndex;
+        public MapId MapId { get; private set; }
 
         [SerializeField]
         private Shader spriteShader;
@@ -23,7 +23,7 @@ namespace UI.Map
         // Use this for initialization
         void Awake()
         {
-            mapIndex = -1;
+            MapId = null;
 
             var systemRepository = DI.DependencyInjector.It().SystemDataRepository;
             var dataRef = new Domain.Data.DataRef(new Domain.Data.TableId(7), new Domain.Data.RecordId(0), new Domain.Data.FieldId(0));
@@ -74,14 +74,14 @@ namespace UI.Map
         }
 
         // マップを切り替える
-        public void ChangeMap(MapId mapId)
+        public void ChangeMap(MapId nextMapId)
         {
-            if (mapId.Value == mapIndex)
+            if (nextMapId == MapId)
             {
                 return;
             }
 
-            mapIndex = mapId.Value;
+            MapId = nextMapId;
 
             if (MapEvents != null)
             {
@@ -91,11 +91,40 @@ namespace UI.Map
                 }
             }
 
+            if (mapData != null)
+            {
+                Destroy(mapData.BaseObject);
+            }
+
             // マップ生成
-            WolfHd2dMapFactory creator = new WolfHd2dMapFactory(mapId);
+            WolfHd2dMapFactory creator = new WolfHd2dMapFactory(nextMapId);
             mapData = creator.Create();
 
             GenerateEventObjects(mapData);
+        }
+
+        public int GetWidth()
+        {
+            if (mapData == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return mapData.Width;
+            }
+        }
+
+        public int GetHeight()
+        {
+            if (mapData == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return mapData.Height;
+            }
         }
     }
 }

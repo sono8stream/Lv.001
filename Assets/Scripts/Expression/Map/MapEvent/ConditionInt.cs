@@ -5,24 +5,24 @@ namespace Expression.Map.MapEvent
 {
     public class ConditionInt
     {
-        public IDataAccessor<int> LeftHandAccessor { get; private set; }
-        public IDataAccessor<int> RightHandAccessor { get; private set; }
+        public IDataAccessorFactory<int> LeftHandAccessorFactory { get; private set; }
+        public IDataAccessorFactory<int> RightHandAccessorFactory { get; private set; }
 
         public OperatorType OperatorType { get; private set; }
 
-        public ConditionInt(IDataAccessor<int> leftHandAccessor,
-            IDataAccessor<int> rightHandAccessor,
+        public ConditionInt(IDataAccessorFactory<int> leftHandAccessorFactory,
+            IDataAccessorFactory<int> rightHandAccessorFactory,
              OperatorType operatorType)
         {
-            LeftHandAccessor = leftHandAccessor;
-            RightHandAccessor = rightHandAccessor;
+            LeftHandAccessorFactory = leftHandAccessorFactory;
+            RightHandAccessorFactory = rightHandAccessorFactory;
             OperatorType = operatorType;
         }
 
-        public bool CheckIsTrue()
+        public bool CheckIsTrue(Expression.Map.MapEvent.CommandVisitContext context)
         {
-            int leftValue = LeftHandAccessor.Get();
-            int rightValue = RightHandAccessor.Get();
+            int leftValue = LeftHandAccessorFactory.Create(context).Get();
+            int rightValue = RightHandAccessorFactory.Create(context).Get();
 
             switch (OperatorType)
             {

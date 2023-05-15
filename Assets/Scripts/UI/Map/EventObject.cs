@@ -60,6 +60,7 @@ namespace UI.Map
         {
             this.EventData = eventData;
 
+            // 【暫定】イベントページ決め打ちを修正
             Texture2D currentTexture = eventData.PageData[0].GetCurrentTexture();
 
             if (currentTexture == null)
@@ -78,6 +79,11 @@ namespace UI.Map
         public bool IsExecutable(Expression.Map.MapEvent.EventTriggerType triggerType)
         {
             return EventData.PageData[0].TriggerType == triggerType;
+        }
+
+        public bool CanPass()
+        {
+            return EventData.PageData[0].CanPass();
         }
     }
 }

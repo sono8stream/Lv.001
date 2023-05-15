@@ -5,7 +5,7 @@ namespace UI.Action
     /// <summary>
     /// アクションを複数個まとめたアクション
     /// Compositeパターンのようにふるまう
-    /// 制御機能は持たず、あくまで一連の処理をまとめ、逐次実行するのみ
+    /// 制御機能は持たず、あくまで一連の処理をまとめ、逐次実行するだけ
     /// </summary>
     public class MultiAction : ActionBase
     {

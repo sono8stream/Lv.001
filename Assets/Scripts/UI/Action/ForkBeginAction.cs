@@ -1,4 +1,5 @@
-﻿
+﻿using Expression.Event;
+
 namespace UI.Action
 {
     /// <summary>
@@ -18,21 +19,11 @@ namespace UI.Action
             this.labelString = labelString;
         }
 
-        /// <summary>
-        /// 自分自身が指定されたラベルと対応しているかを判定
-        /// </summary>
-        /// <param name="label">チェックしたいラベル</param>
-        /// <returns></returns>
-        public override bool VerifyLabel(ActionLabel label)
-        {
-            return labelString == label.LabelName;
-        }
-
         /// <inheritdoc/>
         public override bool Run()
         {
             // 前段の分岐ブロックから遷移してきたので，分岐終端までスキップする
-            ActionLabel label = new ActionLabel($"{indentDepth}.{0}");
+            CommandLabel label = new CommandLabel($"{indentDepth}.{0}");
             controlInfo.ReserveSkip(label);
 
             return base.Run();

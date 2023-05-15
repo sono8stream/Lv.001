@@ -10,18 +10,18 @@ namespace UI.Action
 {
     class ShowMessageAction : ActionBase
     {
-        bool isCompleted;
-        string message;
+        List<Expression.Common.IDataAccessor<string>> accessors;
 
         float x, y, width, height;
 
         ActionEnvironment actionEnv;
 
-        public ShowMessageAction(string message, ActionEnvironment actionEnv,
-            float x = 0, float y = -690, float width = 1060, float height = 500)
+        public ShowMessageAction(
+            List<Expression.Common.IDataAccessor<string>> accessors,
+            ActionEnvironment actionEnv,
+            float x = 0, float y = -506, float width = 1680, float height = 400)
         {
-            isCompleted = false;
-            this.message = message;
+            this.accessors = accessors;
             this.x = x;
             this.y = y;
             this.width = width;
@@ -33,7 +33,7 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            isCompleted = true;
+            string message = GenerateMessage();
             if (message.Equals(""))
             {
                 return true;
@@ -55,6 +55,17 @@ namespace UI.Action
             text.SetActive(true);
 
             return true;
+        }
+
+        private string GenerateMessage()
+        {
+            string message = "";
+            for(int i = 0; i < accessors.Count; i++)
+            {
+                message += accessors[i].Get();
+            }
+
+            return message;
         }
     }
 }

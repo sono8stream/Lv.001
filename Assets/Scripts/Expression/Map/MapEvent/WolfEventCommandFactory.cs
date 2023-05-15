@@ -7,15 +7,11 @@ namespace Expression.Map.MapEvent
     public class WolfEventCommandFactory
     {
         WolfDataReader reader;
-        MapId mapId;
-        EventId eventId;
         int startOffset;
 
-        public WolfEventCommandFactory(WolfDataReader reader, MapId mapId,EventId eventId, int startOffset)
+        public WolfEventCommandFactory(WolfDataReader reader, int startOffset)
         {
             this.reader = reader;
-            this.mapId = mapId;
-            this.eventId = eventId;
             this.startOffset = startOffset;
         }
 
@@ -55,14 +51,23 @@ namespace Expression.Map.MapEvent
                         command = factory.Create(metaCommand);
                     }
                     break;
+                case 0x000000D2:
+                    {
+                        var factory = new CommandFactory.WolfCallEventByIdCommandFactory();
+                        command = factory.Create(metaCommand);
+                    }
+                    break;
+                case 0x0000012C:
+                    {
+                        var factory = new CommandFactory.WolfCallEventByNameCommandFactory();
+                        command = factory.Create(metaCommand);
+                    }
+                    break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
                     break;
                 case 0x000001F3:
                     command = CreateForkEndCommand(metaCommand);
-                    break;
-                case 0x000000D2:
-                    CreateCallEventByIdCommand(currentOffset, out currentOffset);
                     break;
                 default:
                     if (metaCommand.FooterValue == 1)
@@ -86,13 +91,6 @@ namespace Expression.Map.MapEvent
             for (int i = 0; i < numberVariableCount; i++)
             {
                 numberVariables[i] = reader.ReadInt(currentOffset, true, out currentOffset);
-
-                if (i == 0 && numberVariables[i] == 0x000000D2)
-                {
-                    // イベント呼び出しコマンドは特殊な配置なので切り抜け、個別処理で読み込ませる
-                    nextOffset = currentOffset;
-                    return new MetaEventCommand(numberVariables, null, 0, 0);
-                }
             }
 
             int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
@@ -148,96 +146,16 @@ namespace Expression.Map.MapEvent
 
         private ConditionInt GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
         {
-            Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(flagLeft);
+            Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, flagLeft);
 
-            Common.IDataAccessor<int> rightAccessor;
-            if ((rightAndCompareParams >> 4) == 0)
-            {
-                rightAccessor = new Common.ConstDataAccessor<int>(flagRight);
-            }
-            else
-            {
-                rightAccessor = GenerateIntAccessor(flagLeft);
-            }
+            Common.IDataAccessorFactory<int> rightAccessorFactory;
+            bool isConst = (rightAndCompareParams >> 4) == 0;
+            rightAccessorFactory = new Command.WolfIntAccessorFactory(isConst, flagRight);
 
             OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
 
-            var condition = new ConditionInt(leftAccessor, rightAccessor, operatorType);
+            var condition = new ConditionInt(leftAccessorFactory, rightAccessorFactory, operatorType);
             return condition;
-        }
-
-        private Common.IDataAccessor<int> GenerateIntAccessor(int val)
-        {
-            if (val >= 1300000000)
-            {
-                // システムDB読み出し
-            }
-            else if (val >= 1100000000)
-            {
-                // 可変DB読み出し
-            }
-            else if (val >= 1000000000)
-            {
-                // ユーザーDB読み出し
-            }
-            else if (val >= 15000000)
-            {
-                // コモンイベントのセルフ変数呼び出し
-            }
-            else if (val >= 9900000)
-            {
-                // システムＤＢ[5:システム文字列]呼び出し
-            }
-            else if (val >= 9190000)
-            {
-                // 実行したマップイベントの情報を呼び出し
-            }
-            else if (val >= 9180000)
-            {
-                // 主人公か仲間の情報を呼び出し
-            }
-            else if (val >= 9100000)
-            {
-                // 指定したマップイベントの情報を呼び出し
-            }
-            else if (val >= 9000000)
-            {
-                // システムＤＢ[6:システム変数名]呼び出し
-            }
-            else if (val >= 8000000)
-            {
-                // 乱数呼び出し
-            }
-            else if (val >= 3000000)
-            {
-                // システムＤＢ[4:文字列変数名]呼び出し
-            }
-            else if (val >= 2000000)
-            {
-                // システムＤＢ[14:通常変数名]もしくはシステムＤＢ[15:予備変数1]～[23:予備変数9]呼び出し
-            }
-            else if (val >= 1600000)
-            {
-                // 実行中のコモンイベントのセルフ変数呼び出し
-            }
-            else if (val >= 1100000)
-            {
-                // 実行中のマップイベントのセルフ変数呼び出し
-                var repository = DI.DependencyInjector.It().ExpressionDataRpository;
-                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                    new Domain.Data.TableId(mapId.Value, ""),
-                    new Domain.Data.RecordId(eventId.Value, ""),
-                    new Domain.Data.FieldId(val % 10, "")
-                    );
-                return new Common.RepositoryIntAccessor(repository, dataRef);
-            }
-            else if (val >= 1000000)
-            {
-                // 指定したマップイベントのセルフ変数呼び出し
-            }
-
-            // 特殊条件以外の場合、定数を取得
-            return new Common.ConstDataAccessor<int>(val);
         }
 
         private EventCommandBase CreateChangeVariableCommand(MetaEventCommand metaCommand)
@@ -251,15 +169,14 @@ namespace Expression.Map.MapEvent
             Debug.Log(operatorType);
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
-            // 【暫定】正式な計算処理に対応させる．連続計算，可変DB対応など
-            Common.IDataAccessor<int> leftAccessor = GenerateIntAccessor(leftParamRef);
-            Common.IDataAccessor<int> rightAccessor1 = GenerateIntAccessor(rightParamRef1);
-            Common.IDataAccessor<int> rightAccessor2 = GenerateIntAccessor(rightParamRef2);
+            Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, leftParamRef);
+            Common.IDataAccessorFactory<int> rightAccessor1Factory = new Command.WolfIntAccessorFactory(false, rightParamRef1);
+            Common.IDataAccessorFactory<int> rightAccessor2Factory = new Command.WolfIntAccessorFactory(false, rightParamRef2);
             OperatorType assignType = GetAssignOperator(operatorType % 0x10);
             OperatorType rightOperatorType = GetCalculateOperator(operatorType / 0x10);
 
             UpdaterInt[] updaters = new UpdaterInt[1];
-            updaters[0] = new UpdaterInt(leftAccessor, rightAccessor1, rightAccessor2,
+            updaters[0] = new UpdaterInt(leftAccessorFactory, rightAccessor1Factory, rightAccessor2Factory,
                 assignType, rightOperatorType);
 
             return new ChangeVariableIntCommand(updaters);
@@ -350,52 +267,6 @@ namespace Expression.Map.MapEvent
             Debug.Log($"分岐終端");
 
             return new ForkEndCommand(metaCommand.IndentDepth);
-        }
-
-        // イベントコマンドの取得は未済み
-        private EventCommandBase CreateCallEventByIdCommand(int offset, out int nextOffset)
-        {
-            int currentOffset = offset;
-            int eventId = reader.ReadInt(currentOffset, true, out currentOffset);
-            Debug.Log($"イベント{eventId.ToString()}呼び出し");
-
-            int argsParam = reader.ReadInt(currentOffset, true, out currentOffset);
-            int numberArgCount = argsParam % (1 << 4);
-            int stringArgCount = argsParam / (1 << 4) % (1 << 4);
-            int stringArgVariableFlag = argsParam / (1 << 12) % (1 << 4);
-            int acceptReturnValueFlag = argsParam / (1 << 24) % (1 << 8);
-
-            for (int i = 0; i < numberArgCount; i++)
-            {
-                int numberArg = reader.ReadInt(currentOffset, true, out currentOffset);
-                //Debug.Log($"数値引数{i.ToString()}：{numberArg.ToString()}");
-            }
-
-            for (int i = 0; i < stringArgCount; i++)
-            {
-                int stringArgVariableValue = reader.ReadInt(currentOffset, true, out currentOffset);
-                //Debug.Log($"文字列引数呼び出し値{i.ToString()}：{stringArgVariableValue.ToString()}");
-            }
-
-            if (acceptReturnValueFlag > 0)
-            {
-                int returnValueAddress = reader.ReadInt(currentOffset, true, out currentOffset);
-            }
-
-            int indentDepth = reader.ReadByte(currentOffset, out currentOffset);
-            int stringVariableCount = reader.ReadByte(currentOffset, out currentOffset);
-
-            for (int i = 0; i < stringVariableCount; i++)
-            {
-                string text = reader.ReadString(currentOffset, out currentOffset);
-                //Debug.Log($"文字データ：{text}");
-            }
-
-            // フッタはスキップ
-            int ft = reader.ReadByte(currentOffset, out currentOffset);
-
-            nextOffset = currentOffset;
-            return null;
         }
 
         // 【暫定】モデル定義までデータを空読み

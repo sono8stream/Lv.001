@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using Expression;
+﻿using Expression.Event;
 
 namespace UI.Action
 {
@@ -15,13 +7,16 @@ namespace UI.Action
         ActionControl controlInfo;
         int indentDepth;
         Expression.Map.MapEvent.ConditionInt[] conditions;
+        Expression.Map.MapEvent.CommandVisitContext context;
 
         public ForkByVariableIntAction(ActionControl controlInfo, int indentDepth,
-            Expression.Map.MapEvent.ConditionInt[] conditions)
+            Expression.Map.MapEvent.ConditionInt[] conditions,
+            Expression.Map.MapEvent.CommandVisitContext context)
         {
             this.controlInfo = controlInfo;
             this.indentDepth = indentDepth;
             this.conditions = conditions;
+            this.context = context;
         }
 
         /// <inheritdoc/>
@@ -30,13 +25,13 @@ namespace UI.Action
             int forkId = -1;
             for (int i = 0; i < conditions.Length; i++)
             {
-                if (conditions[i].CheckIsTrue())
+                if (conditions[i].CheckIsTrue(context))
                 {
                     forkId = i + 1;
                 }
             }
 
-            ActionLabel label = new ActionLabel($"{indentDepth}.{forkId}");
+            CommandLabel label = new CommandLabel($"{indentDepth}.{forkId}");
             controlInfo.ReserveSkip(label);
             return true;
         }

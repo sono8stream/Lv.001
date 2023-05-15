@@ -35,8 +35,13 @@ namespace Infrastructure
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            string val = stringDict.ContainsKey(dataRef) ? stringDict[dataRef] : "";
-            if (stringDict.ContainsKey(dataRef))
+            // 数値を文字列として取り出したいケースがある。そういった場合は文字列変換して返す
+            string val = "";
+            if (intDict.ContainsKey(dataRef))
+            {
+                val = intDict[dataRef].ToString();
+            }
+            else if (stringDict.ContainsKey(dataRef))
             {
                 val = stringDict[dataRef];
             }
