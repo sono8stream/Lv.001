@@ -5,23 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using Expression.Map.MapEvent.CommandFactory;
 
 namespace UI.Action
 {
     class ShowMessageAction : ActionBase
     {
-        List<Expression.Common.IDataAccessor<string>> accessors;
+        string message;
 
         float x, y, width, height;
 
         ActionEnvironment actionEnv;
 
-        public ShowMessageAction(
-            List<Expression.Common.IDataAccessor<string>> accessors,
-            ActionEnvironment actionEnv,
+        public ShowMessageAction(string message, ActionEnvironment actionEnv,
             float x = 0, float y = -506, float width = 1680, float height = 400)
         {
-            this.accessors = accessors;
+            this.message = message;
             this.x = x;
             this.y = y;
             this.width = width;
@@ -33,7 +32,6 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            string message = GenerateMessage();
             if (message.Equals(""))
             {
                 return true;
@@ -55,17 +53,6 @@ namespace UI.Action
             text.SetActive(true);
 
             return true;
-        }
-
-        private string GenerateMessage()
-        {
-            string message = "";
-            for(int i = 0; i < accessors.Count; i++)
-            {
-                message += accessors[i].Get();
-            }
-
-            return message;
         }
     }
 }

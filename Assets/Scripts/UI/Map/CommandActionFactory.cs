@@ -37,8 +37,8 @@ namespace UI.Map
         public void OnVisitMessageCommand(MessageCommand command)
         {
             List<ActionBase> actions = new List<ActionBase>();
-            var accessors = command.GetAccessors(commandVisitContext);
-            actions.Add(new ShowMessageAction(accessors, actionEnv));
+            string message = command.StringFactory.GenerateMessage(commandVisitContext);
+            actions.Add(new ShowMessageAction(message, actionEnv));
             actions.Add(new WaitForInputAction());
             actions.Add(new CloseMessageAction(actionEnv, false));
 
@@ -84,7 +84,8 @@ namespace UI.Map
 
         public void OnVisitShowPictureCommand(ShowPictureCommand command)
         {
-            string imagePath = $"{Application.streamingAssetsPath}/Data/" + command.FilePath;
+            string imagePath = $"{Application.streamingAssetsPath}/Data/"
+                + command.FilePathFactory.GenerateMessage(commandVisitContext);
             byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
 
             Texture2D texture = new Texture2D(0, 0);

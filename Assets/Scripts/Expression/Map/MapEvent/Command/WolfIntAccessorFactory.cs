@@ -73,6 +73,7 @@ namespace Expression.Map.MapEvent.Command
             else if (rawVal >= 1600000)
             {
                 // 実行中のコモンイベントのセルフ変数呼び出し
+                return new Event.CommonEventIntAccessor(context.CommonEventId, rawVal % 100);
             }
             else if (rawVal >= 1100000)
             {
