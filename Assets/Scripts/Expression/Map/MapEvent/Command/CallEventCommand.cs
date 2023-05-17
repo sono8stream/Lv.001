@@ -5,15 +5,16 @@ namespace Expression.Map.MapEvent.Command
 {
     public class CallEventCommand : EventCommandBase
     {
-        public int[] NumberArgs { get; private set; }
+        public Common.IDataAccessorFactory<int>[] NumberFactories { get; private set; }
 
         public string[] StringArgs { get; private set; }
 
         public IEventDataAccessorFactory EventDataAccessorFactory { get; private set; }
 
-        public CallEventCommand(int[] numberArgs, string[] stringArgs, IEventDataAccessorFactory eventDataAccessorFactory)
+        public CallEventCommand(Common.IDataAccessorFactory<int>[] numberFactories,
+            string[] stringArgs, IEventDataAccessorFactory eventDataAccessorFactory)
         {
-            NumberArgs = numberArgs;
+            NumberFactories = numberFactories;
             StringArgs = stringArgs;
 
             EventDataAccessorFactory = eventDataAccessorFactory;

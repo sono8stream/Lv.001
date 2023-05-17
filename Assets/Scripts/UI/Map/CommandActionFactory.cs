@@ -103,7 +103,7 @@ namespace UI.Map
         {
             IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
             // ここでVisitorを介してイベントデータからアクションを生成する
-            var actionFactory = new EventActionFactory(actionEnv, commandVisitContext);
+            var actionFactory = new EventActionFactory(actionEnv, commandVisitContext, command.NumberFactories);
             GeneratedAction = actionFactory.GenerateAction(accessor.GetEvent());
         }
     }

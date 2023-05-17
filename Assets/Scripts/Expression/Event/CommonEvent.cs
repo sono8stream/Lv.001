@@ -15,7 +15,7 @@ namespace Expression.Event
 
         public string[] StringVariables { get; set; }
 
-        public CommonEvent(CommonEventId id,string name, Map.MapEvent.EventCommandBase[] eventCommands)
+        public CommonEvent(CommonEventId id, string name, Map.MapEvent.EventCommandBase[] eventCommands)
         {
             Id = id;
             Name = name;
@@ -28,6 +28,15 @@ namespace Expression.Event
         public void Visit(EventVisitorBase visitor)
         {
             visitor.OnVisitCommonEvent(this);
+        }
+
+        public void SetNumberArgs(int[] args)
+        {
+            int argCount = Math.Min(4, args.Length);
+            for (int i = 0; i < argCount; i++)
+            {
+                NumberVariables[i] = args[i];
+            }
         }
     }
 }

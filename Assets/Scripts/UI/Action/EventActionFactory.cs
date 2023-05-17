@@ -1,6 +1,5 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine.Events;
+using System.Linq;
+using Expression.Common;
 using Expression.Event;
 using Expression.Map.MapEvent;
 
@@ -14,11 +13,14 @@ namespace UI.Action
         private EventAction generatedAction;
         private ActionEnvironment actionEnv;
         private CommandVisitContext commandVisitContext;
+        private IDataAccessorFactory<int>[] numberFactories;
 
-        public EventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext)
+        public EventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext,
+            IDataAccessorFactory<int>[] numberFactories)
         {
             this.actionEnv = actionEnv;
             this.commandVisitContext = commandVisitContext;
+            this.numberFactories = numberFactories;
         }
 
         public ActionBase GenerateAction(IEvent eventData)
@@ -29,10 +31,14 @@ namespace UI.Action
 
         public override void OnVisitCommonEvent(CommonEvent commonEvent)
         {
-            // yŽb’èzˆø”‚È‚Ç‚àContext‚É•t—^‚µ‚Ä‚¨‚­
+            // yŽb’èz•¶Žš—ñˆø”‚à•t—^‚µ‚Ä‚¨‚­
             commandVisitContext.CommonEventId = commonEvent.Id;
             generatedAction = new EventAction(commonEvent.EventCommands,
                 actionEnv, commandVisitContext);
+            
+            // ˆø”‚ðEventƒIƒuƒWƒFƒNƒg‚ÉŠ„‚è“–‚Ä‚éB
+            int[] numberArgs = numberFactories.Select(factory => factory.Create(commandVisitContext).Get()).ToArray();
+            commonEvent.SetNumberArgs(numberArgs);
         }
 
         public override void OnVisitMapEvent(EventData mapEvent)
