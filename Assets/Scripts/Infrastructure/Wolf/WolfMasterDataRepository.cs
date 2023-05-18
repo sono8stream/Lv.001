@@ -10,29 +10,31 @@ namespace Infrastructure
     /// </summary>
     public class WolfMasterDataRepository : IMasterDataRepository
     {
-        public DataRecord Find(RecordId id)
+        private WolfDataRepositoryImpl impl;
+
+        public WolfMasterDataRepository()
         {
-            return null;
+            impl = new WolfDataRepositoryImpl("Database");
         }
 
         public DataField<int> FindInt(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            return impl.FindInt(dataRef);
         }
 
         public void SetInt(DataRef dataRef, int value)
         {
-            throw new System.NotImplementedException();
+            impl.SetInt(dataRef, value);
         }
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            throw new System.NotImplementedException();
+            return impl.FindString(dataRef);
         }
 
         public void SetString(DataRef dataRef, string value)
         {
-            throw new System.NotImplementedException();
+            impl.SetString(dataRef, value);
         }
     }
 }

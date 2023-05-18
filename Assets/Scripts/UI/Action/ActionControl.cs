@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Expression.Event;
 using Expression.Map.MapEvent;
+using UnityEngine;
 
 namespace UI.Action
 {
@@ -78,6 +79,7 @@ namespace UI.Action
             {
                 CurrentActNo++;
             }
+            Debug.Log(CurrentActNo);
         }
     }
 }

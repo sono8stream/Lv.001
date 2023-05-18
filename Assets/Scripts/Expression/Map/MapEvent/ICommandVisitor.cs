@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
+using Expression.Event.Command;
 
 namespace Expression.Map.MapEvent
 {
@@ -17,6 +18,7 @@ namespace Expression.Map.MapEvent
         public void OnVisitShowPictureCommand(Command.ShowPictureCommand command);
         public void OnVisitRemovePictureCommand(Command.RemovePictureCommand command);
         public void OnVisitCallEventCommand(Command.CallEventCommand command);
+        public void OnVisitDbControlCommand(DbControlCommand command);
 
     }
 }

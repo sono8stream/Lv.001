@@ -57,6 +57,11 @@ namespace Expression.Map.MapEvent
                         command = factory.Create(metaCommand);
                     }
                     break;
+                case 0x000000FA:
+                    {
+
+                    }
+                    break;
                 case 0x0000012C:
                     {
                         var factory = new CommandFactory.WolfCallEventByNameCommandFactory();

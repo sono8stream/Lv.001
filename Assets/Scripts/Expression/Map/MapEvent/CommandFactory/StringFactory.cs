@@ -19,6 +19,7 @@ namespace Expression.Map.MapEvent.CommandFactory
             string constStr = "";
 
             // 特殊文字を取り出す
+            // 【暫定】セルフ変数呼び出しにしか対応していないので、修正
             var matches = Regex.Matches(text, @"\\c?self\[[0-9]+\]");
             int matchIndex = 0;
 
