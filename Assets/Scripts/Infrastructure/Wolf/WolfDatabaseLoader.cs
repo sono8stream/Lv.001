@@ -11,11 +11,11 @@ namespace Infrastructure
     /// </summary>
     public class WolfDatabaseLoader
     {
-        public void LoadDatabase(string projPath, string datPath, out Dictionary<DataRef, int> intDict, out Dictionary<DataRef, string> strDict)
+        public void LoadDatabase(WolfConfig.DatabaseType dbType, out Dictionary<DataRef, int> intDict, out Dictionary<DataRef, string> strDict)
         {
             // .projectファイルと.datファイルを用いてオンメモリデータストアを構築
-            LoadTypes(projPath, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records);
-            LoadDataAll(datPath, schemas, records, out intDict, out strDict);
+            LoadTypes(dbType, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records);
+            LoadDataAll(dbType, schemas, records, out intDict, out strDict);
         }
 
         /// <summary>
@@ -23,8 +23,9 @@ namespace Infrastructure
         /// </summary>
         /// <param name="projPath">.projectファイルパス</param>
         /// <returns></returns>
-        public void LoadTypes(string projPath, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records)
+        public void LoadTypes(WolfConfig.DatabaseType dbType, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records)
         {
+            string projPath = WolfConfig.GetDbProjectPath(dbType);
             Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(projPath);
             int offset = 0;
             int columns = reader.ReadInt(offset, true, out offset);
@@ -122,11 +123,12 @@ namespace Infrastructure
             schema = new WolfDatabaseSchema(name, columns);
         }
 
-        public void LoadDataAll(string datPath,
+        public void LoadDataAll(WolfConfig.DatabaseType dbType,
             WolfDatabaseSchema[] schemas, WolfDatabaseRecord[][] records,
             out Dictionary<DataRef, int> intDict,
             out Dictionary<DataRef, string> strDict)
         {
+            string datPath = WolfConfig.GetDbDatPath(dbType);
             Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(datPath);
             int offset = 0;
             // ヘッダーをスキップ

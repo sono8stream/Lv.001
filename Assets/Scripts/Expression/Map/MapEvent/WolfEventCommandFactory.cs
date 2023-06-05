@@ -59,7 +59,8 @@ namespace Expression.Map.MapEvent
                     break;
                 case 0x000000FA:
                     {
-
+                        var factory = new CommandFactory.WolfOperateDbCommandFactory();
+                        command = factory.Create(metaCommand);
                     }
                     break;
                 case 0x0000012C:
@@ -242,7 +243,6 @@ namespace Expression.Map.MapEvent
                     return OperatorType.CosAssign;
                 default:
                     return OperatorType.NormalAssign;
-
             }
         }
 
