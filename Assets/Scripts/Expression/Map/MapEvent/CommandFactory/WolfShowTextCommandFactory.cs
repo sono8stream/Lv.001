@@ -9,7 +9,7 @@ namespace Expression.Map.MapEvent.CommandFactory
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
             string text = metaCommand.StringArgs[0];
-            StringFactory factory = new StringFactory(text);
+            IStringFactory factory = new WolfStringFactory(text);
             return new MessageCommand(factory);
         }
     }

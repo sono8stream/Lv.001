@@ -6,9 +6,9 @@ namespace Expression.Map.MapEvent
 {
     public class MessageCommand : EventCommandBase
     {
-        public CommandFactory.StringFactory StringFactory { get; private set; }
+        public CommandFactory.IStringFactory StringFactory { get; private set; }
 
-        public MessageCommand(CommandFactory.StringFactory stringFactory)
+        public MessageCommand(CommandFactory.IStringFactory stringFactory)
         {
             StringFactory = stringFactory;
         }
