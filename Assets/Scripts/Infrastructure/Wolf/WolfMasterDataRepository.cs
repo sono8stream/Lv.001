@@ -14,7 +14,7 @@ namespace Infrastructure
 
         public WolfMasterDataRepository()
         {
-            impl = new WolfDataRepositoryImpl("Database");
+            impl = new WolfDataRepositoryImpl(WolfConfig.DatabaseType.User);
         }
 
         public DataField<int> FindInt(DataRef dataRef)

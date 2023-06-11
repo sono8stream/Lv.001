@@ -12,12 +12,10 @@ namespace Infrastructure
         private Dictionary<DataRef, int> intDict;
         private Dictionary<DataRef, string> stringDict;
 
-        public WolfDataRepositoryImpl(string databaseName)
+        public WolfDataRepositoryImpl(WolfConfig.DatabaseType dbType)
         {
             var loader = new Infrastructure.WolfDatabaseLoader();
-            var projPath = $"{Application.streamingAssetsPath}/Data/BasicData/{databaseName}.project";
-            var datPath = $"{Application.streamingAssetsPath}/Data/BasicData/{databaseName}.dat";
-            loader.LoadDatabase(projPath, datPath, out intDict, out stringDict);
+            loader.LoadDatabase(dbType, out intDict, out stringDict);
         }
 
         public DataField<int> FindInt(DataRef dataRef)

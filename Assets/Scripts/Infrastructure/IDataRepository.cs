@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Domain.Data;
 
 namespace Infrastructure
@@ -14,7 +11,7 @@ namespace Infrastructure
     {
         public DataField<int> FindInt(DataRef dataRef);
 
-        public void SetInt(DataRef dataRef,int value);
+        public void SetInt(DataRef dataRef, int value);
 
         public DataField<string> FindString(DataRef dataRef);
 

@@ -79,5 +79,20 @@ namespace Infrastructure
         {
             throw new System.NotImplementedException();
         }
+
+        public string GetTableName(DataRef dataRef)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public string GetRecordName(DataRef dataRef)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public string GetFieldName(DataRef dataRef)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -4,8 +4,6 @@ using System.Text.RegularExpressions;
 
 namespace Expression.Map.MapEvent.Command
 {
-    // 【暫定】AccessorFactoryは冗長。StringFactoryクラスに統合してしまう。
-    // IDataAccessorFactoryをStringFactoryに完全移行後、削除
     public class WolfStringAccessorFactory : Common.IDataAccessorFactory<string>
     {
         private bool isConstValue;
