@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UI.Action;
 using Expression.Map.MapEvent;
 using Expression.Map.MapEvent.Command;
-using Expression.Event.Command;
 
 namespace UI.Map
 {
@@ -106,11 +105,6 @@ namespace UI.Map
             // ここでVisitorを介してイベントデータからアクションを生成する
             var actionFactory = new EventActionFactory(actionEnv, commandVisitContext, command.NumberFactories);
             GeneratedAction = actionFactory.GenerateAction(accessor.GetEvent());
-        }
-
-        public void OnVisitDbControlCommand(DbControlCommand command)
-        {
-            GeneratedAction = null;
         }
     }
 }

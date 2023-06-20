@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Util.Wolf;
 using UnityEngine;
 
@@ -8,11 +9,14 @@ namespace Expression.Map.MapEvent
     {
         WolfDataReader reader;
         int startOffset;
+        Dictionary<int, CommandFactory.WolfEventCommandFactoryInterface> factories;
 
         public WolfEventCommandFactory(WolfDataReader reader, int startOffset)
         {
             this.reader = reader;
             this.startOffset = startOffset;
+
+            InitializeFactoryDict();
         }
 
         public EventCommandBase Create(out int nextOffset)
@@ -22,7 +26,8 @@ namespace Expression.Map.MapEvent
 
             EventCommandBase command = new EventCommandBase();
 
-            switch (metaCommand.NumberArgs[0])
+            int commandKey = metaCommand.NumberArgs[0];
+            switch (commandKey)
             {
                 case 0x00000065:
                     {
@@ -57,12 +62,6 @@ namespace Expression.Map.MapEvent
                         command = factory.Create(metaCommand);
                     }
                     break;
-                case 0x000000FA:
-                    {
-                        var factory = new CommandFactory.WolfOperateDbCommandFactory();
-                        command = factory.Create(metaCommand);
-                    }
-                    break;
                 case 0x0000012C:
                     {
                         var factory = new CommandFactory.WolfCallEventByNameCommandFactory();
@@ -81,6 +80,11 @@ namespace Expression.Map.MapEvent
                         ReadEventMoveRoute(currentOffset, out currentOffset);
                     }
                     break;
+            }
+
+            if (factories.ContainsKey(commandKey))
+            {
+                command = factories[commandKey].Create(metaCommand);
             }
 
             nextOffset = currentOffset;
@@ -306,6 +310,12 @@ namespace Expression.Map.MapEvent
             }
 
             nextOffset = currentOffset;
+        }
+
+        private void InitializeFactoryDict()
+        {
+            factories = new Dictionary<int, CommandFactory.WolfEventCommandFactoryInterface>();
+            factories.Add(0x000000FA, new CommandFactory.WolfOperateDbCommandFactory());
         }
     }
 }

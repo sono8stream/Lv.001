@@ -23,7 +23,7 @@ namespace Infrastructure
 
         public enum ColumnType
         {
-            Int,String
+            Int, String
         }
     }
 }

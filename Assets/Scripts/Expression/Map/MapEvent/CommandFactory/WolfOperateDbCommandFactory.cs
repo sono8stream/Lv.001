@@ -1,7 +1,8 @@
 using Util.Wolf;
+using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using UnityEngine;// 本来はExpressionレイヤはUnityEngineに依存しない。要設計見直し
+using UnityEngine;// 【暫定】本来はExpressionレイヤはUnityEngineに依存しない。要設計見直し
+using Infrastructure;
 
 namespace Expression.Map.MapEvent.CommandFactory
 {
@@ -9,45 +10,46 @@ namespace Expression.Map.MapEvent.CommandFactory
     {
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
-            return new EventCommandBase();
-            
+            //return new EventCommandBase();
+
             int typeNo = metaCommand.NumberArgs[1];
             int dataNo = metaCommand.NumberArgs[2];
             int fieldNo = metaCommand.NumberArgs[3];
-            int valueType = metaCommand.NumberArgs[4] & 0x0F;
-            int operatorType = (metaCommand.NumberArgs[4] >> 4) & 0x0F;
+            int operatorType = metaCommand.NumberArgs[4] & 0x0F;
             int targetDatabase = (metaCommand.NumberArgs[4] >> 8) & 0x0F;
             int modeType = (metaCommand.NumberArgs[4] >> 12) & 0x0F;
             int nameSpecifyConfig = (metaCommand.NumberArgs[4] >> 16) & 0x0F;
-            int targetVal = metaCommand.NumberArgs[5];// 数値か代入先変数
+            int targetVal = metaCommand.NumberArgs.Length > 5 ? metaCommand.NumberArgs[5] : 0;// 数値か代入先変数
 
             // DBの参照を変数呼び出し値に変換する
-            int databaseCallVal = 0;
+            WolfConfig.DatabaseType dbType;
             {
+                var loader = new WolfDatabaseLoader();
                 switch (targetDatabase)
                 {
                     case 0:
                         // 可変DB
-                        databaseCallVal = 1100000000;
+                        dbType = WolfConfig.DatabaseType.Changable;
                         break;
                     case 1:
                         // システムDB
-                        databaseCallVal = 1300000000;
+                        dbType = WolfConfig.DatabaseType.System;
                         break;
                     case 2:
                         // ユーザDB
-                        databaseCallVal = 1000000000;
+                        dbType = WolfConfig.DatabaseType.User;
                         break;
-                }
-
-                {
-                    // 参照に文字列が含まれていた場合、変換する
+                    default:
+                        throw new Exception("不正なDBタイプを指定された");
                 }
             }
 
+            // 設定時は文字列でキーを指定していたとしても、データ上は数値に変換された状態で保持している。
+            // このため、データ構成をロードして文字列で検索する処理は不要
             OperatorType assignType = GetAssignOperator(operatorType);
             Common.IDataAccessorFactory<int> targetAccessorFactory = new Command.WolfIntAccessorFactory(false, targetVal);
-            Common.IDataAccessorFactory<int> databaseAccessorFactory = new Command.WolfIntAccessorFactory(false, databaseCallVal);
+            Common.IDataAccessorFactory<int> databaseAccessorFactory
+                = new Command.WolfIntRepositoryAccessorFactory(dbType, typeNo, dataNo, fieldNo);
             // 右辺第二項は固定。何もしない
             OperatorType rightOperatorType = OperatorType.Plus;
             Common.IDataAccessorFactory<int> rightAccessorFactory = new Command.WolfIntAccessorFactory(true, 0);
