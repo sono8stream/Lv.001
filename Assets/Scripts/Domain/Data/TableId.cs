@@ -4,7 +4,6 @@ namespace Domain.Data
 {
     public class TableId
     {
-        // 【暫定】数値をキーにした呼び出しを廃止し、文字列でのみ呼び出し可能とする
         private int value;
         private string name;
 
@@ -33,7 +32,7 @@ namespace Domain.Data
                 return false;
             }
 
-            return this.value == other.value || (!string.IsNullOrEmpty(this.name) && this.name == other.name);
+            return this.value == other.value;
         }
     }
 }
