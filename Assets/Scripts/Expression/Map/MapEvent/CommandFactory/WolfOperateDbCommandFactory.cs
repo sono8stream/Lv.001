@@ -8,6 +8,23 @@ namespace Expression.Map.MapEvent.CommandFactory
 {
     public class WolfOperateDbCommandFactory : WolfEventCommandFactoryInterface
     {
+        private WolfDatabaseSchema[] userDbSchemas;
+        private WolfDatabaseSchema[] changableDbSchemas;
+        private WolfDatabaseSchema[] systemDbSchemas;
+
+        private WolfDatabaseRecord[][] userDbRecords;
+        private WolfDatabaseRecord[][] changableDbRecords;
+        private WolfDatabaseRecord[][] systemDbRecords;
+
+        public WolfOperateDbCommandFactory()
+        {
+            WolfDatabaseLoader loader = new WolfDatabaseLoader();
+
+            loader.LoadTypes(WolfConfig.DatabaseType.User, out userDbSchemas, out userDbRecords);
+            loader.LoadTypes(WolfConfig.DatabaseType.Changable, out changableDbSchemas, out changableDbRecords);
+            loader.LoadTypes(WolfConfig.DatabaseType.System, out systemDbSchemas, out systemDbRecords);
+        }
+
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
             //return new EventCommandBase();
@@ -23,6 +40,8 @@ namespace Expression.Map.MapEvent.CommandFactory
 
             // DBの参照を変数呼び出し値に変換する
             WolfConfig.DatabaseType dbType;
+            WolfDatabaseSchema[] targetSchemas;
+            WolfDatabaseRecord[][] targetRecords;
             {
                 var loader = new WolfDatabaseLoader();
                 switch (targetDatabase)
@@ -30,22 +49,41 @@ namespace Expression.Map.MapEvent.CommandFactory
                     case 0:
                         // 可変DB
                         dbType = WolfConfig.DatabaseType.Changable;
+                        targetSchemas = changableDbSchemas;
+                        targetRecords = changableDbRecords;
                         break;
                     case 1:
                         // システムDB
                         dbType = WolfConfig.DatabaseType.System;
+                        targetSchemas = systemDbSchemas;
+                        targetRecords = systemDbRecords;
                         break;
                     case 2:
                         // ユーザDB
                         dbType = WolfConfig.DatabaseType.User;
+                        targetSchemas = userDbSchemas;
+                        targetRecords = userDbRecords;
                         break;
                     default:
                         throw new Exception("不正なDBタイプを指定された");
                 }
             }
 
-            // 設定時は文字列でキーを指定していたとしても、データ上は数値に変換された状態で保持している。
-            // このため、データ構成をロードして文字列で検索する処理は不要
+            // 設定時に文字列でキーを指定していた場合、数値として変換されていない状態の可能性がある。（おそらく、DB構成変更などに追従できていない）
+            // このため、データ構成をロードして文字列で検索する必要がある。
+            if ((nameSpecifyConfig & 0x01) > 0)
+            {
+                typeNo = Array.FindIndex(targetSchemas, schema => schema.Name == metaCommand.StringArgs[1]);
+            }
+            if ((nameSpecifyConfig & 0x02) > 0)
+            {
+                dataNo = Array.FindIndex(targetRecords[typeNo], record => record.Name == metaCommand.StringArgs[2]);
+            }
+            if ((nameSpecifyConfig & 0x04) > 0)
+            {
+                fieldNo = Array.FindIndex(targetSchemas[typeNo].Columns, field => field.Name == metaCommand.StringArgs[3]);
+            }
+
             OperatorType assignType = GetAssignOperator(operatorType);
             Common.IDataAccessorFactory<int> targetAccessorFactory = new Command.WolfIntAccessorFactory(false, targetVal);
             Common.IDataAccessorFactory<int> databaseAccessorFactory

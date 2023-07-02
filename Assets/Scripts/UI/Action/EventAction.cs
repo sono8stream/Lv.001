@@ -17,6 +17,7 @@ namespace UI.Action
 
         ActionControl control;
         Map.CommandActionFactory actionFactory;
+        CommandVisitContext context;
 
         public EventAction(EventCommandBase[] commands,
             ActionEnvironment actionEnv,
@@ -25,6 +26,7 @@ namespace UI.Action
             this.commands = commands;
             this.control = new ActionControl();
             this.actionFactory = new Map.CommandActionFactory(actionEnv, context,control);
+            this.context = context;
         }
 
         /// <inheritdoc/>

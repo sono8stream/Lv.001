@@ -20,10 +20,5 @@ namespace Infrastructure
             Name = name;
             Columns = columns;
         }
-
-        public void AddColumn()
-        {
-
-        }
     }
 }

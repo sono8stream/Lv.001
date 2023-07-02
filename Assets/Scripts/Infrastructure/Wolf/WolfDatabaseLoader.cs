@@ -153,7 +153,7 @@ namespace Infrastructure
             ref Dictionary<DataRef, string> strDict)
         {
             reader.ReadInt(offset, true, out offset);// ヘッダの読み取り
-            int idSelectType = reader.ReadInt(offset, true, out offset);
+            int idSelectType = reader.ReadInt(offset, true, out offset);// データ名を指定する方法。
             int columnCount = reader.ReadInt(offset, true, out offset);
             int[] columnTypes = new int[columnCount];// 数値か文字列かを保持
             int numberCount = 0;
