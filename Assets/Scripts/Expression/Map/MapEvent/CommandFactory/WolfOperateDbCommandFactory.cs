@@ -8,6 +8,11 @@ namespace Expression.Map.MapEvent.CommandFactory
 {
     public class WolfOperateDbCommandFactory : WolfEventCommandFactoryInterface
     {
+
+        public WolfOperateDbCommandFactory()
+        {
+        }
+
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
             //return new EventCommandBase();
@@ -44,8 +49,12 @@ namespace Expression.Map.MapEvent.CommandFactory
                 }
             }
 
-            // 設定時は文字列でキーを指定していたとしても、データ上は数値に変換された状態で保持している。
-            // このため、データ構成をロードして文字列で検索する処理は不要
+            // 設定時は文字列でキーを指定していたとしても、データ上は数値に変換された状態で保持している場合がある。
+            // しかし、データ構造を変えるなど構造を変えた場合は追従できていない場合が多いので、文字列が割り当てられているなら文字列を優先して読み出す
+            if ((nameSpecifyConfig & 0x01) > 0)
+            {
+            }
+
             OperatorType assignType = GetAssignOperator(operatorType);
             Common.IDataAccessorFactory<int> targetAccessorFactory = new Command.WolfIntAccessorFactory(false, targetVal);
             Common.IDataAccessorFactory<int> databaseAccessorFactory

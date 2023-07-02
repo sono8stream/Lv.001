@@ -32,7 +32,7 @@ namespace Domain.Data
                 return false;
             }
 
-            return this.value == other.value;
+            return this.value == other.value || (!string.IsNullOrEmpty(this.name) && this.name == other.name);
         }
     }
 }
