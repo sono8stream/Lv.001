@@ -19,9 +19,22 @@ namespace Domain.Data
             this.name = "";
         }
 
+        public FieldId(string name)
+        {
+            this.value = 0;
+            this.name = name;
+        }
+
         public override int GetHashCode()
         {
-            return value.GetHashCode();
+            if (string.IsNullOrEmpty(name))
+            {
+                return value.GetHashCode();
+            }
+            else
+            {
+                return name.GetHashCode();
+            }
         }
 
         public override bool Equals(object obj)
