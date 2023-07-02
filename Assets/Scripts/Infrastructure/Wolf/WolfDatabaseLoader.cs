@@ -183,13 +183,7 @@ namespace Infrastructure
                 {
                     DataRef dataRef = new DataRef(tableId, recordId, numbers[j]);
                     int value = reader.ReadInt(offset, true, out offset);
-                    try
-                    {
-                        intDict.Add(dataRef, value);
-                    }
-                    catch(System.Exception e){
-
-                    }
+                    intDict.Add(dataRef, value);
                 }
 
                 for (int j = 0; j < stringCount; j++)

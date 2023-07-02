@@ -32,17 +32,17 @@ namespace Infrastructure
                     var intFields = new Dictionary<FieldId, DataField<int>>();
                     for (int k = 0; k < 10; k++)
                     {
-                        var fieldId = new FieldId(k.ToString());
+                        var fieldId = new FieldId(k);
                         intFields.Add(fieldId, new DataField<int>(fieldId, 0));
                     }
                     var stringFields = new Dictionary<FieldId, DataField<string>>();
 
-                    var recordId = new RecordId(j.ToString());
+                    var recordId = new RecordId(j);
                     DataRecord record = new DataRecord(recordId, intFields, stringFields);
                     mapVariableRecords.Add(recordId, record);
                 }
 
-                var tableId = new TableId(i.ToString());
+                var tableId = new TableId(i);
                 var mapVariableTable = new DataTable(tableId, mapVariableRecords);
                 variableDict.Add(tableId, mapVariableTable);
             }

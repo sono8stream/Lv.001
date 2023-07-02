@@ -20,22 +20,9 @@ namespace Domain.Data
             this.name = "";
         }
 
-        public TableId(string name)
-        {
-            this.value = 0;
-            this.name = name;
-        }
-
         public override int GetHashCode()
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                return value.GetHashCode();
-            }
-            else
-            {
-                return name.GetHashCode();
-            }
+            return value.GetHashCode();
         }
 
         public override bool Equals(object obj)
