@@ -26,6 +26,7 @@ namespace Infrastructure
 
         public void SetInt(DataRef dataRef, int value)
         {
+            Debug.Log($"Set {value} to Table: {dataRef.TableId.Value}, Record: {dataRef.RecordId.Value}, Filed: {dataRef.FieldId.Value}");
             if (intDict.ContainsKey(dataRef))
             {
                 intDict[dataRef] = value;

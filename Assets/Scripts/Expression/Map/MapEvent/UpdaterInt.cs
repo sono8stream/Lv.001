@@ -66,15 +66,7 @@ namespace Expression.Map.MapEvent
                     assignValue = leftValue * assignValue;
                     break;
                 case OperatorType.DivideAssign:
-                    try
-                    {
-                        assignValue = leftValue / assignValue;
-                    }
-                    catch
-                    {
-                        // デバッグ時ブレーク用
-                        throw;
-                    }
+                    assignValue = leftValue / assignValue;
                     break;
                 default:
                     break;

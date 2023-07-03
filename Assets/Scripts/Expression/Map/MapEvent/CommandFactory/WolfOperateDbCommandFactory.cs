@@ -20,9 +20,9 @@ namespace Expression.Map.MapEvent.CommandFactory
         {
             WolfDatabaseLoader loader = new WolfDatabaseLoader();
 
-            loader.LoadTypes(WolfConfig.DatabaseType.User, out userDbSchemas, out userDbRecords);
-            loader.LoadTypes(WolfConfig.DatabaseType.Changable, out changableDbSchemas, out changableDbRecords);
-            loader.LoadTypes(WolfConfig.DatabaseType.System, out systemDbSchemas, out systemDbRecords);
+            loader.LoadDatabaseRaw(WolfConfig.DatabaseType.User, out userDbSchemas, out userDbRecords);
+            loader.LoadDatabaseRaw(WolfConfig.DatabaseType.Changable, out changableDbSchemas, out changableDbRecords);
+            loader.LoadDatabaseRaw(WolfConfig.DatabaseType.System, out systemDbSchemas, out systemDbRecords);
         }
 
         public EventCommandBase Create(MetaEventCommand metaCommand)

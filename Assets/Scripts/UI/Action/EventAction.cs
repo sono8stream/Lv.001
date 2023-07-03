@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Expression.Map.MapEvent;
+using UnityEngine;
 
 namespace UI.Action
 {
@@ -39,24 +40,31 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            while (currentAction != null && currentAction.Run())
+            try
             {
-                currentAction.OnEnd();
+                while (currentAction != null && currentAction.Run())
+                {
+                    currentAction.OnEnd();
 
-                control.TransitToNext(commands);
+                    control.TransitToNext(commands);
 
-                TryToStartCurrentAction();
+                    TryToStartCurrentAction();
+                }
+
+                if (currentAction == null)
+                {
+                    // 実行できるアクションがないので終了とする
+                    return true;
+                }
+                else
+                {
+                    // 実行できるアクションがあるので終了しない
+                    return false;
+                }
             }
-
-            if (currentAction == null)
+            catch (System.Exception e)
             {
-                // 実行できるアクションがないので終了とする
-                return true;
-            }
-            else
-            {
-                // 実行できるアクションがあるので終了しない
-                return false;
+                throw e;
             }
         }
 
@@ -68,6 +76,7 @@ namespace UI.Action
                 commands[control.CurrentActNo].Visit(actionFactory);
                 currentAction = actionFactory.GeneratedAction;
                 currentAction.OnStart();
+                Debug.Log($"Start script of MapId: {context.MapId.Value}, EventId: {context.EventId.Value}, CommonId: {context.CommonEventId?.Value}, Line: {control.CurrentActNo}");
             }
         }
     }

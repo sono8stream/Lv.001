@@ -79,7 +79,6 @@ namespace UI.Action
             {
                 CurrentActNo++;
             }
-            Debug.Log(CurrentActNo);
         }
     }
 }

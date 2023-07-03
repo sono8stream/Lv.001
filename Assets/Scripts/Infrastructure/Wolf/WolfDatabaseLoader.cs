@@ -31,7 +31,7 @@ namespace Infrastructure
         /// </summary>
         /// <param name="projPath">.projectファイルパス</param>
         /// <returns></returns>
-        public void LoadTypes(WolfConfig.DatabaseType dbType, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records)
+        private void LoadTypes(WolfConfig.DatabaseType dbType, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records)
         {
             string projPath = WolfConfig.GetDbProjectPath(dbType);
             Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(projPath);
@@ -131,7 +131,7 @@ namespace Infrastructure
             schema = new WolfDatabaseSchema(name, columns);
         }
 
-        public void LoadDataAll(WolfConfig.DatabaseType dbType,
+        private void LoadDataAll(WolfConfig.DatabaseType dbType,
             ref WolfDatabaseSchema[] schemas, ref WolfDatabaseRecord[][] records)
         {
             string datPath = WolfConfig.GetDbDatPath(dbType);

@@ -24,7 +24,6 @@ namespace Infrastructure
 
         public CommonEvent GetEvent(CommonEventId eventId)
         {
-            Debug.Log(eventId.Value);
             if (commandsDict.ContainsKey(eventId))
             {
                 return commandsDict[eventId];
