@@ -13,15 +13,15 @@ namespace Infrastructure
     {
         public string Name { get; private set; }
 
-        public int[] IntData { get; private set; }
+        public int[] IntData { get; set; }
 
-        public string[] StringData { get; private set; }
+        public string[] StringData { get; set; }
 
-        public WolfDatabaseRecord(string name, int[] intData, string[] stringData)
+        public WolfDatabaseRecord(string name)
         {
             Name = name;
-            IntData = intData;
-            StringData = stringData;
+            IntData = null;
+            StringData = null;
         }
     }
 }

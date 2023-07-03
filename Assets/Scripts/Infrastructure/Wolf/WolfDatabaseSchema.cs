@@ -13,7 +13,7 @@ namespace Infrastructure
     {
         public string Name { get; private set; }
 
-        public WolfDatabaseColumn[] Columns { get; private set; }
+        public WolfDatabaseColumn[] Columns { get; set; }
 
         public WolfDatabaseSchema(string name, WolfDatabaseColumn[] columns)
         {
