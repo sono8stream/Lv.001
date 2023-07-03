@@ -11,7 +11,7 @@ namespace Infrastructure
     /// </summary>
     public class WolfDatabaseRecord
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         public int[] IntData { get; set; }
 

@@ -1,4 +1,4 @@
-using Domain.Data;
+ï»¿using Domain.Data;
 using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
@@ -7,13 +7,13 @@ using UnityEngine;
 namespace Infrastructure
 {
     /// <summary>
-    /// WolfRPG‚ÌDBƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş‚½‚ß‚Ìƒ[ƒ_[
+    /// WolfRPGã®DBãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€ãŸã‚ã®ãƒ­ãƒ¼ãƒ€ãƒ¼
     /// </summary>
     public class WolfDatabaseLoader
     {
         public void LoadDatabase(WolfConfig.DatabaseType dbType, out Dictionary<DataRef, int> intDict, out Dictionary<DataRef, string> strDict)
         {
-            // Wolf‚ÅŠÇ—‚·‚éƒ‚ƒfƒ‹‚É“K‚µ‚½Œ`®‚Åƒf[ƒ^‚ğ“Ç‚İæ‚èA‚»‚ÌŒãƒIƒ“ƒƒ‚ƒŠƒf[ƒ^ƒx[ƒX‚ğ\’z
+            // Wolfã§ç®¡ç†ã™ã‚‹ãƒ¢ãƒ‡ãƒ«ã«é©ã—ãŸå½¢å¼ã§ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å–ã‚Šã€ãã®å¾Œã‚ªãƒ³ãƒ¡ãƒ¢ãƒªãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã‚’æ§‹ç¯‰
             LoadDatabaseRaw(dbType, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records);
             CreateDatabase(schemas, records, out intDict, out strDict);
         }
@@ -21,15 +21,15 @@ namespace Infrastructure
         public void LoadDatabaseRaw(WolfConfig.DatabaseType dbType,
             out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records)
         {
-            // .projectƒtƒ@ƒCƒ‹‚Æ.datƒtƒ@ƒCƒ‹‚ğ—p‚¢‚ÄƒIƒ“ƒƒ‚ƒŠƒf[ƒ^ƒXƒgƒA‚ğ\’z
+            // .projectãƒ•ã‚¡ã‚¤ãƒ«ã¨.datãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç”¨ã„ã¦ã‚ªãƒ³ãƒ¡ãƒ¢ãƒªãƒ‡ãƒ¼ã‚¿ã‚¹ãƒˆã‚¢ã‚’æ§‹ç¯‰
             LoadTypes(dbType, out schemas, out records);
             LoadDataAll(dbType, ref schemas, ref records);
         }
 
         /// <summary>
-        /// DataBase.projectƒtƒ@ƒCƒ‹‚©‚çDBƒ^ƒCƒv‚ğ“Ç‚İo‚·
+        /// DataBase.projectãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰DBã‚¿ã‚¤ãƒ—ã‚’èª­ã¿å‡ºã™
         /// </summary>
-        /// <param name="projPath">.projectƒtƒ@ƒCƒ‹ƒpƒX</param>
+        /// <param name="projPath">.projectãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹</param>
         /// <returns></returns>
         public void LoadTypes(WolfConfig.DatabaseType dbType, out WolfDatabaseSchema[] schemas, out WolfDatabaseRecord[][] records)
         {
@@ -47,7 +47,7 @@ namespace Infrastructure
         }
 
         /// <summary>
-        /// w’è‚³‚ê‚½reader‚ğ—p‚¢‚Ä’Pˆê‚ÌDBƒ^ƒCƒv‚ğ“Ç‚İo‚·
+        /// æŒ‡å®šã•ã‚ŒãŸreaderã‚’ç”¨ã„ã¦å˜ä¸€ã®DBã‚¿ã‚¤ãƒ—ã‚’èª­ã¿å‡ºã™
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
@@ -71,44 +71,44 @@ namespace Infrastructure
                 dataNames[i] = reader.ReadString(offset, out offset);
             }
 
-            reader.ReadString(offset, out offset);// ƒƒ‚‚Ì“Ç‚İæ‚è
-            int customSelectCount = reader.ReadInt(offset, true, out offset);// 0x64ŒÅ’èB“Áê‚È‘I‘ğƒ{ƒbƒNƒX‚Ì”
+            reader.ReadString(offset, out offset);// ãƒ¡ãƒ¢ã®èª­ã¿å–ã‚Š
+            int customSelectCount = reader.ReadInt(offset, true, out offset);// 0x64å›ºå®šã€‚ç‰¹æ®Šãªé¸æŠãƒœãƒƒã‚¯ã‚¹ã®æ•°
             int[] customSelectTypes = new int[customSelectCount];
             for (int i = 0; i < customSelectCount; i++)
             {
                 customSelectTypes[i] = reader.ReadByte(offset, out offset);
             }
 
-            int memoCount = reader.ReadInt(offset, true, out offset);// €–Ú”‚Éˆê’vB€–Úƒƒ‚‚Ì”
+            int memoCount = reader.ReadInt(offset, true, out offset);// é …ç›®æ•°ã«ä¸€è‡´ã€‚é …ç›®ãƒ¡ãƒ¢ã®æ•°
             for (int i = 0; i < columnCount; i++)
             {
-                // Še€–Ú‚Ìƒƒ‚‚Ì“Ç‚İæ‚èBƒGƒfƒBƒ^‚©‚ç‚ÍŒ©‚¦‚È‚¢‚Ì‚Å–³‹
+                // å„é …ç›®ã®ãƒ¡ãƒ¢ã®èª­ã¿å–ã‚Šã€‚ã‚¨ãƒ‡ã‚£ã‚¿ã‹ã‚‰ã¯è¦‹ãˆãªã„ã®ã§ç„¡è¦–
                 reader.ReadString(offset, out offset);
             }
 
-            int stringParams = reader.ReadInt(offset, true, out offset);// €–Ú”‚Éˆê’vB•¶š—ñƒf[ƒ^‚Ì“Áêİ’è”‚ğæ“¾
+            int stringParams = reader.ReadInt(offset, true, out offset);// é …ç›®æ•°ã«ä¸€è‡´ã€‚æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã®ç‰¹æ®Šè¨­å®šæ•°ã‚’å–å¾—
             for (int i = 0; i < stringParams; i++)
             {
-                // ‘I‘ğ‰Â”\‚È€–Ú‚Ì”‚ğ¦‚·
+                // é¸æŠå¯èƒ½ãªé …ç›®ã®æ•°ã‚’ç¤ºã™
                 int stringSelectCount = reader.ReadInt(offset, true, out offset);
                 for (int j = 0; j < stringSelectCount; j++)
                 {
-                    reader.ReadString(offset, out offset);// æ‚èo‚µ‚Ä‚àˆÓ–¡‚ª‚È‚¢‚Ì‚Å–³‹
+                    reader.ReadString(offset, out offset);// å–ã‚Šå‡ºã—ã¦ã‚‚æ„å‘³ãŒãªã„ã®ã§ç„¡è¦–
                 }
             }
 
-            int numberParams = reader.ReadInt(offset, true, out offset);// €–Ú”‚Éˆê’vB”’lƒf[ƒ^‚Ì“Áêİ’è”‚ğæ“¾
+            int numberParams = reader.ReadInt(offset, true, out offset);// é …ç›®æ•°ã«ä¸€è‡´ã€‚æ•°å€¤ãƒ‡ãƒ¼ã‚¿ã®ç‰¹æ®Šè¨­å®šæ•°ã‚’å–å¾—
             for (int i = 0; i < numberParams; i++)
             {
-                // ‘I‘ğ‰Â”\‚È€–Ú‚Ì”‚ğ¦‚·
+                // é¸æŠå¯èƒ½ãªé …ç›®ã®æ•°ã‚’ç¤ºã™
                 int intSelectCount = reader.ReadInt(offset, true, out offset);
                 for (int j = 0; j < intSelectCount; j++)
                 {
-                    reader.ReadInt(offset, true, out offset);// æ‚èo‚µ‚Ä‚àˆÓ–¡‚ª‚È‚¢‚Ì‚Å–³‹
+                    reader.ReadInt(offset, true, out offset);// å–ã‚Šå‡ºã—ã¦ã‚‚æ„å‘³ãŒãªã„ã®ã§ç„¡è¦–
                 }
             }
 
-            int initValueCount = reader.ReadInt(offset, true, out offset);// €–Ú”‚Éˆê’vB‰Šú’l‚Ì”‚ğæ“¾
+            int initValueCount = reader.ReadInt(offset, true, out offset);// é …ç›®æ•°ã«ä¸€è‡´ã€‚åˆæœŸå€¤ã®æ•°ã‚’å–å¾—
             int[] initValues = new int[initValueCount];
             for (int i = 0; i < initValueCount; i++)
             {
@@ -137,26 +137,37 @@ namespace Infrastructure
             string datPath = WolfConfig.GetDbDatPath(dbType);
             Util.Wolf.WolfDataReader reader = new Util.Wolf.WolfDataReader(datPath);
             int offset = 0;
-            // ƒwƒbƒ_[‚ğƒXƒLƒbƒv
+            // ãƒ˜ãƒƒãƒ€ãƒ¼ã‚’ã‚¹ã‚­ãƒƒãƒ—
             for (int i = 0; i < 11; i++)
             {
                 reader.ReadByte(offset, out offset);
             }
 
             int typeCount = reader.ReadInt(offset, true, out offset);
+            WolfDatabaseRecord[] prevRecords = null;
             for (int i = 0; i < typeCount; i++)
             {
-                LoadData(reader, offset, out offset, ref schemas[i], ref records[i]);
+                LoadData(reader, offset, out offset, ref schemas[i], ref records[i], out bool isUsePrevName, prevRecords);
+                
+                // ã‚¿ã‚¤ãƒ—åã‚’è¤‡æ•°å›å¼•ãç¶™ãå ´åˆã€æœ€ã‚‚é …ç›®ãŒå¤šã„ï¼ˆå¼•ç¶™ãå…ƒã®ï¼‰ã‚¹ã‚­ãƒ¼ãƒã‚’å¼•ãç¶™ãã‚ˆã†ã«ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
+                // ä¾‹ãˆã°ã€0ç•ªç›®ã®ã‚¹ã‚­ãƒ¼ãƒã‚’1ã€2ç•ªç›®ã§ç¶™æ‰¿ã™ã‚‹å ´åˆã«ãƒ‡ãƒ¼ã‚¿æ•°ãŒãã‚Œãã‚Œ10,1,5ã¨ã™ã‚‹ã€‚
+                // ã“ã®ã¨ãã€1ç•ªç›®ã‚ˆã‚Šã‚‚2ç•ªç›®ã®ã‚¹ã‚­ãƒ¼ãƒã®æ–¹ãŒãƒ‡ãƒ¼ã‚¿æ•°ãŒå¤šã„å ´åˆã€0ç•ªç›®ã®ã‚¹ã‚­ãƒ¼ãƒã®åå‰ã‚’å–ã£ã¦5ç•ªç›®ã®ãƒ‡ãƒ¼ã‚¿ã¾ã§åå‰ãŒå‰²ã‚Šå½“ã¦ã‚‰ã‚Œã‚‹ã€‚
+                if (!isUsePrevName)
+                {
+                    prevRecords = records[i];
+                }
             }
         }
 
         private void LoadData(Util.Wolf.WolfDataReader reader, int offset, out int nextOffset,
-            ref WolfDatabaseSchema schema, ref WolfDatabaseRecord[] records)
+            ref WolfDatabaseSchema schema, ref WolfDatabaseRecord[] records, out bool isUsePrevDataName,
+            WolfDatabaseRecord[] prevRecords)
         {
-            reader.ReadInt(offset, true, out offset);// ƒwƒbƒ_‚Ì“Ç‚İæ‚è
-            int idSelectType = reader.ReadInt(offset, true, out offset);// ƒf[ƒ^–¼‚ğw’è‚·‚é•û–@B
+            reader.ReadInt(offset, true, out offset);// ãƒ˜ãƒƒãƒ€ã®èª­ã¿å–ã‚Š
+            int idSelectType = reader.ReadInt(offset, true, out offset);// ãƒ‡ãƒ¼ã‚¿åã‚’æŒ‡å®šã™ã‚‹æ–¹æ³•ã€‚
+
             int columnCount = reader.ReadInt(offset, true, out offset);
-            int[] columnTypes = new int[columnCount];// ”’l‚©•¶š—ñ‚©‚ğ•Û
+            int[] columnTypes = new int[columnCount];// æ•°å€¤ã‹æ–‡å­—åˆ—ã‹ã‚’ä¿æŒ
             int numberCount = 0;
             int stringCount = 0;
 
@@ -193,11 +204,37 @@ namespace Infrastructure
                 }
             }
 
+            isUsePrevDataName = false;
+            if (idSelectType == 0x01)
+            {
+                // Fieldå†…ã®æœ€åˆã®æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã—ã¦ãƒ¬ã‚³ãƒ¼ãƒ‰åã¨ã™ã‚‹
+                if (stringCount > 0)
+                {
+                    for (int i = 0; i < dataCount; i++)
+                    {
+                        records[i].Name = records[i].StringData[0];
+                    }
+                }
+            }
+            else if (idSelectType == 0x02)
+            {
+                // 1ã¤å‰ã®ã‚¿ã‚¤ãƒ—ã®ãƒ‡ãƒ¼ã‚¿IDã‚’å‰²ã‚Šå½“ã¦ã‚‹
+                if (prevRecords != null)
+                {
+                    int iterCount = Mathf.Min(records.Length, prevRecords.Length);
+                    for (int i = 0; i < iterCount; i++)
+                    {
+                        records[i].Name = prevRecords[i].Name;
+                    }
+                }
+                isUsePrevDataName = true;
+            }
+
             nextOffset = offset;
         }
 
         /// <summary>
-        /// “Ç‚İ‚ñ‚¾WolfDatabase\‘¢‚©‚çƒIƒ“ƒƒ‚ƒŠƒf[ƒ^ƒx[ƒX‚ğ¶¬
+        /// èª­ã¿è¾¼ã‚“ã WolfDatabaseæ§‹é€ ã‹ã‚‰ã‚ªãƒ³ãƒ¡ãƒ¢ãƒªãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã‚’ç”Ÿæˆ
         /// </summary>
         /// <param name="schemas"></param>
         /// <param name="records"></param>
