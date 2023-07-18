@@ -193,21 +193,21 @@ namespace Expression.Map.MapEvent
         {
             switch (value)
             {
-                case 0xF0:
+                case 0x0F:
                     return OperatorType.ArcTan;
                 case 0x00:
                     return OperatorType.Plus;
-                case 0x10:
+                case 0x01:
                     return OperatorType.Minus;
-                case 0x20:
+                case 0x02:
                     return OperatorType.Multiply;
-                case 0x30:
+                case 0x03:
                     return OperatorType.Divide;
-                case 0x40:
+                case 0x04:
                     return OperatorType.Mod;
-                case 0x50:
+                case 0x05:
                     return OperatorType.And;
-                case 0x60:
+                case 0x06:
                     return OperatorType.Random;
                 default:
                     return OperatorType.Plus;

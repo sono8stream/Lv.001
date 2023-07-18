@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UI.Action;
 using Expression.Map.MapEvent;
 using Expression.Map.MapEvent.Command;
+using Expression.Common;
 
 namespace UI.Map
 {
@@ -101,9 +102,9 @@ namespace UI.Map
 
         public void OnVisitCallEventCommand(CallEventCommand command)
         {
+            var actionFactory = new EventActionFactory(actionEnv, commandVisitContext, command.NumberFactories,
+                command.HasReturnValue, command.ReturnDestinationAccessor);
             IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
-            // ここでVisitorを介してイベントデータからアクションを生成する
-            var actionFactory = new EventActionFactory(actionEnv, commandVisitContext, command.NumberFactories);
             GeneratedAction = actionFactory.GenerateAction(accessor.GetEvent());
         }
     }

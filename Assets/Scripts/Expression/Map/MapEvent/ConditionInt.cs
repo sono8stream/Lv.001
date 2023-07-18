@@ -1,5 +1,6 @@
 ﻿using Domain.Data;
 using Expression.Common;
+using UnityEngine;// 【暫定】本来はログ出力を抽象化してUnityのDebug.Logにつなぐべき
 
 namespace Expression.Map.MapEvent
 {
@@ -23,6 +24,7 @@ namespace Expression.Map.MapEvent
         {
             int leftValue = LeftHandAccessorFactory.Create(context).Get();
             int rightValue = RightHandAccessorFactory.Create(context).Get();
+            Debug.Log($"Compare {leftValue} & {rightValue} with {OperatorType}");
 
             switch (OperatorType)
             {

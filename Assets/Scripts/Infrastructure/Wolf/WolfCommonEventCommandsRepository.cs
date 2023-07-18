@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Expression.Map.MapEvent;
+using Expression.Map.MapEvent.Command;
 using Expression.Event;
 using UnityEngine;
 using Util.Wolf;
@@ -29,7 +30,7 @@ namespace Infrastructure
                 return commandsDict[eventId];
             }
 
-            return new CommonEvent(eventId, "無し", new EventCommandBase[0]);
+            return new CommonEvent(eventId, "無し", new EventCommandBase[0], null);
         }
 
         private void ReadCommonEvents()
@@ -146,11 +147,12 @@ namespace Infrastructure
             dummy = reader.ReadByte(offset, out offset);// 0x92が入っている想定（V2以降）
 
             string retMeaning = reader.ReadString(offset, out offset);
-            int retAddress = reader.ReadInt(offset, true, out offset);
+            int retAddress = 15000000 + eventId.Value * 100 + reader.ReadInt(offset, true, out offset);
+            var returnValueAccessorFactory = new WolfIntAccessorFactory(false, retAddress);
 
             dummy = reader.ReadByte(offset, out offset);
 
-            var commonEvent = new CommonEvent(eventId, eventName, commands);
+            var commonEvent = new CommonEvent(eventId, eventName, commands, returnValueAccessorFactory);
             return commonEvent;
         }
 

@@ -1,5 +1,7 @@
-﻿using Domain.Data;
+﻿using System;
+using Domain.Data;
 using Expression.Common;
+using UnityEngine;// 【暫定】本来はログ出力のアダプタを仕込む
 
 namespace Expression.Map.MapEvent
 {
@@ -28,7 +30,8 @@ namespace Expression.Map.MapEvent
         public void Update(CommandVisitContext context)
         {
             int rightValue1 = RightHandAccessor1Factory.Create(context).Get();
-            int rightValue2 = RightHandAccessor2Factory.Create(context).Get();
+            int rightValue2 = RightHandAccessor2Factory == null
+                ? 0 : RightHandAccessor2Factory.Create(context).Get();
 
             int assignValue = 0;
 
@@ -44,7 +47,7 @@ namespace Expression.Map.MapEvent
                     assignValue = rightValue1 * rightValue2;
                     break;
                 case OperatorType.Divide:
-                    assignValue = rightValue1 / rightValue2;
+                    assignValue = rightValue2 == 0 ? rightValue1 : rightValue1 / rightValue2;
                     break;
                 default:
                     break;
@@ -66,13 +69,22 @@ namespace Expression.Map.MapEvent
                     assignValue = leftValue * assignValue;
                     break;
                 case OperatorType.DivideAssign:
-                    assignValue = leftValue / assignValue;
+                    assignValue = assignValue == 0 ? leftValue : leftValue / assignValue;
+                    break;
+                case OperatorType.MaxAssign:
+                    assignValue = Math.Max(leftValue, assignValue);
+                    break;
+                case OperatorType.MinAssign:
+                    assignValue = Math.Min(leftValue, assignValue);
                     break;
                 default:
                     break;
             }
 
+            Debug.Log($"Update {leftValue} {AssignOperatorType} {rightValue1} {RightOperatorType} {rightValue2}");
+
             LeftHandAccessorFactory.Create(context).Set(assignValue);
+
         }
     }
 }

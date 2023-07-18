@@ -32,7 +32,7 @@ namespace Expression.Map.MapEvent.CommandFactory
             int typeNo = metaCommand.NumberArgs[1];
             int dataNo = metaCommand.NumberArgs[2];
             int fieldNo = metaCommand.NumberArgs[3];
-            int operatorType = metaCommand.NumberArgs[4] & 0x0F;
+            int operatorType = metaCommand.NumberArgs[4] & 0xF0;
             int targetDatabase = (metaCommand.NumberArgs[4] >> 8) & 0x0F;
             int modeType = (metaCommand.NumberArgs[4] >> 12) & 0x0F;
             int nameSpecifyConfig = (metaCommand.NumberArgs[4] >> 16) & 0x0F;
@@ -119,22 +119,22 @@ namespace Expression.Map.MapEvent.CommandFactory
             {
                 case 0x00:
                     return OperatorType.NormalAssign;
-                case 0x01:
+                case 0x10:
                     return OperatorType.PlusAssign;
-                case 0x02:
+                case 0x20:
                     return OperatorType.MinusAssign;
-                case 0x03:
+                case 0x30:
                     return OperatorType.MultiplyAssign;
-                case 0x04:
+                case 0x40:
                     return OperatorType.DivideAssign;
-                case 0x05:
+                case 0x50:
                     return OperatorType.ModAssign;
-                case 0x06:
+                case 0x60:
                     return OperatorType.MaxAssign;
-                case 0x07:
+                case 0x70:
                     return OperatorType.MinAssign;
                 default:
-                    return OperatorType.NormalAssign;
+                    throw new Exception("想定外の割り当てタイプ");
             }
         }
 

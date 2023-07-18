@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Expression.Event;
+using System;
 using System.Collections.Generic;
 
 namespace Expression.Map.MapEvent.Command
@@ -37,6 +38,8 @@ namespace Expression.Map.MapEvent.Command
             else if (rawVal >= 15000000)
             {
                 // コモンイベントのセルフ変数呼び出し
+                int eventNo = (rawVal - 15000000) / 100;
+                return new Event.CommonEventIntAccessor(new CommonEventId(eventNo), rawVal % 100);
             }
             else if (rawVal >= 9900000)
             {

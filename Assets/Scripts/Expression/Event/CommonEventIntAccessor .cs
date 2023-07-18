@@ -22,21 +22,56 @@ namespace Expression.Event
         public int Get()
         {
             var eventData = repository.GetEvent(eventId);
-            if (variableId < eventData.NumberVariables.Length)
+
+            int id = ToIntVariableIndex(variableId);
+            if (id == -1)
             {
-                return eventData.NumberVariables[variableId];
+                // 文字列変数は無効
+                return 0;
             }
 
-            // 文字列変数は無効
+            if (id < eventData.NumberVariables.Length)
+            {
+                return eventData.NumberVariables[id];
+            }
+
             return 0;
         }
 
         public void Set(int value)
         {
             var eventData = repository.GetEvent(eventId);
-            if (variableId < eventData.NumberVariables.Length)
+
+            int id = ToIntVariableIndex(variableId);
+            if (id == -1)
             {
-                eventData.NumberVariables[variableId] = value;
+                // 文字列変数は無効
+                return;
+            }
+
+            if (id < eventData.NumberVariables.Length)
+            {
+                eventData.NumberVariables[id] = value;
+            }
+        }
+
+        private int ToIntVariableIndex(int variableId)
+        {
+            // 【暫定】本来はVariableIdクラスを作り、その中に隠蔽すべきロジック
+
+            if (5 <= variableId && variableId <= 9)
+            {
+                // 文字列は無効な値を返す
+                return -1;
+            }
+
+            if (variableId <= 4)
+            {
+                return variableId;
+            }
+            else
+            {
+                return variableId - 5;
             }
         }
     }

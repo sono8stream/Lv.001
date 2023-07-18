@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Expression.Event;
 using Expression.Map.MapEvent;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace UI.Action
     /// アクションを複数個まとめ、さらに分岐などを制御できる
     /// Compositeパターンのようにふるまう
     /// </summary>
-    public class EventAction : ActionBase
+    public class EventActionBase : ActionBase
     {
         EventCommandBase[] commands;
 
@@ -18,9 +19,11 @@ namespace UI.Action
 
         ActionControl control;
         Map.CommandActionFactory actionFactory;
-        CommandVisitContext context;
+        protected CommandVisitContext context;
 
-        public EventAction(EventCommandBase[] commands,
+        CommonEventId parentId;
+
+        public EventActionBase(EventCommandBase[] commands,
             ActionEnvironment actionEnv,
             CommandVisitContext context)
         {
@@ -42,25 +45,26 @@ namespace UI.Action
         {
             try
             {
-                while (currentAction != null && currentAction.Run())
+                int perFrame = 100;
+                for (int i = 0; i < perFrame; i++)
                 {
-                    currentAction.OnEnd();
+                    if (currentAction != null && currentAction.Run())
+                    {
+                        currentAction.OnEnd();
 
-                    control.TransitToNext(commands);
+                        control.TransitToNext(commands);
 
-                    TryToStartCurrentAction();
-                }
+                        TryToStartCurrentAction();
+                    }
 
-                if (currentAction == null)
-                {
-                    // 実行できるアクションがないので終了とする
-                    return true;
+                    if (currentAction == null)
+                    {
+                        // 実行できるアクションがないので終了とする
+                        return true;
+                    }
                 }
-                else
-                {
-                    // 実行できるアクションがあるので終了しない
-                    return false;
-                }
+                // 実行できるアクションがあるので終了しない
+                return false;
             }
             catch (System.Exception e)
             {

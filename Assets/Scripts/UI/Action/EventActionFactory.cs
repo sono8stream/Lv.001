@@ -10,17 +10,24 @@ namespace UI.Action
     /// </summary>
     public class EventActionFactory : EventVisitorBase
     {
-        private EventAction generatedAction;
+        private EventActionBase generatedAction;
         private ActionEnvironment actionEnv;
         private CommandVisitContext commandVisitContext;
         private IDataAccessorFactory<int>[] numberFactories;
 
+        private bool hasReturnValue;
+        private IDataAccessorFactory<int> returnDestinationAccessor;
+
         public EventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext,
-            IDataAccessorFactory<int>[] numberFactories)
+            IDataAccessorFactory<int>[] numberFactories, bool hasReturnValue,
+            IDataAccessorFactory<int> returnDestinationAccessor)
         {
             this.actionEnv = actionEnv;
             this.commandVisitContext = commandVisitContext;
             this.numberFactories = numberFactories;
+
+            this.hasReturnValue = hasReturnValue;
+            this.returnDestinationAccessor = returnDestinationAccessor;
         }
 
         public ActionBase GenerateAction(IEvent eventData)
@@ -32,9 +39,10 @@ namespace UI.Action
         public override void OnVisitCommonEvent(CommonEvent commonEvent)
         {
             // yŽb’èz•¶Žš—ñˆø”‚à•t—^‚µ‚Ä‚¨‚­
-            commandVisitContext.CommonEventId = commonEvent.Id;
-            generatedAction = new EventAction(commonEvent.EventCommands,
-                actionEnv, commandVisitContext);
+            generatedAction = new CommonEventAction(commonEvent.Id,
+                commonEvent.EventCommands,
+                actionEnv, commandVisitContext,
+                hasReturnValue, returnDestinationAccessor, commonEvent.ReturnValueAccessorFactory);
             
             // ˆø”‚ðEventƒIƒuƒWƒFƒNƒg‚ÉŠ„‚è“–‚Ä‚éB
             int[] numberArgs = numberFactories.Select(factory => factory.Create(commandVisitContext).Get()).ToArray();
@@ -43,7 +51,8 @@ namespace UI.Action
 
         public override void OnVisitMapEvent(EventData mapEvent)
         {
-            generatedAction = new EventAction(mapEvent.PageData[0].CommandDataArray,
+            generatedAction = new MapEventAction(mapEvent.Id,
+                mapEvent.PageData[0].CommandDataArray,
                 actionEnv, commandVisitContext);
         }
     }

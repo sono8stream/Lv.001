@@ -1,4 +1,6 @@
 using Util.Wolf;
+using Expression.Common;
+using Expression.Map.MapEvent.Command;
 
 namespace Expression.Map.MapEvent.CommandFactory
 {
@@ -20,7 +22,13 @@ namespace Expression.Map.MapEvent.CommandFactory
 
             IEventDataAccessorFactory factory = new Command.WolfEventDataAccessorFactory(eventId);
 
-            return new Command.CallEventCommand(numberFactories, metaCommand.StringArgs, factory);
+            int returnDestinationRaw = haveReturnValue
+                ? metaCommand.NumberArgs[3 + numberArgCount + stringArgCount] : 0;
+            IDataAccessorFactory<int> returnDataAccessorFactory
+                = new WolfIntAccessorFactory(false, returnDestinationRaw);
+
+            return new Command.CallEventCommand(numberFactories, metaCommand.StringArgs, factory,
+                haveReturnValue, returnDataAccessorFactory);
         }
     }
 }
