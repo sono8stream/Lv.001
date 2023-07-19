@@ -11,7 +11,7 @@ namespace Infrastructure
     public class WolfDatabaseColumn
     {
         public string Name { get; private set; }
-        public ColumnType Type { get; private set; }
+        public ColumnType Type { get; set; }
         public int InitValue { get; private set; }
 
         public WolfDatabaseColumn(string name, ColumnType type, int initValue)
@@ -23,7 +23,7 @@ namespace Infrastructure
 
         public enum ColumnType
         {
-            Int,String
+            Int, String
         }
     }
 }

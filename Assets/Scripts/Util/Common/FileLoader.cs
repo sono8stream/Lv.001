@@ -13,7 +13,7 @@ namespace Util.Common
     {
         public static byte[] LoadSync(string path)
         {
-            Debug.Log(path);
+            //Debug.Log(path);
             byte[] res = null;
 
             using (var request = UnityWebRequest.Get(path))
@@ -27,15 +27,15 @@ namespace Util.Common
                         || request.result == UnityWebRequest.Result.ConnectionError)
                     {
                         //ÉGÉâÅ[
-                        Debug.LogError(path);
-                        Debug.LogError(request.error);
+                        //Debug.LogError(path);
+                        //Debug.LogError(request.error);
                         break;
                     }
 
                     if (async.isDone)
                     {
                         //ê≥èÌèIóπ
-                        Debug.Log($"Load DONE! for ${path}");
+                        //Debug.Log($"Load DONE! for ${path}");
                         break;
                     }
                 }

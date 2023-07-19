@@ -6,24 +6,36 @@ namespace Expression.Map.MapEvent.CommandFactory
     {
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
-            if (metaCommand.StringArgs.Length > 0)
+            int operationType = metaCommand.NumberArgs[1] & 0x0F;
+            if (operationType == 0x00)
             {
-                string imagePath = metaCommand.StringArgs[0];
-                int pictureId = metaCommand.NumberArgs[2];
-                PicturePivotPattern posPattern = GetPosPattern(metaCommand.NumberArgs[2]);
-                int x = metaCommand.NumberArgs[8];
-                int y = metaCommand.NumberArgs[9];
-                float scale = metaCommand.NumberArgs[10] * 0.01f;// 拡大率。X/Y別カウントのケースは未実装
+                int sourceType = (metaCommand.NumberArgs[1] >> 4) & 0x0F;
+                if (sourceType == 0x00)
+                {
+                    string imagePath = metaCommand.StringArgs[0];
 
-                return new ShowPictureCommand(pictureId, imagePath, posPattern, x, y, scale);
+
+                    int pivot = (metaCommand.NumberArgs[1] >> 0x100) & 0xFF;
+                    PicturePivotPattern posPattern = GetPosPattern(pivot);
+
+
+                    int pictureId = metaCommand.NumberArgs[2];
+                    int x = metaCommand.NumberArgs[8];
+                    int y = metaCommand.NumberArgs[9];
+                    float scale = metaCommand.NumberArgs[10] * 0.01f;// 拡大率。X/Y別カウントのケースは未実装
+
+                    return new ShowPictureCommand(pictureId, imagePath, posPattern, x, y, scale);
+                }
+
+                return new EventCommandBase();
+            }
+            else if (operationType == 0x02)
+            {
+                int pictureId = metaCommand.NumberArgs[2];
+                return new RemovePictureCommand(pictureId);
             }
             else
             {
-                if ((metaCommand.NumberArgs[1] & 0xFF) == 0x02)// 消去
-                {
-                    int pictureId = metaCommand.NumberArgs[2];
-                    return new RemovePictureCommand(pictureId);
-                }
                 return new EventCommandBase();
             }
         }

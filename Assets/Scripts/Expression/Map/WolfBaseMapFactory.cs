@@ -29,12 +29,12 @@ namespace Expression.Map
                 }
                 MapEvent.EventId eventId = new MapEvent.EventId(
                     reader.ReadInt(offset, true, out offset));
-                Debug.Log($"イベントID：{eventId.Value}");
+                //Debug.Log($"イベントID：{eventId.Value}");
                 string eventName = reader.ReadString(offset, out offset);
                 int posX = reader.ReadInt(offset, true, out offset);
                 int posY = reader.ReadInt(offset, true, out offset);
                 int pageCount = reader.ReadInt(offset, true, out offset);
-                Debug.Log($"ページ数：{pageCount}");
+                //Debug.Log($"ページ数：{pageCount}");
                 // 00 00 00 00のスキップ
                 reader.ReadInt(offset, true, out offset);
 

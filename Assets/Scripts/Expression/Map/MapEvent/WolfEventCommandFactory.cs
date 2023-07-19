@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Util.Wolf;
 using UnityEngine;
 
@@ -8,11 +9,14 @@ namespace Expression.Map.MapEvent
     {
         WolfDataReader reader;
         int startOffset;
+        Dictionary<int, CommandFactory.WolfEventCommandFactoryInterface> factories;
 
         public WolfEventCommandFactory(WolfDataReader reader, int startOffset)
         {
             this.reader = reader;
             this.startOffset = startOffset;
+
+            InitializeFactoryDict();
         }
 
         public EventCommandBase Create(out int nextOffset)
@@ -22,7 +26,8 @@ namespace Expression.Map.MapEvent
 
             EventCommandBase command = new EventCommandBase();
 
-            switch (metaCommand.NumberArgs[0])
+            int commandKey = metaCommand.NumberArgs[0];
+            switch (commandKey)
             {
                 case 0x00000065:
                     {
@@ -77,6 +82,11 @@ namespace Expression.Map.MapEvent
                     break;
             }
 
+            if (factories.ContainsKey(commandKey))
+            {
+                command = factories[commandKey].Create(metaCommand);
+            }
+
             nextOffset = currentOffset;
             startOffset = currentOffset;
             return command;
@@ -117,7 +127,7 @@ namespace Expression.Map.MapEvent
 
             for (int i = 0; i < metaCommand.StringArgs.Length; i++)
             {
-                Debug.Log($"選択肢{i}：{metaCommand.StringArgs[i]}");
+                //Debug.Log($"選択肢{i}：{metaCommand.StringArgs[i]}");
             }
 
             return new ChoiceForkCommand(metaCommand.IndentDepth, metaCommand.StringArgs);
@@ -125,18 +135,17 @@ namespace Expression.Map.MapEvent
 
         private EventCommandBase CreateFlagForkByVariableCommand(MetaEventCommand metaCommand)
         {
-            Debug.Log("変数分岐");
             int forkParams = metaCommand.NumberArgs[1];
             int forkCount = forkParams % (1 << 4);
             int flagCount = (metaCommand.NumberArgs.Length - 2) / 3;
-            Debug.Log($"条件数：{flagCount}、分岐数：{forkCount}");
+            //Debug.Log($"条件数：{flagCount}、分岐数：{forkCount}");
             ConditionInt[] conditions = new ConditionInt[flagCount];
             for (int i = 0; i < flagCount; i++)
             {
                 int flagLeft = metaCommand.NumberArgs[2 + 3 * i];
                 int flagRight = metaCommand.NumberArgs[3 + 3 * i];
                 int rightAndCompareParams = metaCommand.NumberArgs[4 + 3 * i];
-                Debug.Log($"左辺 : {flagLeft}, 右辺 : {flagRight}, 条件ID : {rightAndCompareParams}");
+                //Debug.Log($"左辺 : {flagLeft}, 右辺 : {flagRight}, 条件ID : {rightAndCompareParams}");
 
                 conditions[i] = GenerateCondition(flagLeft, flagRight, rightAndCompareParams);
             }
@@ -160,13 +169,11 @@ namespace Expression.Map.MapEvent
 
         private EventCommandBase CreateChangeVariableCommand(MetaEventCommand metaCommand)
         {
-            Debug.Log("変数操作");
             int leftParamRef = metaCommand.NumberArgs[1];
             int rightParamRef1 = metaCommand.NumberArgs[2];
             int rightParamRef2 = metaCommand.NumberArgs[3];
             int valueCondition = metaCommand.NumberArgs[4] % 0x100;
             int operatorType = (metaCommand.NumberArgs[4] / 0x100) % 0x100;
-            Debug.Log(operatorType);
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
             Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, leftParamRef);
@@ -186,21 +193,21 @@ namespace Expression.Map.MapEvent
         {
             switch (value)
             {
-                case 0xF0:
+                case 0x0F:
                     return OperatorType.ArcTan;
                 case 0x00:
                     return OperatorType.Plus;
-                case 0x10:
+                case 0x01:
                     return OperatorType.Minus;
-                case 0x20:
+                case 0x02:
                     return OperatorType.Multiply;
-                case 0x30:
+                case 0x03:
                     return OperatorType.Divide;
-                case 0x40:
+                case 0x04:
                     return OperatorType.Mod;
-                case 0x50:
+                case 0x05:
                     return OperatorType.And;
-                case 0x60:
+                case 0x06:
                     return OperatorType.Random;
                 default:
                     return OperatorType.Plus;
@@ -237,13 +244,12 @@ namespace Expression.Map.MapEvent
                     return OperatorType.CosAssign;
                 default:
                     return OperatorType.NormalAssign;
-
             }
         }
 
         private EventCommandBase CreateMovePositionCommand(MetaEventCommand metaCommand)
         {
-            Debug.Log("場所移動");
+            //Debug.Log("場所移動");
             EventId eventId = new EventId(metaCommand.NumberArgs[1]);
             int x = metaCommand.NumberArgs[2];
             int y = metaCommand.NumberArgs[3];
@@ -257,14 +263,14 @@ namespace Expression.Map.MapEvent
         {
             int forkNumber = metaCommand.NumberArgs[1];
 
-            Debug.Log($"分岐始点{forkNumber}");
+            //Debug.Log($"分岐始点{forkNumber}");
 
             return new ForkBeginCommand(metaCommand.IndentDepth, forkNumber);
         }
 
         private EventCommandBase CreateForkEndCommand(MetaEventCommand metaCommand)
         {
-            Debug.Log($"分岐終端");
+            //Debug.Log($"分岐終端");
 
             return new ForkEndCommand(metaCommand.IndentDepth);
         }
@@ -301,6 +307,12 @@ namespace Expression.Map.MapEvent
             }
 
             nextOffset = currentOffset;
+        }
+
+        private void InitializeFactoryDict()
+        {
+            factories = new Dictionary<int, CommandFactory.WolfEventCommandFactoryInterface>();
+            factories.Add(0x000000FA, new CommandFactory.WolfOperateDbCommandFactory());
         }
     }
 }

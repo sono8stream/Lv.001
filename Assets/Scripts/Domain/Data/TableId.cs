@@ -4,24 +4,24 @@ namespace Domain.Data
 {
     public class TableId
     {
-        private int value;
+        public int Value { get; private set; }
         private string name;
 
         public TableId(int value, string name)
         {
-            this.value = value;
+            this.Value = value;
             this.name = name;
         }
 
         public TableId(int value)
         {
-            this.value = value;
+            this.Value = value;
             this.name = "";
         }
 
         public override int GetHashCode()
         {
-            return value.GetHashCode();
+            return Value.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -32,7 +32,7 @@ namespace Domain.Data
                 return false;
             }
 
-            return this.value == other.value;
+            return this.Value == other.Value;
         }
     }
 }

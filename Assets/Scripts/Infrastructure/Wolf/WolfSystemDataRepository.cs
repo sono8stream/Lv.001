@@ -1,5 +1,4 @@
 using Domain.Data;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,50 +6,34 @@ namespace Infrastructure
 {
     /// <summary>
     /// WolfRPGのシステムDBを読み出すためのリポジトリ
-    /// 【暫定】WolfRPG共通の基底のデータリポジトリクラスを作り、共通化する
     /// </summary>
     public class WolfSystemDataRepository : ISystemDataRepository
     {
-        private Dictionary<DataRef, int> intDict;
-        private Dictionary<DataRef, string> stringDict;
+        private WolfDataRepositoryImpl impl;
 
         public WolfSystemDataRepository()
         {
-            var loader = new Infrastructure.WolfDatabaseLoader();
-            var projPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.project";
-            var datPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDatabase.dat";
-            loader.LoadDatabase(projPath, datPath, out intDict, out stringDict);
+            impl = new WolfDataRepositoryImpl(WolfConfig.DatabaseType.System);
         }
 
         public DataField<int> FindInt(DataRef dataRef)
         {
-            int val = intDict.ContainsKey(dataRef) ? intDict[dataRef] : 0;
-            return new DataField<int>(dataRef.FieldId, val);
+            return impl.FindInt(dataRef);
         }
 
         public void SetInt(DataRef dataRef, int value)
         {
-            throw new System.NotImplementedException();
+            impl.SetInt(dataRef, value);
         }
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            // 数値を文字列として取り出したいケースがある。そういった場合は文字列変換して返す
-            string val = "";
-            if (intDict.ContainsKey(dataRef))
-            {
-                val = intDict[dataRef].ToString();
-            }
-            else if (stringDict.ContainsKey(dataRef))
-            {
-                val = stringDict[dataRef];
-            }
-            return new DataField<string>(dataRef.FieldId, val);
+            return impl.FindString(dataRef);
         }
 
         public void SetString(DataRef dataRef, string value)
         {
-            throw new System.NotImplementedException();
+            impl.SetString(dataRef, value);
         }
     }
 }

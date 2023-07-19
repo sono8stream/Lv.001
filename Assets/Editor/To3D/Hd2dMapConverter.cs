@@ -126,11 +126,10 @@ namespace Hd2d
                     creator.Create();
 
                     var loader = new Infrastructure.WolfDatabaseLoader();
-                    var projPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDataBase.project";
-                    var datPath = $"{Application.streamingAssetsPath}/Data/BasicData/SysDataBase.dat";
                     var intDict = new Dictionary<Domain.Data.DataRef, int>();
                     var strDict = new Dictionary<Domain.Data.DataRef, string>();
-                    loader.LoadDatabase(projPath, datPath, out intDict, out strDict);
+                    loader.LoadDatabase(Infrastructure.WolfConfig.DatabaseType.System,
+                        out intDict, out strDict);
                 }
             }
         }

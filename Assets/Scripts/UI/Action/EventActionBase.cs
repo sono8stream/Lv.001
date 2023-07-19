@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using Expression.Event;
 using Expression.Map.MapEvent;
+using UnityEngine;
 
 namespace UI.Action
 {
@@ -8,7 +10,7 @@ namespace UI.Action
     /// アクションを複数個まとめ、さらに分岐などを制御できる
     /// Compositeパターンのようにふるまう
     /// </summary>
-    public class EventAction : ActionBase
+    public class EventActionBase : ActionBase
     {
         EventCommandBase[] commands;
 
@@ -17,14 +19,18 @@ namespace UI.Action
 
         ActionControl control;
         Map.CommandActionFactory actionFactory;
+        protected CommandVisitContext context;
 
-        public EventAction(EventCommandBase[] commands,
+        CommonEventId parentId;
+
+        public EventActionBase(EventCommandBase[] commands,
             ActionEnvironment actionEnv,
             CommandVisitContext context)
         {
             this.commands = commands;
             this.control = new ActionControl();
             this.actionFactory = new Map.CommandActionFactory(actionEnv, context,control);
+            this.context = context;
         }
 
         /// <inheritdoc/>
@@ -37,24 +43,32 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            while (currentAction != null && currentAction.Run())
+            try
             {
-                currentAction.OnEnd();
+                int perFrame = 100;
+                for (int i = 0; i < perFrame; i++)
+                {
+                    if (currentAction != null && currentAction.Run())
+                    {
+                        currentAction.OnEnd();
 
-                control.TransitToNext(commands);
+                        control.TransitToNext(commands);
 
-                TryToStartCurrentAction();
-            }
+                        TryToStartCurrentAction();
+                    }
 
-            if (currentAction == null)
-            {
-                // 実行できるアクションがないので終了とする
-                return true;
-            }
-            else
-            {
+                    if (currentAction == null)
+                    {
+                        // 実行できるアクションがないので終了とする
+                        return true;
+                    }
+                }
                 // 実行できるアクションがあるので終了しない
                 return false;
+            }
+            catch (System.Exception e)
+            {
+                throw e;
             }
         }
 
@@ -66,6 +80,7 @@ namespace UI.Action
                 commands[control.CurrentActNo].Visit(actionFactory);
                 currentAction = actionFactory.GeneratedAction;
                 currentAction.OnStart();
+                Debug.Log($"Start script of MapId: {context.MapId.Value}, EventId: {context.EventId.Value}, CommonId: {context.CommonEventId?.Value}, Line: {control.CurrentActNo}");
             }
         }
     }

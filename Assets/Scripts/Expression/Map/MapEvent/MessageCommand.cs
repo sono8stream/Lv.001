@@ -6,22 +6,16 @@ namespace Expression.Map.MapEvent
 {
     public class MessageCommand : EventCommandBase
     {
-        public List<Common.IDataAccessorFactory<string>> StringFactories { get; private set; }
+        public CommandFactory.IStringFactory StringFactory { get; private set; }
 
-        public MessageCommand(List<Common.IDataAccessorFactory<string>> stringFactories)
+        public MessageCommand(CommandFactory.IStringFactory stringFactory)
         {
-            StringFactories = stringFactories;
+            StringFactory = stringFactory;
         }
 
         public override void Visit(ICommandVisitor visitor)
         {
             visitor.OnVisitMessageCommand(this);
-        }
-
-        public List<Common.IDataAccessor<string>> GetAccessors(CommandVisitContext context)
-        {
-            var accessors = StringFactories.Select(a => a.Create(context)).ToList();
-            return accessors;
         }
     }
 }

@@ -61,6 +61,25 @@ namespace Expression.Map.MapEvent.Command
                 return new Event.CommonEventStringAccessor(
                     new Event.CommonEventId(context.CommonEventId.Value), variableId);
             }
+            else if (rawStr.StartsWith("\\sdb["))
+            {
+                // システムDBの変数呼び出し
+                // []内を取得
+                string fieldStr = rawStr.Substring("\\self[".Length, rawStr.Length - "\\self[]".Length);
+                if (int.TryParse(fieldStr, out int variableId))
+                {
+                    // ID変換できない場合は定数として返す
+                    return new Common.ConstDataAccessor<string>(rawStr);
+                }
+                if (context.CommonEventId == null)
+                {
+                    // コモンイベントから呼び出されていない場合は0を返す
+                    return new Common.ConstDataAccessor<string>("0");
+                }
+
+                return new Event.CommonEventStringAccessor(
+                    new Event.CommonEventId(context.CommonEventId.Value), variableId);
+            }
 
             // 特殊条件以外の場合、定数を取得
             return new Common.ConstDataAccessor<string>(rawStr);

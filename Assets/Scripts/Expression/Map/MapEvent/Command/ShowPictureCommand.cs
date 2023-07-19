@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Expression.Map.MapEvent.CommandFactory;
 
 namespace Expression.Map.MapEvent.Command
 {
     public class ShowPictureCommand : EventCommandBase
     {
         public int Id { get; private set; }
-        public string FilePath { get; private set; }
+        public IStringFactory FilePathFactory { get; private set; }
         public PicturePivotPattern PivotPattern { get; private set; }
         public int X { get; private set; }
         public int Y { get; private set; }
@@ -15,7 +16,7 @@ namespace Expression.Map.MapEvent.Command
         public ShowPictureCommand(int id, string filePath, PicturePivotPattern posPattern, int x, int y, float scale)
         {
             Id = id;
-            FilePath = String.Copy(filePath);
+            FilePathFactory = new WolfStringFactory(filePath);
             PivotPattern = posPattern;
             X = x;
             Y = y;

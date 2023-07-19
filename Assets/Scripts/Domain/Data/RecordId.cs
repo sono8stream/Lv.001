@@ -6,24 +6,24 @@ namespace Domain.Data
 {
     public class RecordId
     {
-        private int value;
+        public int Value { get; private set; }
         private string name;
 
         public RecordId(int value,string name)
         {
-            this.value = value;
+            this.Value = value;
             this.name = name;
         }
 
         public RecordId(int value)
         {
-            this.value = value;
+            this.Value = value;
             this.name = "";
         }
 
         public override int GetHashCode()
         {
-            return value.GetHashCode();
+            return Value.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -34,7 +34,7 @@ namespace Domain.Data
                 return false;
             }
 
-            return this.value == other.value;
+            return this.Value == other.Value;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UI.Action;
 using Expression.Map.MapEvent;
 using Expression.Map.MapEvent.Command;
+using Expression.Common;
 
 namespace UI.Map
 {
@@ -37,8 +38,8 @@ namespace UI.Map
         public void OnVisitMessageCommand(MessageCommand command)
         {
             List<ActionBase> actions = new List<ActionBase>();
-            var accessors = command.GetAccessors(commandVisitContext);
-            actions.Add(new ShowMessageAction(accessors, actionEnv));
+            string message = command.StringFactory.GenerateMessage(commandVisitContext);
+            actions.Add(new ShowMessageAction(message, actionEnv));
             actions.Add(new WaitForInputAction());
             actions.Add(new CloseMessageAction(actionEnv, false));
 
@@ -84,7 +85,8 @@ namespace UI.Map
 
         public void OnVisitShowPictureCommand(ShowPictureCommand command)
         {
-            string imagePath = $"{Application.streamingAssetsPath}/Data/" + command.FilePath;
+            string imagePath = $"{Application.streamingAssetsPath}/Data/"
+                + command.FilePathFactory.GenerateMessage(commandVisitContext);
             byte[] baseTexBytes = Util.Common.FileLoader.LoadSync(imagePath);
 
             Texture2D texture = new Texture2D(0, 0);
@@ -100,9 +102,9 @@ namespace UI.Map
 
         public void OnVisitCallEventCommand(CallEventCommand command)
         {
+            var actionFactory = new EventActionFactory(actionEnv, commandVisitContext, command.NumberFactories,
+                command.HasReturnValue, command.ReturnDestinationAccessor);
             IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
-            // ここでVisitorを介してイベントデータからアクションを生成する
-            var actionFactory = new EventActionFactory(actionEnv, commandVisitContext);
             GeneratedAction = actionFactory.GenerateAction(accessor.GetEvent());
         }
     }
