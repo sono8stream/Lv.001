@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Expression.Map.MapEvent;
 
 namespace Expression.Map
 {
@@ -38,11 +39,13 @@ namespace Expression.Map
                 // 00 00 00 00のスキップ
                 reader.ReadInt(offset, true, out offset);
 
-                List<MapEvent.EventPageData> eventPages = new List<MapEvent.EventPageData>();
+                List<EventPageData> eventPages = new List<EventPageData>();
+                WolfEventCommandFactory factory = new WolfEventCommandFactory();
                 for (int i = 0; i < pageCount; i++)
                 {
                     // イベントページの読み込み
-                    eventPages.Add(ReadEventPageData(reader, mapTexture, eventId, offset, out offset));
+                    eventPages.Add(ReadEventPageData(reader, mapTexture, eventId, offset,
+                        out offset, factory));
                 }
 
                 // フッタースキップ
@@ -60,7 +63,8 @@ namespace Expression.Map
         }
 
         private MapEvent.EventPageData ReadEventPageData(Util.Wolf.WolfDataReader reader, Texture2D mapTexture,
-            MapEvent.EventId eventId, int offset, out int nextOffset)
+            MapEvent.EventId eventId, int offset, out int nextOffset,
+            WolfEventCommandFactory commandFactory)
         {
             // ヘッダースキップ
             int hh = reader.ReadByte(offset, out offset);
@@ -87,12 +91,13 @@ namespace Expression.Map
             int triggerFlagRight3 = reader.ReadInt(offset, true, out offset);
             int triggerFlagRight4 = reader.ReadInt(offset, true, out offset);
 
-            MapEvent.EventMoveData moveData = ReadEventMoveRoute(reader, offset, out offset);
+            EventMoveData moveData = ReadEventMoveRoute(reader, offset, out offset);
 
             int eventCommandCount = reader.ReadInt(offset, true, out offset);
             Debug.Log($"イベントコマンド数：{eventCommandCount}");
             // デバッグここまでOK
-            MapEvent.EventCommandBase[] commands = ReadEventCommands(reader, eventCommandCount, offset, out offset);
+            EventCommandBase[] commands = ReadEventCommands(reader, eventCommandCount, offset,
+                out offset, commandFactory);
 
             // イベントコマンドフッタースキップ
             reader.ReadInt(offset, true, out offset);
@@ -226,15 +231,14 @@ namespace Expression.Map
 
         // 【暫定】詳細定義していないコマンドは空読み
         private MapEvent.EventCommandBase[] ReadEventCommands(Util.Wolf.WolfDataReader reader,
-            int eventCommandCount, int offset, out int nextOffset)
+            int eventCommandCount, int offset, out int nextOffset, WolfEventCommandFactory commandFactory)
         {
             int currentOffset = offset;
-            MapEvent.WolfEventCommandFactory factory = new MapEvent.WolfEventCommandFactory(reader, currentOffset);
             List<MapEvent.EventCommandBase> commands = new List<MapEvent.EventCommandBase>();
             for (int i = 0; i < eventCommandCount; i++)
             {
                 // 一つ一つのコマンドを読み取る
-                commands.Add(factory.Create(out currentOffset));
+                commands.Add(commandFactory.Create(reader, currentOffset, out currentOffset));
             }
             nextOffset = currentOffset;
 
