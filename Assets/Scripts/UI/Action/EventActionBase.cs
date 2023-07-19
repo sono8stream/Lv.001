@@ -45,26 +45,26 @@ namespace UI.Action
         {
             try
             {
-                int perFrame = 100;
-                for (int i = 0; i < perFrame; i++)
+                // 【暫定】高速実行できるようにする。いっぺんに実行すると待ちイベントなどもスキップされるので要注意。
+                while (currentAction != null && currentAction.Run())
                 {
-                    if (currentAction != null && currentAction.Run())
-                    {
-                        currentAction.OnEnd();
+                    currentAction.OnEnd();
 
-                        control.TransitToNext(commands);
+                    control.TransitToNext(commands);
 
-                        TryToStartCurrentAction();
-                    }
-
-                    if (currentAction == null)
-                    {
-                        // 実行できるアクションがないので終了とする
-                        return true;
-                    }
+                    TryToStartCurrentAction();
                 }
-                // 実行できるアクションがあるので終了しない
-                return false;
+
+                if (currentAction == null)
+                {
+                    // 実行できるアクションがないので終了とする
+                    return true;
+                }
+                else
+                {
+                    // 実行できるアクションがあるので終了しない
+                    return false;
+                }
             }
             catch (System.Exception e)
             {

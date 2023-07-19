@@ -38,16 +38,18 @@ namespace Infrastructure
             var reader = new WolfDataReader(dirPath);
             int offset = 11;// オフセットスキップ
             int eventCount = reader.ReadInt(offset, true, out offset);
+            WolfEventCommandFactory commandFactory = new WolfEventCommandFactory();
 
             for (int i = 0; i < eventCount; i++)
             {
                 // イベントを読み出す
                 var id = new CommonEventId(i);
-                commandsDict.Add(id, ReadCommonEvent(reader, ref offset));
+                commandsDict.Add(id, ReadCommonEvent(reader, ref offset, commandFactory));
             }
         }
 
-        private CommonEvent ReadCommonEvent(WolfDataReader reader, ref int offset)
+        private CommonEvent ReadCommonEvent(WolfDataReader reader, ref int offset,
+            WolfEventCommandFactory commandFactory)
         {
             reader.ReadByte(offset, out offset);// ヘッダーはスキップ
             int eventIdRaw = reader.ReadInt(offset, true, out offset);
@@ -63,11 +65,12 @@ namespace Infrastructure
             string eventName = reader.ReadString(offset, out offset);
             int eventCommandLength = reader.ReadInt(offset, true, out offset);
             EventCommandBase[] commands = new EventCommandBase[eventCommandLength];
-            WolfEventCommandFactory factory = new WolfEventCommandFactory(reader, offset);
+
             for (int i = 0; i < eventCommandLength; i++)
             {
-                commands[i] = factory.Create(out offset);
+                commands[i] = commandFactory.Create(reader, offset, out offset);
             }
+
             reader.ReadBytes(offset, 5, out offset);// スキップ
 
             string memo = reader.ReadString(offset, out offset);

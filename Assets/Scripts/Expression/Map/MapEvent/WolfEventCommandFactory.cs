@@ -7,22 +7,18 @@ namespace Expression.Map.MapEvent
 {
     public class WolfEventCommandFactory
     {
-        WolfDataReader reader;
-        int startOffset;
         Dictionary<int, CommandFactory.WolfEventCommandFactoryInterface> factories;
 
-        public WolfEventCommandFactory(WolfDataReader reader, int startOffset)
+        public WolfEventCommandFactory()
         {
-            this.reader = reader;
-            this.startOffset = startOffset;
-
             InitializeFactoryDict();
         }
 
-        public EventCommandBase Create(out int nextOffset)
+        public EventCommandBase Create(WolfDataReader reader, int offset, out int nextOffset)
         {
-            int currentOffset = startOffset;
-            MetaEventCommand metaCommand = ReadCommand(currentOffset, out currentOffset);
+
+            int currentOffset = offset;
+            MetaEventCommand metaCommand = ReadCommand(reader, currentOffset, out currentOffset);
 
             EventCommandBase command = new EventCommandBase();
 
@@ -77,7 +73,7 @@ namespace Expression.Map.MapEvent
                 default:
                     if (metaCommand.FooterValue == 1)
                     {
-                        ReadEventMoveRoute(currentOffset, out currentOffset);
+                        ReadEventMoveRoute(reader, currentOffset, out currentOffset);
                     }
                     break;
             }
@@ -88,11 +84,10 @@ namespace Expression.Map.MapEvent
             }
 
             nextOffset = currentOffset;
-            startOffset = currentOffset;
             return command;
         }
 
-        private MetaEventCommand ReadCommand(int offset, out int nextOffset)
+        private MetaEventCommand ReadCommand(WolfDataReader reader, int offset, out int nextOffset)
         {
             int currentOffset = offset;
 
@@ -276,7 +271,7 @@ namespace Expression.Map.MapEvent
         }
 
         // 【暫定】モデル定義までデータを空読み
-        private void ReadEventMoveRoute(int offset, out int nextOffset)
+        private void ReadEventMoveRoute(WolfDataReader reader, int offset, out int nextOffset)
         {
             int currentOffset = offset;
             int animationSpeed = reader.ReadByte(currentOffset, out currentOffset);
