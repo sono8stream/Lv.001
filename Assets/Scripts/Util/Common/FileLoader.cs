@@ -13,7 +13,7 @@ namespace Util.Common
     {
         public static byte[] LoadSync(string path)
         {
-            //Debug.Log(path);
+            Debug.Log(path);
             byte[] res = null;
 
             using (var request = UnityWebRequest.Get(path))
