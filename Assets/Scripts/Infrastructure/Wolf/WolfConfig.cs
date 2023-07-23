@@ -28,9 +28,9 @@ namespace Infrastructure
                 case DatabaseType.System:
                     return "SysDatabase";
                 case DatabaseType.Changable:
-                    return "CDatabase";
+                    return "CDataBase";
                 case DatabaseType.User:
-                    return "Database";
+                    return "DataBase";
                 default:
                     throw new System.Exception("–¢À‘•‚ÌƒGƒ‰[í•Ê");
             }
