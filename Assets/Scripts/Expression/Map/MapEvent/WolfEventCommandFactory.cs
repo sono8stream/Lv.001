@@ -25,12 +25,6 @@ namespace Expression.Map.MapEvent
             int commandKey = metaCommand.NumberArgs[0];
             switch (commandKey)
             {
-                case 0x00000065:
-                    {
-                        var factory = new CommandFactory.WolfShowTextCommandFactory();
-                        command = factory.Create(metaCommand);
-                    }
-                    break;
                 case 0x00000067:
                     // デバッグ文。処理なし
                     break;
@@ -45,24 +39,6 @@ namespace Expression.Map.MapEvent
                     break;
                 case 0x00000082:
                     command = CreateMovePositionCommand(metaCommand);
-                    break;
-                case 0x00000096:
-                    {
-                        var factory = new CommandFactory.WolfPictureCommandFactory();
-                        command = factory.Create(metaCommand);
-                    }
-                    break;
-                case 0x000000D2:
-                    {
-                        var factory = new CommandFactory.WolfCallEventByIdCommandFactory();
-                        command = factory.Create(metaCommand);
-                    }
-                    break;
-                case 0x0000012C:
-                    {
-                        var factory = new CommandFactory.WolfCallEventByNameCommandFactory();
-                        command = factory.Create(metaCommand);
-                    }
                     break;
                 case 0x00000191:
                     command = CreateForkBeginCommand(metaCommand);
@@ -307,6 +283,10 @@ namespace Expression.Map.MapEvent
         private void InitializeFactoryDict()
         {
             factories = new Dictionary<int, CommandFactory.WolfEventCommandFactoryInterface>();
+            factories.Add(0x00000065,new CommandFactory.WolfShowTextCommandFactory());
+            factories.Add(0x00000096, new CommandFactory.WolfPictureCommandFactory());
+            factories.Add(0x000000D2, new CommandFactory.WolfCallEventByIdCommandFactory());
+            factories.Add(0x0000012C, new CommandFactory.WolfCallEventByNameCommandFactory());
             factories.Add(0x000000FA, new CommandFactory.WolfOperateDbCommandFactory());
         }
     }
