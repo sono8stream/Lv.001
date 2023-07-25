@@ -24,19 +24,20 @@ namespace Expression.Map.MapEvent.CommandFactory
                     int y = metaCommand.NumberArgs[9];
                     float scale = metaCommand.NumberArgs[10] * 0.01f;// 拡大率。X/Y別カウントのケースは未実装
 
-                    return new ShowPictureCommand(pictureId, imagePath, posPattern, x, y, scale);
+                    return new ShowPictureCommand(metaCommand.IndentDepth, pictureId,
+                        imagePath, posPattern, x, y, scale);
                 }
 
-                return new EventCommandBase();
+                return new EventCommandBase(metaCommand.IndentDepth);
             }
             else if (operationType == 0x02)
             {
                 int pictureId = metaCommand.NumberArgs[2];
-                return new RemovePictureCommand(pictureId);
+                return new RemovePictureCommand(metaCommand.IndentDepth, pictureId);
             }
             else
             {
-                return new EventCommandBase();
+                return new EventCommandBase(metaCommand.IndentDepth);
             }
         }
 

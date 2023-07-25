@@ -10,7 +10,7 @@ namespace Expression.Map.MapEvent.CommandFactory
         {
             string text = metaCommand.StringArgs[0];
             IStringFactory factory = new WolfStringFactory(text);
-            return new MessageCommand(factory);
+            return new Command.MessageCommand(metaCommand.IndentDepth, factory);
         }
     }
 }

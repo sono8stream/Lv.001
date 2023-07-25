@@ -8,7 +8,7 @@ namespace Expression.Map.MapEvent
     {
         public string LabelString { get; private set; }
 
-        public ForkEndCommand(int indent)
+        public ForkEndCommand(int indent) : base(indent)
         {
             LabelString = $"{indent}.{0}";
         }

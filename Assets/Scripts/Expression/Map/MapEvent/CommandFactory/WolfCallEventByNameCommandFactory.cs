@@ -27,7 +27,8 @@ namespace Expression.Map.MapEvent.CommandFactory
             IDataAccessorFactory<int> returnDataAccessorFactory
                 = new WolfIntAccessorFactory(false, returnDestinationRaw);
 
-            return new Command.CallEventCommand(numberFactories, metaCommand.StringArgs, factory,
+            return new Command.CallEventCommand(metaCommand.IndentDepth,
+                numberFactories, metaCommand.StringArgs, factory,
                 haveReturnValue, returnDataAccessorFactory);
         }
     }

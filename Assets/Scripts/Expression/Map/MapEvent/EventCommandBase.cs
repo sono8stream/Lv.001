@@ -6,9 +6,11 @@ namespace Expression.Map.MapEvent
 {
     public class EventCommandBase
     {
+        public int IndentDepth { get; private set; }
 
-        public EventCommandBase()
+        public EventCommandBase(int indentDepth)
         {
+            IndentDepth = indentDepth;
         }
 
         public virtual void Visit(ICommandVisitor visitor)

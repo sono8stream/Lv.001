@@ -107,5 +107,15 @@ namespace UI.Map
             IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
             GeneratedAction = actionFactory.GenerateAction(accessor.GetEvent());
         }
+
+        public void OnVisitLoopStartCommand(LoopStartCommand command)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void OnVisitLoopEndCommand(LoopEndCommand command)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

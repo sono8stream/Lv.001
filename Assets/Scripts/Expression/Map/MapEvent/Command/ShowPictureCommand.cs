@@ -13,7 +13,8 @@ namespace Expression.Map.MapEvent.Command
         public int Y { get; private set; }
         public float Scale { get; private set; }
 
-        public ShowPictureCommand(int id, string filePath, PicturePivotPattern posPattern, int x, int y, float scale)
+        public ShowPictureCommand(int indentDepth, int id, string filePath,
+            PicturePivotPattern posPattern, int x, int y, float scale) : base(indentDepth)
         {
             Id = id;
             FilePathFactory = new WolfStringFactory(filePath);
