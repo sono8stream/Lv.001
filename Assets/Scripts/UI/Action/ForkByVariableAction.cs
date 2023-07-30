@@ -33,7 +33,7 @@ namespace UI.Action
             }
 
             CommandLabel label = new CommandLabel($"{indentDepth}.{forkId}");
-            controlInfo.ReserveSkip(label);
+            controlInfo.ReserveJump(label);
             return true;
         }
     }

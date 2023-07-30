@@ -14,10 +14,42 @@ namespace UI.Action
 
         public int LoopStartPos { get; private set; }
 
-        public LoopControlInfo(int indentDepth, int loopStartPos)
+        // ループ制御のための情報を保持
+        public bool IsInfiniteLoop { get; private set; }
+
+        public int MaxLoopCount { get; private set; }
+
+        public int CurrentLoopCount { get; private set; }
+
+        public LoopControlInfo(int indentDepth, bool isInfiniteLoop, int maxLoopCount)
         {
             IndentDepth = indentDepth;
+            LoopStartPos = -1;
+
+            IsInfiniteLoop = isInfiniteLoop;
+            MaxLoopCount = maxLoopCount;
+            CurrentLoopCount = 0;
+        }
+
+        public void InitializePosition(int loopStartPos)
+        {
             LoopStartPos = loopStartPos;
+        }
+
+        public void RecordLoopExecution()
+        {
+            if (LoopStartPos == -1)
+            {
+                throw new System.Exception("開始位置を初期化していないのに実行されるのは実装ミス");
+            }
+
+            CurrentLoopCount++;
+        }
+
+        public bool IsExecutable()
+        {
+            // 無限ループか、ループ回数が上限に達するまでしか実行できない
+            return IsInfiniteLoop || CurrentLoopCount < MaxLoopCount;
         }
     }
 }

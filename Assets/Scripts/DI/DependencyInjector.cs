@@ -12,7 +12,7 @@ namespace DI
 
         public IPlayDataRepository PlayDataRepository { get; private set; }
 
-        public IMapDataRepository MapDataRepository { get; private set; }
+        public Expression.Map.IMapDataRepository MapDataRepository { get; private set; }
 
         public Expression.Map.IBaseMapDataRepository BaseMapDataRepository { get; private set; }
 

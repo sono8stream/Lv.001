@@ -110,12 +110,16 @@ namespace UI.Map
 
         public void OnVisitLoopStartCommand(LoopStartCommand command)
         {
-            throw new System.NotImplementedException();
+            // この段階ではループ開始位置が不定なので、Action実行時に注入するようにする。
+            // 【暫定】色んな所に関心ごとを要求してしまうので、美味い設計を整備したい
+            var loopControlInfo = new LoopControlInfo(command.IndentDepth,
+                command.IsInfinite, command.LoopCount);
+            GeneratedAction = new LoopStartAction(controlInfo, loopControlInfo);
         }
 
         public void OnVisitLoopEndCommand(LoopEndCommand command)
         {
-            throw new System.NotImplementedException();
+            GeneratedAction = new LoopEndAction(controlInfo);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Expression.Map.MapEvent.Command
 
         public LoopStartCommand(int indentDepth, bool isInfinite, int loopCount) : base(indentDepth)
         {
-            IsInfinite = IsInfinite;
+            IsInfinite = isInfinite;
             LoopCount = loopCount;
         }
 

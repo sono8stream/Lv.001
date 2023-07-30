@@ -14,12 +14,10 @@ namespace UI.Action
 
         public CommandLabel SkipLabel { get; private set; }
 
-        public Stack<LoopControlInfo> LoopStartNos { get; private set; }
+        public Stack<LoopControlInfo> LoopControlInfos { get; private set; }
 
         // 本来は遷移ロジックをクラス化してストラテジっぽくするのが良いのだろう
         private TransitType transitType;
-        private int jumpIndentDepth;
-        private int jumpSteps;// 分岐で飛び越えるカウント
 
         public ActionControl()
         {
@@ -33,14 +31,14 @@ namespace UI.Action
         {
             CurrentActNo = 0;
             SkipLabel = null;
-            LoopStartNos = new Stack<LoopControlInfo>();
+            LoopControlInfos = new Stack<LoopControlInfo>();
             transitType = TransitType.Sequential;
         }
 
         /// <summary>
-        /// 特定のアクションまでスキップするための予約を行う
+        /// 特定のアクションまでジャンプするための予約を行う
         /// </summary>
-        public void ReserveSkip(CommandLabel label)
+        public void ReserveJump(CommandLabel label)
         {
             if (label == null)
             {
@@ -51,25 +49,19 @@ namespace UI.Action
             SkipLabel = label;
         }
 
-        /// <summary>
-        /// 特定のアクションまでスキップする
-        /// </summary>
-        public void Reserve()
+        public void StartLoop(LoopControlInfo loopControlInfo)
         {
-
-        }
-
-        public void SetLoopStart(int indent)
-        {
-            LoopStartNos.Push(new LoopControlInfo(indent, CurrentActNo));
+            loopControlInfo.InitializePosition(CurrentActNo);
+            LoopControlInfos.Push(loopControlInfo);
+            transitType = TransitType.DoLoop;// ループ初回実行
         }
 
         /// <summary>
-        /// ループの始点までジャンプし、条件チェックを再度行う
+        /// ループ突入フローに入る
         /// </summary>
-        public void ReserveLoopTopJump()
+        public void ReserveDoLoop()
         {
-            transitType = TransitType.LoopTop;
+            transitType = TransitType.DoLoop;
         }
 
         /// <summary>
@@ -77,12 +69,10 @@ namespace UI.Action
         /// </summary>
         public void ReserveLoopBreak(int indentDepth)
         {
-            LoopStartNos.Pop();
             transitType = TransitType.LoopBreak;
-            jumpIndentDepth = indentDepth;
         }
 
-        public void TransitToNext(EventCommandBase[] commands)
+        public void TransitToNext(in EventCommandBase[] commands)
         {
             switch (transitType)
             {
@@ -118,34 +108,30 @@ namespace UI.Action
                         SkipLabel = null;
                     }
                     break;
-                case TransitType.LoopTop:
+                case TransitType.DoLoop:
                     {
-                        if (LoopStartNos.Count == 0)
+                        // ループに突入できるならループ先頭に戻る。だめならループを抜ける
+                        if (LoopControlInfos.Count == 0)
                         {
                             throw new System.Exception("ループ内にいないのは想定外");
                         }
 
-                        CurrentActNo = LoopStartNos.Peek().LoopStartPos;
+                        var info = LoopControlInfos.Peek();
+                        if (info.IsExecutable())
+                        {
+                            info.RecordLoopExecution();// ループ開始したことを記録しておく
+                            CurrentActNo = info.LoopStartPos + 1;
+                        }
+                        else
+                        {
+                            // ループブレークと同じ処理
+                            BreakLoop(commands);
+                        }
                     }
                     break;
                 case TransitType.LoopBreak:
                     {
-                        // 次に同じインデント深さになる位置までジャンプする
-                        int jumpActNo = -1;
-                        for (int i = CurrentActNo + 1; i < commands.Length; i++)
-                        {
-                            if (commands[i].IndentDepth == jumpIndentDepth)
-                            {
-                                jumpActNo = i;
-                                break;
-                            }
-                        }
-                        if (jumpActNo == -1)
-                        {
-                            throw new System.Exception("インデントが閉じられていないのは想定外");
-                        }
-
-                        CurrentActNo = jumpActNo + 1;
+                        BreakLoop(commands);
                     }
                     break;
             }
@@ -154,11 +140,35 @@ namespace UI.Action
             transitType = TransitType.Sequential;
         }
 
+        private void BreakLoop(in EventCommandBase[] commands)
+        {
+            // 次に同じインデント深さになる位置までジャンプする
+            int jumpActNo = -1;
+
+            var loopInfo = LoopControlInfos.Peek();
+            for (int i = loopInfo.LoopStartPos + 1; i < commands.Length; i++)
+            {
+                if (commands[i].IndentDepth == loopInfo.IndentDepth)
+                {
+                    jumpActNo = i;
+                    break;
+                }
+            }
+            if (jumpActNo == -1)
+            {
+                throw new System.Exception("インデントが閉じられていないのは想定外");
+            }
+
+            // ジャンプするのはループ末尾の次のコマンド
+            CurrentActNo = jumpActNo + 1;
+            LoopControlInfos.Pop();
+        }
+
         private enum TransitType
         {
             Sequential,
             Jump,
-            LoopTop,
+            DoLoop,
             LoopBreak,
         }
     }

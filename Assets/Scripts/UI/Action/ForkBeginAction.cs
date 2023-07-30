@@ -24,7 +24,7 @@ namespace UI.Action
         {
             // ここに到達する場合は前段の分岐ブロックから遷移してきた場合のみ。よって分岐終端までスキップする
             CommandLabel label = new CommandLabel($"{indentDepth}.{0}");
-            controlInfo.ReserveSkip(label);
+            controlInfo.ReserveJump(label);
 
             return base.Run();
         }

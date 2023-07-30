@@ -39,7 +39,7 @@ namespace UI.Action
             }
 
             CommandLabel label = new CommandLabel(actionEnv.ChoiceName);
-            controlInfo.ReserveSkip(label);
+            controlInfo.ReserveJump(label);
             return true;
         }
     }
