@@ -14,7 +14,7 @@ namespace DI
 
         public IMapDataRepository MapDataRepository { get; private set; }
 
-        public IBaseMapDataRepository BaseMapDataRepository { get; private set; }
+        public Expression.Map.IBaseMapDataRepository BaseMapDataRepository { get; private set; }
 
         public IExpressionDataRepository MapEventStateRpository { get; private set; }
 

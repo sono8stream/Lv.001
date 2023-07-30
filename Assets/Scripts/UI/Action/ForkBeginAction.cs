@@ -22,7 +22,7 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            // 前段の分岐ブロックから遷移してきたので，分岐終端までスキップする
+            // ここに到達する場合は前段の分岐ブロックから遷移してきた場合のみ。よって分岐終端までスキップする
             CommandLabel label = new CommandLabel($"{indentDepth}.{0}");
             controlInfo.ReserveSkip(label);
 

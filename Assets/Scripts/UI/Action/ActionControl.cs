@@ -14,9 +14,12 @@ namespace UI.Action
 
         public CommandLabel SkipLabel { get; private set; }
 
-        public Stack<int> LoopStartNos { get; private set; }
+        public Stack<LoopControlInfo> LoopStartNos { get; private set; }
 
+        // 本来は遷移ロジックをクラス化してストラテジっぽくするのが良いのだろう
         private TransitType transitType;
+        private int jumpIndentDepth;
+        private int jumpSteps;// 分岐で飛び越えるカウント
 
         public ActionControl()
         {
@@ -30,7 +33,7 @@ namespace UI.Action
         {
             CurrentActNo = 0;
             SkipLabel = null;
-            LoopStartNos = new Stack<int>();
+            LoopStartNos = new Stack<LoopControlInfo>();
             transitType = TransitType.Sequential;
         }
 
@@ -48,29 +51,35 @@ namespace UI.Action
             SkipLabel = label;
         }
 
-        public void SetLoopStart()
+        /// <summary>
+        /// 特定のアクションまでスキップする
+        /// </summary>
+        public void Reserve()
         {
-            LoopStartNos.Push(CurrentActNo);
+
         }
 
+        public void SetLoopStart(int indent)
+        {
+            LoopStartNos.Push(new LoopControlInfo(indent, CurrentActNo));
+        }
+
+        /// <summary>
+        /// ループの始点までジャンプし、条件チェックを再度行う
+        /// </summary>
         public void ReserveLoopTopJump()
         {
             transitType = TransitType.LoopTop;
         }
 
         /// <summary>
-        /// 特定のアクションまでスキップするための予約を行う
+        /// ループ処理の終端までジャンプする遷移を予約
         /// </summary>
-        public void ReserveLoopBreak(CommandLabel label)
+        public void ReserveLoopBreak(int indentDepth)
         {
-            if (label == null)
-            {
-                return;
-            }
-
             LoopStartNos.Pop();
-            transitType = TransitType.Jump;
-            SkipLabel = label;
+            transitType = TransitType.LoopBreak;
+            jumpIndentDepth = indentDepth;
         }
 
         public void TransitToNext(EventCommandBase[] commands)
@@ -116,7 +125,27 @@ namespace UI.Action
                             throw new System.Exception("ループ内にいないのは想定外");
                         }
 
-                        CurrentActNo = LoopStartNos.Peek();
+                        CurrentActNo = LoopStartNos.Peek().LoopStartPos;
+                    }
+                    break;
+                case TransitType.LoopBreak:
+                    {
+                        // 次に同じインデント深さになる位置までジャンプする
+                        int jumpActNo = -1;
+                        for (int i = CurrentActNo + 1; i < commands.Length; i++)
+                        {
+                            if (commands[i].IndentDepth == jumpIndentDepth)
+                            {
+                                jumpActNo = i;
+                                break;
+                            }
+                        }
+                        if (jumpActNo == -1)
+                        {
+                            throw new System.Exception("インデントが閉じられていないのは想定外");
+                        }
+
+                        CurrentActNo = jumpActNo + 1;
                     }
                     break;
             }
@@ -130,6 +159,7 @@ namespace UI.Action
             Sequential,
             Jump,
             LoopTop,
+            LoopBreak,
         }
     }
 }

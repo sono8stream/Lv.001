@@ -8,7 +8,7 @@ namespace Infrastructure
     /// <summary>
     /// マップ情報を読み出すためのインターフェース
     /// </summary>
-    public interface IMapDataRepository : IRepository<MapData, MapId>
+    public interface IMapDataRepository : Common.IRepository<MapData, MapId>
     {
         public int GetCount();
     }
