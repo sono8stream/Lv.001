@@ -12,8 +12,9 @@ namespace Expression.Map.MapEvent.CommandFactory
 
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
-            int loopCount = isInfinite ? 0 : metaCommand.NumberArgs[1];
-            return new Command.LoopStartCommand(metaCommand.IndentDepth, isInfinite, loopCount);
+            int loopCountRaw = isInfinite ? 0 : metaCommand.NumberArgs[1];
+            var loopCountAccessorFactory = new Command.WolfIntAccessorFactory(false, loopCountRaw);
+            return new Command.LoopStartCommand(metaCommand.IndentDepth, isInfinite, loopCountAccessorFactory);
         }
     }
 }
