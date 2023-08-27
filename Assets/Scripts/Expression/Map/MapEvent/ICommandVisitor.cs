@@ -22,5 +22,7 @@ namespace Expression.Map.MapEvent
 
         public void OnVisitLoopEndCommand(Command.LoopEndCommand command);
 
+        public void OnVisitLoopBreakCommand(Command.LoopBreakCommand command);
+
     }
 }

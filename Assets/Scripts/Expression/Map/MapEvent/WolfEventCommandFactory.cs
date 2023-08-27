@@ -129,7 +129,7 @@ namespace Expression.Map.MapEvent
             Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, flagLeft);
 
             Common.IDataAccessorFactory<int> rightAccessorFactory;
-            bool isConst = (rightAndCompareParams >> 4) == 0;
+            bool isConst = (rightAndCompareParams >> 4) > 0;
             rightAccessorFactory = new Command.WolfIntAccessorFactory(isConst, flagRight);
 
             OperatorType operatorType = (OperatorType)Enum.ToObject(typeof(OperatorType), rightAndCompareParams % (1 << 4));
@@ -286,6 +286,7 @@ namespace Expression.Map.MapEvent
             factories.Add(0x00000065, new CommandFactory.WolfShowTextCommandFactory());
             factories.Add(0x00000096, new CommandFactory.WolfPictureCommandFactory());
             factories.Add(0x000000AA, new CommandFactory.WolfLoopStartCommandFactory(true));
+            factories.Add(0x000000AB, new CommandFactory.WolfLoopBreakCommandFactory());
             factories.Add(0x000000B3, new CommandFactory.WolfLoopStartCommandFactory(false));
             factories.Add(0x000000D2, new CommandFactory.WolfCallEventByIdCommandFactory());
             factories.Add(0x000000FA, new CommandFactory.WolfOperateDbCommandFactory());

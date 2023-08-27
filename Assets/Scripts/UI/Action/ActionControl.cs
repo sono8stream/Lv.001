@@ -67,7 +67,7 @@ namespace UI.Action
         /// <summary>
         /// ループ処理の終端までジャンプする遷移を予約
         /// </summary>
-        public void ReserveLoopBreak(int indentDepth)
+        public void ReserveLoopBreak()
         {
             transitType = TransitType.LoopBreak;
         }

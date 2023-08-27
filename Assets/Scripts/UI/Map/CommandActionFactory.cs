@@ -121,5 +121,10 @@ namespace UI.Map
         {
             GeneratedAction = new LoopEndAction(controlInfo);
         }
+
+        public void OnVisitLoopBreakCommand(LoopBreakCommand command)
+        {
+            GeneratedAction=new LoopBreakAction(controlInfo);
+        }
     }
 }
