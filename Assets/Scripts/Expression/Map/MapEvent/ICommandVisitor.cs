@@ -6,7 +6,7 @@ namespace Expression.Map.MapEvent
 {
     public interface ICommandVisitor
     {
-        public void OnVisitMessageCommand(MessageCommand command);
+        public void OnVisitMessageCommand(Command.MessageCommand command);
         public void OnVisitChoiceForkCommand(ChoiceForkCommand command);
         public void OnVisitForkBeginCommand(ForkBeginCommand command);
         public void OnVisitForkEndCommand(ForkEndCommand command);
@@ -17,6 +17,12 @@ namespace Expression.Map.MapEvent
         public void OnVisitShowPictureCommand(Command.ShowPictureCommand command);
         public void OnVisitRemovePictureCommand(Command.RemovePictureCommand command);
         public void OnVisitCallEventCommand(Command.CallEventCommand command);
+
+        public void OnVisitLoopStartCommand(Command.LoopStartCommand command);
+
+        public void OnVisitLoopEndCommand(Command.LoopEndCommand command);
+
+        public void OnVisitLoopBreakCommand(Command.LoopBreakCommand command);
 
     }
 }

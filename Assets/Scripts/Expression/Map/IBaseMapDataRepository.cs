@@ -1,6 +1,6 @@
-using Expression.Map;
+using Common;
 
-namespace Infrastructure
+namespace Expression.Map
 {
     /// <summary>
     /// HD2Dマップ情報を読み出すためのインターフェース

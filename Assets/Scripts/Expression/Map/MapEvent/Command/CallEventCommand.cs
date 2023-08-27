@@ -17,9 +17,10 @@ namespace Expression.Map.MapEvent.Command
         // 戻り値を返す先への参照
         public IDataAccessorFactory<int> ReturnDestinationAccessor { get; private set; }
 
-        public CallEventCommand(Common.IDataAccessorFactory<int>[] numberFactories,
+        public CallEventCommand(int indentDepth,
+            Common.IDataAccessorFactory<int>[] numberFactories,
             string[] stringArgs, IEventDataAccessorFactory eventDataAccessorFactory,
-            bool hasReturnValue, IDataAccessorFactory<int> returnDestinationAccessor)
+            bool hasReturnValue, IDataAccessorFactory<int> returnDestinationAccessor) : base(indentDepth)
         {
             NumberFactories = numberFactories;
             StringArgs = stringArgs;

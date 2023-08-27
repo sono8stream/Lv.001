@@ -12,7 +12,7 @@ namespace Expression.Map.MapEvent
 
         public int Y { get; private set; }
 
-        public MovePositionCommand(EventId eventId, int x, int y, MapId mapId)
+        public MovePositionCommand(int indentDepth, EventId eventId, int x, int y, MapId mapId) : base(indentDepth)
         {
             EventId = eventId;
             X = x;

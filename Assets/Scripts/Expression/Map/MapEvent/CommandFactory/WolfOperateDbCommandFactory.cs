@@ -99,7 +99,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                 updaters[0] = new UpdaterInt(databaseAccessorFactory, targetAccessorFactory, rightAccessorFactory,
                     assignType, rightOperatorType);
 
-                return new ChangeVariableIntCommand(updaters);
+                return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);
             }
             else
             {
@@ -109,7 +109,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                 updaters[0] = new UpdaterInt(targetAccessorFactory, databaseAccessorFactory, rightAccessorFactory,
                     assignType, rightOperatorType);
 
-                return new ChangeVariableIntCommand(updaters);
+                return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);
             }
         }
 

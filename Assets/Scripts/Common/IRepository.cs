@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
-namespace Infrastructure
+namespace Common
 {
     /// <summary>
     /// データを読み出すためのリポジトリのインターフェース

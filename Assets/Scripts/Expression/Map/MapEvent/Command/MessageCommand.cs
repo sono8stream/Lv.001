@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Expression.Map.MapEvent
+namespace Expression.Map.MapEvent.Command
 {
     public class MessageCommand : EventCommandBase
     {
         public CommandFactory.IStringFactory StringFactory { get; private set; }
 
-        public MessageCommand(CommandFactory.IStringFactory stringFactory)
+        public MessageCommand(int indentDepth,
+            CommandFactory.IStringFactory stringFactory) : base(indentDepth)
         {
             StringFactory = stringFactory;
         }

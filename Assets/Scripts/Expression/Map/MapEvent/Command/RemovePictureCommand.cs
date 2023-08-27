@@ -7,7 +7,7 @@ namespace Expression.Map.MapEvent.Command
     {
         public int Id { get; private set; }
 
-        public RemovePictureCommand(int id)
+        public RemovePictureCommand(int indentDepth, int id) : base(indentDepth)
         {
             Id = id;
         }

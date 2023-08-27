@@ -8,7 +8,7 @@ namespace Expression.Map.MapEvent
     {
         public UpdaterInt[] Updaters { get; private set; }
 
-        public ChangeVariableIntCommand(UpdaterInt[] updaters)
+        public ChangeVariableIntCommand(int indentDepth, UpdaterInt[] updaters) : base(indentDepth)
         {
             Updaters = updaters;
         }

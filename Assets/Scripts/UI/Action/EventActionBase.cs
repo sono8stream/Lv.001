@@ -46,13 +46,16 @@ namespace UI.Action
             try
             {
                 // 【暫定】高速実行できるようにする。いっぺんに実行すると待ちイベントなどもスキップされるので要注意。
-                while (currentAction != null && currentAction.Run())
+                int interruptCounter = 10;// デバッグ用にイベント実行中断用のカウンタを持たせる
+                int currentCounter = 0;
+                while (currentAction != null && currentAction.Run() && currentCounter < interruptCounter)
                 {
                     currentAction.OnEnd();
 
                     control.TransitToNext(commands);
 
                     TryToStartCurrentAction();
+                    currentCounter++;
                 }
 
                 if (currentAction == null)

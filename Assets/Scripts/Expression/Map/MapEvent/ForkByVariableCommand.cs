@@ -6,12 +6,10 @@ namespace Expression.Map.MapEvent
 {
     public class ForkByVariableIntCommand : EventCommandBase
     {
-        public int IndentDepth { get; private set; }
         public ConditionInt[] Conditions { get; private set; }
 
-        public ForkByVariableIntCommand(int indentDepth, ConditionInt[] conditions)
+        public ForkByVariableIntCommand(int indentDepth, ConditionInt[] conditions) : base(indentDepth)
         {
-            IndentDepth = indentDepth;
             Conditions = conditions;
         }
 

@@ -107,5 +107,24 @@ namespace UI.Map
             IEventDataAccessor accessor = command.EventDataAccessorFactory.Create(commandVisitContext);
             GeneratedAction = actionFactory.GenerateAction(accessor.GetEvent());
         }
+
+        public void OnVisitLoopStartCommand(LoopStartCommand command)
+        {
+            // この段階ではループ開始位置が不定なので、Action実行時に注入するようにする。
+            // 【暫定】色んな所に関心ごとを要求してしまうので、美味い設計を整備したい
+            var loopControlInfo = new LoopControlInfo(command.IndentDepth,
+                command.IsInfinite, command.LoopCountAccessorFactory.Create(commandVisitContext).Get());
+            GeneratedAction = new LoopStartAction(controlInfo, loopControlInfo);
+        }
+
+        public void OnVisitLoopEndCommand(LoopEndCommand command)
+        {
+            GeneratedAction = new LoopEndAction(controlInfo);
+        }
+
+        public void OnVisitLoopBreakCommand(LoopBreakCommand command)
+        {
+            GeneratedAction=new LoopBreakAction(controlInfo);
+        }
     }
 }
