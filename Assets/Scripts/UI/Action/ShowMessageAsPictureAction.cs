@@ -41,14 +41,14 @@ namespace UI.Action
 
             // 位置・回転・スケール・アンカーなど
             Vector2 canvasSize = actionEnv.canvas.GetComponent<RectTransform>().sizeDelta;
-            RectTransform rectTransform = textObject.gameObject.AddComponent<RectTransform>();
+            RectTransform rectTransform = textObject.GetComponent<RectTransform>();
             rectTransform.sizeDelta = new Vector2(canvasSize.x, canvasSize.y);
             rectTransform.pivot = GetPivot();
             rectTransform.localScale = Vector3.one;
             rectTransform.localPosition = GetPos();
 
-            // スプライト変更
-            Text text = textObject.AddComponent<Text>();
+            // メッセージ指定
+            Text text = textObject.GetComponent<Text>();
             text.text = message;
 
             actionEnv.RegisterPicture(pictureId, textObject);
@@ -95,8 +95,10 @@ namespace UI.Action
             Vector2 canvasSize = actionEnv.canvas.GetComponent<RectTransform>().sizeDelta;
             float xLeft = -canvasSize.x * 0.5f;
             float yTop = canvasSize.y * 0.5f;
+            // 【暫定】本来はスケールは解像度に合わせて調整すべき。
+            float scale = 6;
 
-            return new Vector2(xLeft + pos.x, yTop - pos.y);
+            return new Vector2(xLeft + pos.x * scale, -yTop - pos.y * scale);
         }
     }
 }

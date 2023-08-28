@@ -25,7 +25,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                     return new ShowPictureCommand(metaCommand.IndentDepth, pictureId,
                         imagePath, posPattern, x, y, scale);
                 }
-                else if (sourceType == 0x20)
+                else if (sourceType == 0x02)
                 {
                     // •¶Žš—ñ‚ð•\Ž¦
                     string message = metaCommand.StringArgs[0];
