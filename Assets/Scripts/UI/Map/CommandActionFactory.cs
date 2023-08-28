@@ -97,9 +97,11 @@ namespace UI.Map
 
         public void OnVisitShowMessageAsPictureCommand(ShowMessageAsPictureCommand command)
         {
-            string message =command.MessageFactory.GenerateMessage(commandVisitContext);
-            GeneratedAction = new ShowMessageAsPictureAction(
-                command.Id, message, actionEnv, command.PivotPattern, command.X, command.Y);
+            int id = command.IdFactory.Create(commandVisitContext).Get();
+            string message = command.MessageFactory.GenerateMessage(commandVisitContext);
+            int x = command.XFactory.Create(commandVisitContext).Get();
+            int y = command.YFactory.Create(commandVisitContext).Get();
+            GeneratedAction = new ShowMessageAsPictureAction(id, message, actionEnv, command.PivotPattern, x, y);
         }
 
         public void OnVisitRemovePictureCommand(RemovePictureCommand command)

@@ -30,13 +30,13 @@ namespace Expression.Map.MapEvent.CommandFactory
                     // 文字列を表示
                     string message = metaCommand.StringArgs[0];
 
-                    int pictureId = metaCommand.NumberArgs[2];
-                    int x = metaCommand.NumberArgs[8];
-                    int y = metaCommand.NumberArgs[9];
+                    var pictureIdFactory = new WolfIntAccessorFactory(false, metaCommand.NumberArgs[2]);
+                    var xFactory = new WolfIntAccessorFactory(false, metaCommand.NumberArgs[8]);
+                    var yFactory = new WolfIntAccessorFactory(false, metaCommand.NumberArgs[9]);
                     float scale = metaCommand.NumberArgs[10] * 0.01f;// 拡大率。X/Y別カウントのケースは未実装
 
-                    return new ShowMessageAsPictureCommand(metaCommand.IndentDepth, pictureId,
-                        message, posPattern, x, y, scale);
+                    return new ShowMessageAsPictureCommand(metaCommand.IndentDepth, pictureIdFactory,
+                        message, posPattern, xFactory, yFactory, scale);
                 }
 
                 return new EventCommandBase(metaCommand.IndentDepth);
