@@ -19,7 +19,7 @@ namespace UI.Action
         public List<GameObject> choiceBoxes;
         public List<GameObject> choiceButtons;//選択肢リスト
         public List<GameObject> windows;//メッセージボックスリスト
-        public Dictionary<int, Image> images;//表示画像リスト
+        public Dictionary<int, GameObject> pictures;//表示ピクチャリスト。画像だったり文字だったりするのでGameObjectとして保持
 
         public string ChoiceName { get; set; }
         public string ChoiceNameSub { get; set; }
@@ -77,7 +77,7 @@ namespace UI.Action
             Map = GameObject.Find("Map").GetComponent<UI.Map.Hd2dMap>();
             Player = GameObject.Find("Player").GetComponent<UI.Map.Hd2dPlayerController>();
 
-            images = new Dictionary<int, Image>();
+            pictures = new Dictionary<int, GameObject>();
         }
 
         // Update is called once per frame
@@ -816,25 +816,25 @@ namespace UI.Action
             isCompleted = true;
         }
 
-        public void RegisterImage(int id, Image image)
+        public void RegisterPicture(int id, GameObject pictureObject)
         {
-            if (images.ContainsKey(id))
+            if (pictures.ContainsKey(id))
             {
-                Destroy(images[id].gameObject);
-                images[id] = image;
+                Destroy(pictures[id].gameObject);
+                pictures[id] = pictureObject;
             }
             else
             {
-                images.Add(id, image);
+                pictures.Add(id, pictureObject);
             }
         }
 
         public void RemoveImage(int id)
         {
-            if (images.ContainsKey(id))
+            if (pictures.ContainsKey(id))
             {
-                Destroy(images[id].gameObject);
-                images.Remove(id);
+                Destroy(pictures[id]);
+                pictures.Remove(id);
             }
         }
     }

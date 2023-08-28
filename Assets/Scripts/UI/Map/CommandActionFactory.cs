@@ -95,6 +95,13 @@ namespace UI.Map
             GeneratedAction = new ShowPictureAction(command.Id, texture, actionEnv, command.PivotPattern, command.X, command.Y, command.Scale);
         }
 
+        public void OnVisitShowMessageAsPictureCommand(ShowMessageAsPictureCommand command)
+        {
+            string message =command.MessageFactory.GenerateMessage(commandVisitContext);
+            GeneratedAction = new ShowMessageAsPictureAction(
+                command.Id, message, actionEnv, command.PivotPattern, command.X, command.Y);
+        }
+
         public void OnVisitRemovePictureCommand(RemovePictureCommand command)
         {
             GeneratedAction = new RemovePictureAction(command.Id, actionEnv);

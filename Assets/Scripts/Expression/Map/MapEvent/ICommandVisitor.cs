@@ -15,6 +15,7 @@ namespace Expression.Map.MapEvent
         public void OnVisitBaseCommand(EventCommandBase command);
         public void OnVisitMovePositionCommand(MovePositionCommand command);
         public void OnVisitShowPictureCommand(Command.ShowPictureCommand command);
+        public void OnVisitShowMessageAsPictureCommand(Command.ShowMessageAsPictureCommand command);
         public void OnVisitRemovePictureCommand(Command.RemovePictureCommand command);
         public void OnVisitCallEventCommand(Command.CallEventCommand command);
 

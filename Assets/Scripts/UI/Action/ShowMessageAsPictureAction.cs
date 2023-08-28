@@ -1,62 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using Expression.Map.MapEvent.Command;
 
 namespace UI.Action
 {
-    class ShowPictureAction : ActionBase
+    class ShowMessageAsPictureAction : ActionBase
     {
         int pictureId;
-        Texture2D texture;
+        string message;
 
         PicturePivotPattern pivotPattern;
-        float scale;
         Vector2 pos;
 
         ActionEnvironment actionEnv;
 
         Transform imageBox;
+        Transform textOrigin;
 
-        public ShowPictureAction(int pictureId,Texture2D texture, ActionEnvironment actionEnv,
-            PicturePivotPattern pivotPattern, float x, float y, float scale)
+        public ShowMessageAsPictureAction(int pictureId, string message, ActionEnvironment actionEnv,
+            PicturePivotPattern pivotPattern, float x, float y)
         {
             this.pictureId = pictureId;
-            this.texture = texture;
+            this.message = message;
             this.pivotPattern = pivotPattern;
-            this.scale = scale;
-            this.pos = new Vector2(x, y);
+            pos = new Vector2(x, y);
 
             this.actionEnv = actionEnv;
             imageBox = actionEnv.canvas.transform.Find("Image Box");
+            textOrigin = actionEnv.canvas.transform.Find("Text Origin");
         }
 
         /// <inheritdoc/>
         public override bool Run()
         {
-            GameObject image = new GameObject("image");
+            // Canvasに非アクティブで置いているオブジェクトをコピーして使用する
+            GameObject textObject = Object.Instantiate(textOrigin).gameObject;
 
             // 親子関係
-            image.transform.SetParent(imageBox, false);
+            textObject.transform.SetParent(imageBox, false);
 
             // 位置・回転・スケール・アンカーなど
-            RectTransform rectTransform = image.AddComponent<RectTransform>();
-            rectTransform.sizeDelta = new Vector2(texture.width, texture.height);
+            Vector2 canvasSize = actionEnv.canvas.GetComponent<RectTransform>().sizeDelta;
+            RectTransform rectTransform = textObject.gameObject.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(canvasSize.x, canvasSize.y);
             rectTransform.pivot = GetPivot();
-            rectTransform.localScale = Vector3.one * 6 * scale;
+            rectTransform.localScale = Vector3.one;
             rectTransform.localPosition = GetPos();
 
             // スプライト変更
-            Image img = image.AddComponent<Image>();
-            img.sprite = Sprite.Create(texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f));
+            Text text = textObject.AddComponent<Text>();
+            text.text = message;
 
-            actionEnv.RegisterPicture(pictureId, image);
+            actionEnv.RegisterPicture(pictureId, textObject);
+
+            textObject.SetActive(true);
 
             return true;
         }

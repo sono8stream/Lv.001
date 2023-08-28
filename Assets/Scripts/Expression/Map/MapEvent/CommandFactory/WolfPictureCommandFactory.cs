@@ -10,14 +10,12 @@ namespace Expression.Map.MapEvent.CommandFactory
             if (operationType == 0x00)
             {
                 int sourceType = (metaCommand.NumberArgs[1] >> 4) & 0x0F;
+                int pivot = (metaCommand.NumberArgs[1] >> 0x100) & 0xFF;
+                PicturePivotPattern posPattern = GetPosPattern(pivot);
+
                 if (sourceType == 0x00)
                 {
                     string imagePath = metaCommand.StringArgs[0];
-
-
-                    int pivot = (metaCommand.NumberArgs[1] >> 0x100) & 0xFF;
-                    PicturePivotPattern posPattern = GetPosPattern(pivot);
-
 
                     int pictureId = metaCommand.NumberArgs[2];
                     int x = metaCommand.NumberArgs[8];
@@ -26,6 +24,19 @@ namespace Expression.Map.MapEvent.CommandFactory
 
                     return new ShowPictureCommand(metaCommand.IndentDepth, pictureId,
                         imagePath, posPattern, x, y, scale);
+                }
+                else if (sourceType == 0x20)
+                {
+                    // 文字列を表示
+                    string message = metaCommand.StringArgs[0];
+
+                    int pictureId = metaCommand.NumberArgs[2];
+                    int x = metaCommand.NumberArgs[8];
+                    int y = metaCommand.NumberArgs[9];
+                    float scale = metaCommand.NumberArgs[10] * 0.01f;// 拡大率。X/Y別カウントのケースは未実装
+
+                    return new ShowMessageAsPictureCommand(metaCommand.IndentDepth, pictureId,
+                        message, posPattern, x, y, scale);
                 }
 
                 return new EventCommandBase(metaCommand.IndentDepth);
