@@ -24,7 +24,19 @@ namespace Expression.Map.MapEvent.Command
             fieldIdCreator = new WolfIntAccessorCreator(false, fieldVal);
         }
 
-        public Common.IDataAccessor<int> Create(CommandVisitContext context)
+        public int Get(CommandVisitContext context)
+        {
+            var accessor = Create(context);
+            return accessor.Get();
+        }
+
+        public void Set(CommandVisitContext context, int value)
+        {
+            var accessor = Create(context);
+            accessor.Set(value);
+        }
+
+        private Common.IDataAccessor<int> Create(CommandVisitContext context)
         {
             var tableId = new Domain.Data.TableId(tableIdCreator.Create(context).Get(), "");
             var recordId = new Domain.Data.RecordId(recordIdCreator.Create(context).Get(), "");

@@ -45,7 +45,7 @@ namespace UI.Action
                 hasReturnValue, returnDestinationAccessor, commonEvent.ReturnValueAccessorFactory);
             
             // 引数をEventオブジェクトに割り当てる。
-            int[] numberArgs = numberFactories.Select(factory => factory.Create(commandVisitContext).Get()).ToArray();
+            int[] numberArgs = numberFactories.Select(factory => factory.Get(commandVisitContext)).ToArray();
             commonEvent.SetNumberArgs(numberArgs);
         }
 

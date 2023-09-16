@@ -15,7 +15,19 @@ namespace Expression.Map.MapEvent.Command
             this.rawStr = rawVal;
         }
 
-        public Common.IDataAccessor<string> Create(CommandVisitContext context)
+        public string Get(CommandVisitContext context)
+        {
+            var accessor = Create(context);
+            return accessor.Get();
+        }
+
+        public void Set(CommandVisitContext context, string value)
+        {
+            var accessor = Create(context);
+            accessor.Set(value);
+        }
+
+        private Common.IDataAccessor<string> Create(CommandVisitContext context)
         {
             // そのまま値を使用する場合
             if (isConstValue)

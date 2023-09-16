@@ -22,8 +22,8 @@ namespace Expression.Map.MapEvent
 
         public bool CheckIsTrue(Expression.Map.MapEvent.CommandVisitContext context)
         {
-            int leftValue = LeftHandAccessorFactory.Create(context).Get();
-            int rightValue = RightHandAccessorFactory.Create(context).Get();
+            int leftValue = LeftHandAccessorFactory.Get(context);
+            int rightValue = RightHandAccessorFactory.Get(context);
             Debug.Log($"Compare {leftValue} & {rightValue} with {OperatorType}");
 
             switch (OperatorType)

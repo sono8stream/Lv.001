@@ -5,6 +5,8 @@ namespace Expression.Common
 {
     public interface IDataAccessorFactory<T>
     {
-        public Common.IDataAccessor<T> Create(Map.MapEvent.CommandVisitContext context);
+        public T Get(Map.MapEvent.CommandVisitContext context);
+
+        public void Set(Map.MapEvent.CommandVisitContext context, T value);
     }
 }

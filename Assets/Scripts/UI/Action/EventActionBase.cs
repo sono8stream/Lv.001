@@ -43,35 +43,28 @@ namespace UI.Action
         /// <inheritdoc/>
         public override bool Run()
         {
-            try
+            // 【暫定】高速実行できるようにする。いっぺんに実行すると待ちイベントなどもスキップされるので要注意。
+            int interruptCounter = 10;// デバッグ用にイベント実行中断用のカウンタを持たせる
+            int currentCounter = 0;
+            while (currentAction != null && currentAction.Run() && currentCounter < interruptCounter)
             {
-                // 【暫定】高速実行できるようにする。いっぺんに実行すると待ちイベントなどもスキップされるので要注意。
-                int interruptCounter = 10;// デバッグ用にイベント実行中断用のカウンタを持たせる
-                int currentCounter = 0;
-                while (currentAction != null && currentAction.Run() && currentCounter < interruptCounter)
-                {
-                    currentAction.OnEnd();
+                currentAction.OnEnd();
 
-                    control.TransitToNext(commands);
+                control.TransitToNext(commands);
 
-                    TryToStartCurrentAction();
-                    currentCounter++;
-                }
-
-                if (currentAction == null)
-                {
-                    // 実行できるアクションがないので終了とする
-                    return true;
-                }
-                else
-                {
-                    // 実行できるアクションがあるので終了しない
-                    return false;
-                }
+                TryToStartCurrentAction();
+                currentCounter++;
             }
-            catch (System.Exception e)
+
+            if (currentAction == null)
             {
-                throw e;
+                // 実行できるアクションがないので終了とする
+                return true;
+            }
+            else
+            {
+                // 実行できるアクションがあるので終了しない
+                return false;
             }
         }
 

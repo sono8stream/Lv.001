@@ -12,9 +12,14 @@ namespace Expression.Map.MapEvent.Command
             creator = new WolfIntAccessorCreator(isConstValue, rawVal);
         }
 
-        public Common.IDataAccessor<int> Create(CommandVisitContext context)
+        public int Get(CommandVisitContext context)
         {
-            return creator.Create(context);
+            return creator.Create(context).Get();
+        }
+
+        public void Set(CommandVisitContext context, int value)
+        {
+            creator.Create(context).Set(value);
         }
     }
 }

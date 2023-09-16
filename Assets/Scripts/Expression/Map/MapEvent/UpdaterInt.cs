@@ -29,9 +29,9 @@ namespace Expression.Map.MapEvent
 
         public void Update(CommandVisitContext context)
         {
-            int rightValue1 = RightHandAccessor1Factory.Create(context).Get();
+            int rightValue1 = RightHandAccessor1Factory.Get(context);
             int rightValue2 = RightHandAccessor2Factory == null
-                ? 0 : RightHandAccessor2Factory.Create(context).Get();
+                ? 0 : RightHandAccessor2Factory.Get(context);
 
             int assignValue = 0;
 
@@ -54,7 +54,7 @@ namespace Expression.Map.MapEvent
             }
 
             // 【暫定】全ての代入演算子に対応させる
-            int leftValue = LeftHandAccessorFactory.Create(context).Get();
+            int leftValue = LeftHandAccessorFactory.Get(context);
             switch (AssignOperatorType)
             {
                 case OperatorType.NormalAssign:
@@ -83,7 +83,7 @@ namespace Expression.Map.MapEvent
 
             Debug.Log($"Update {leftValue} {AssignOperatorType} {rightValue1} {RightOperatorType} {rightValue2}");
 
-            LeftHandAccessorFactory.Create(context).Set(assignValue);
+            LeftHandAccessorFactory.Set(context, assignValue);
 
         }
     }
