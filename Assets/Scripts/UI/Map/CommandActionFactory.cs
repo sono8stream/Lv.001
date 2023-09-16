@@ -101,7 +101,14 @@ namespace UI.Map
             string message = command.MessageFactory.GenerateMessage(commandVisitContext);
             int x = command.XFactory.Create(commandVisitContext).Get();
             int y = command.YFactory.Create(commandVisitContext).Get();
-            GeneratedAction = new ShowMessageAsPictureAction(id, message, actionEnv, command.PivotPattern, x, y);
+
+            // デバッグ用にキー待ち
+            List<ActionBase> actions = new List<ActionBase>();
+            actions.Add(new ShowMessageAsPictureAction(id, message, actionEnv, command.PivotPattern, x, y));
+            actions.Add(new WaitForChoiceAction(actionEnv));
+            actions.Add(new CloseChoiceAction(actionEnv, false, controlInfo));
+
+            GeneratedAction = new MultiAction(actions);
         }
 
         public void OnVisitRemovePictureCommand(RemovePictureCommand command)
