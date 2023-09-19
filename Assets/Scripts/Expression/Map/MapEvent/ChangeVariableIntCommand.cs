@@ -6,9 +6,9 @@ namespace Expression.Map.MapEvent
 {
     public class ChangeVariableIntCommand : EventCommandBase
     {
-        public UpdaterInt[] Updaters { get; private set; }
+        public VariableUpdater[] Updaters { get; private set; }
 
-        public ChangeVariableIntCommand(int indentDepth, UpdaterInt[] updaters) : base(indentDepth)
+        public ChangeVariableIntCommand(int indentDepth, VariableUpdater[] updaters) : base(indentDepth)
         {
             Updaters = updaters;
         }

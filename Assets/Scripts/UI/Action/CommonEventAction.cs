@@ -53,7 +53,7 @@ namespace UI.Action
             // 戻り値を返す
             if (hasReturnValue)
             {
-                var updater = new UpdaterInt(returnDestinationAccessorFactory,
+                var updater = new VariableUpdater(returnDestinationAccessorFactory,
                     returnValueAccessorFactory,
                     null,
                     OperatorType.NormalAssign,

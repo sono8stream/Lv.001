@@ -20,12 +20,30 @@ namespace Expression.Common
         public string Get()
         {
             Domain.Data.DataField<string> field = repository.FindString(dataRef);
-            return field != null ? field.Val : "";
+            return field == null ? "" : field.Val;
         }
 
         public void Set(string value)
         {
             repository.SetString(dataRef, value);
+        }
+
+        public bool TestType(VariableType targetType)
+        {
+            // IntAccessorと同じロジック。うまいこと共通化したい。型を抽象化したアクセッサを用意できればいいが…
+            Domain.Data.DataField<int> intField = repository.FindInt(dataRef);
+            if (intField != null && targetType == VariableType.Number)
+            {
+                return true;
+            }
+
+            Domain.Data.DataField<string> stringField = repository.FindString(dataRef);
+            if (stringField != null && targetType == VariableType.String)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

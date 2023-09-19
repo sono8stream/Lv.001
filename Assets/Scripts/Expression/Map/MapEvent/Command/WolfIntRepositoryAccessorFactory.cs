@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Infrastructure;
+using Expression.Common;
 
 namespace Expression.Map.MapEvent.Command
 {
     /// <summary>
     /// DataRefを遅延生成してデータアクセスするAccessor
     /// </summary>
-    public class WolfIntRepositoryAccessorFactory : Common.IDataAccessorFactory<int>
+    public class WolfIntRepositoryAccessorFactory : IDataAccessorFactory<int>
     {
         private WolfIntAccessorCreator tableIdCreator;
         private WolfIntAccessorCreator recordIdCreator;
@@ -34,6 +35,12 @@ namespace Expression.Map.MapEvent.Command
         {
             var accessor = Create(context);
             accessor.Set(value);
+        }
+
+        public bool TestType(CommandVisitContext context, VariableType targetType)
+        {
+            var accessor = Create(context);
+            return accessor.TestType(targetType);
         }
 
         private Common.IDataAccessor<int> Create(CommandVisitContext context)

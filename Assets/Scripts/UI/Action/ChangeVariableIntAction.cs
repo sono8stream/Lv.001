@@ -3,10 +3,10 @@ namespace UI.Action
 {
     class ChangeVariableIntAction : ActionBase
     {
-        Expression.Map.MapEvent.UpdaterInt[] updaters;
+        Expression.Map.MapEvent.VariableUpdater[] updaters;
         Expression.Map.MapEvent.CommandVisitContext context;
 
-        public ChangeVariableIntAction(Expression.Map.MapEvent.UpdaterInt[] updaters,
+        public ChangeVariableIntAction(Expression.Map.MapEvent.VariableUpdater[] updaters,
              Expression.Map.MapEvent.CommandVisitContext context)
         {
             this.updaters = updaters;

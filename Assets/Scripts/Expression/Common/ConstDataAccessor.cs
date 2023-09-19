@@ -24,6 +24,21 @@ namespace Expression.Common
             // 再代入不可なので何もしない
             return;
         }
+
+        public bool TestType(VariableType targetType)
+        {
+            System.Type currentType = typeof(T);
+            if (currentType == typeof(string))
+            {
+                return targetType == VariableType.String;
+            }
+            else if (currentType == typeof(int))
+            {
+                return targetType == VariableType.Number;
+            }
+
+            throw new Exception("想定外の型");
+        }
     }
 
 }

@@ -27,8 +27,6 @@ namespace Expression.Map.MapEvent.CommandFactory
 
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
-            //return new EventCommandBase();
-
             int typeNo = metaCommand.NumberArgs[1];
             int dataNo = metaCommand.NumberArgs[2];
             int fieldNo = metaCommand.NumberArgs[3];
@@ -84,6 +82,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                 fieldNo = Array.FindIndex(targetSchemas[typeNo].Columns, field => field.Name == metaCommand.StringArgs[3]);
             }
 
+            // yb’èz•¶š—ñ‚ª—^‚¦‚ç‚ê‚é‚±‚Æ‚à‚ ‚éB”’lE•¶š—ñ‚ğˆÓ¯‚µ‚È‚¢À‘•‚É‚µ‚½‚¢
             OperatorType assignType = GetAssignOperator(operatorType);
             Common.IDataAccessorFactory<int> targetAccessorFactory = new Command.WolfIntAccessorFactory(false, targetVal);
             Common.IDataAccessorFactory<int> databaseAccessorFactory
@@ -95,8 +94,8 @@ namespace Expression.Map.MapEvent.CommandFactory
             if (modeType == 0)
             {
                 // DB‚É‘ã“ü
-                UpdaterInt[] updaters = new UpdaterInt[1];
-                updaters[0] = new UpdaterInt(databaseAccessorFactory, targetAccessorFactory, rightAccessorFactory,
+                VariableUpdater[] updaters = new VariableUpdater[1];
+                updaters[0] = new VariableUpdater(databaseAccessorFactory, targetAccessorFactory, rightAccessorFactory,
                     assignType, rightOperatorType);
 
                 return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);
@@ -105,8 +104,8 @@ namespace Expression.Map.MapEvent.CommandFactory
             {
                 // •Ï”‚É‘ã“ü
 
-                UpdaterInt[] updaters = new UpdaterInt[1];
-                updaters[0] = new UpdaterInt(targetAccessorFactory, databaseAccessorFactory, rightAccessorFactory,
+                VariableUpdater[] updaters = new VariableUpdater[1];
+                updaters[0] = new VariableUpdater(targetAccessorFactory, databaseAccessorFactory, rightAccessorFactory,
                     assignType, rightOperatorType);
 
                 return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);

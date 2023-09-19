@@ -5,7 +5,8 @@ using UnityEngine;// 【暫定】本来はログ出力のアダプタを仕込�
 
 namespace Expression.Map.MapEvent
 {
-    public class UpdaterInt
+    // 【暫定】Intに限定せず、LeftHandAccessorの型に応じて計算内容を変える対応を仕込む。
+    public class VariableUpdater
     {
         public IDataAccessorFactory<int> LeftHandAccessorFactory { get; private set; }
         public IDataAccessorFactory<int> RightHandAccessor1Factory { get; private set; }
@@ -14,7 +15,7 @@ namespace Expression.Map.MapEvent
         public OperatorType AssignOperatorType { get; private set; }
         public OperatorType RightOperatorType { get; private set; }
 
-        public UpdaterInt(IDataAccessorFactory<int> leftHandAccessorFactory,
+        public VariableUpdater(IDataAccessorFactory<int> leftHandAccessorFactory,
             IDataAccessorFactory<int> rightHandAccessor1Factory,
             IDataAccessorFactory<int> rightHandAccessor2Factory,
             OperatorType assignOperatorType,

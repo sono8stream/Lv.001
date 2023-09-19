@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Expression.Common;
+using System;
 
 namespace Expression.Event
 {
@@ -11,6 +8,9 @@ namespace Expression.Event
         private ICommonEventCommandsRepository repository;
         private CommonEventId eventId;
         private int variableId;
+
+        private int minStringVariableId = 5;
+        private int maxStringVariableId = 9;
 
         public CommonEventStringAccessor(CommonEventId eventId, int variableId)
         {
@@ -23,20 +23,46 @@ namespace Expression.Event
         {
             var eventData = repository.GetEvent(eventId);
             // 【暫定】実際にはIDが5~9のもののみが文字列型になる。呼び出し側が数値化文字列化を区別しなくて済むよう、レコード側に複数の取り出し方を実装する
-            if(variableId< eventData.NumberVariables.Length)
+            if (variableId < minStringVariableId || variableId > maxStringVariableId)
             {
-                return eventData.NumberVariables[variableId].ToString();
+                int numberVariableId = variableId > maxStringVariableId ? variableId - (maxStringVariableId - minStringVariableId + 1) : variableId;
+                return eventData.NumberVariables[numberVariableId].ToString();
             }
             else
             {
-                int id = variableId - eventData.NumberVariables.Length;
-                return eventData.StringVariables[id];
+                int stringVariableId = variableId - minStringVariableId;
+                return eventData.StringVariables[stringVariableId];
             }
         }
 
         public void Set(string value)
         {
             throw new NotImplementedException();
+        }
+
+        public bool TestType(VariableType targetType)
+        {
+            int id = ToStringVariableIndex(variableId);
+            if (id == -1)
+            {
+                return targetType == VariableType.String;
+            }
+            else
+            {
+                return targetType == VariableType.Number;
+            }
+        }
+
+        private int ToStringVariableIndex(int variableId)
+        {
+            // 【暫定】本来はVariableIdクラスを作り、その中に隠蔽すべきロジック
+            if (minStringVariableId <= variableId && variableId <= maxStringVariableId)
+            {
+                // 文字列ならインデックスを返す
+                return variableId - minStringVariableId;
+            }
+
+            return -1;
         }
     }
 }

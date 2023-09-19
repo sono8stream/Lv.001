@@ -14,6 +14,13 @@ namespace Expression.Common
         public T Get();
 
         public void Set(T value);
+
+        public bool TestType(VariableType targetType);
     }
 
+    public enum VariableType
+    {
+        Number,
+        String,
+    }
 }

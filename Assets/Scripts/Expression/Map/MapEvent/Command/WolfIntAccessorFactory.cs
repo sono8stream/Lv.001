@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Expression.Common;
+using System;
 using System.Collections.Generic;
 
 namespace Expression.Map.MapEvent.Command
@@ -20,6 +21,11 @@ namespace Expression.Map.MapEvent.Command
         public void Set(CommandVisitContext context, int value)
         {
             creator.Create(context).Set(value);
+        }
+
+        public bool TestType(CommandVisitContext context, VariableType targetType)
+        {
+            return creator.Create(context).TestType(targetType);
         }
     }
 }

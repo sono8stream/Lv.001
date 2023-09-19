@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Expression.Map.MapEvent;
 
 namespace Expression.Common
 {
@@ -8,5 +7,7 @@ namespace Expression.Common
         public T Get(Map.MapEvent.CommandVisitContext context);
 
         public void Set(Map.MapEvent.CommandVisitContext context, T value);
+
+        public bool TestType(CommandVisitContext context, VariableType targetType);
     }
 }

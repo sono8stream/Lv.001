@@ -153,8 +153,8 @@ namespace Expression.Map.MapEvent
             OperatorType assignType = GetAssignOperator(operatorType % 0x10);
             OperatorType rightOperatorType = GetCalculateOperator(operatorType / 0x10);
 
-            UpdaterInt[] updaters = new UpdaterInt[1];
-            updaters[0] = new UpdaterInt(leftAccessorFactory, rightAccessor1Factory, rightAccessor2Factory,
+            VariableUpdater[] updaters = new VariableUpdater[1];
+            updaters[0] = new VariableUpdater(leftAccessorFactory, rightAccessor1Factory, rightAccessor2Factory,
                 assignType, rightOperatorType);
 
             return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);

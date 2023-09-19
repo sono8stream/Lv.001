@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Expression.Common;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Expression.Map.MapEvent.Command
 {
-    public class WolfStringAccessorFactory : Common.IDataAccessorFactory<string>
+    public class WolfStringAccessorFactory : IDataAccessorFactory<string>
     {
         private bool isConstValue;
         private string rawStr;
@@ -25,6 +26,12 @@ namespace Expression.Map.MapEvent.Command
         {
             var accessor = Create(context);
             accessor.Set(value);
+        }
+
+        public bool TestType(CommandVisitContext context, VariableType targetType)
+        {
+            var accessor = Create(context);
+            return accessor.TestType(targetType);
         }
 
         private Common.IDataAccessor<string> Create(CommandVisitContext context)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Expression.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -52,6 +53,19 @@ namespace Expression.Event
             if (id < eventData.NumberVariables.Length)
             {
                 eventData.NumberVariables[id] = value;
+            }
+        }
+
+        public bool TestType(VariableType targetType)
+        {
+            int id = ToIntVariableIndex(variableId);
+            if (id == -1)
+            {
+                return targetType == VariableType.String;
+            }
+            else
+            {
+                return targetType == VariableType.Number;
             }
         }
 
