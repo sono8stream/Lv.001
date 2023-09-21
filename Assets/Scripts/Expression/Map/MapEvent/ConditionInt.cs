@@ -6,13 +6,13 @@ namespace Expression.Map.MapEvent
 {
     public class ConditionInt
     {
-        public IDataAccessorFactory<int> LeftHandAccessorFactory { get; private set; }
-        public IDataAccessorFactory<int> RightHandAccessorFactory { get; private set; }
+        public IDataAccessorFactory LeftHandAccessorFactory { get; private set; }
+        public IDataAccessorFactory RightHandAccessorFactory { get; private set; }
 
         public OperatorType OperatorType { get; private set; }
 
-        public ConditionInt(IDataAccessorFactory<int> leftHandAccessorFactory,
-            IDataAccessorFactory<int> rightHandAccessorFactory,
+        public ConditionInt(IDataAccessorFactory leftHandAccessorFactory,
+            IDataAccessorFactory rightHandAccessorFactory,
              OperatorType operatorType)
         {
             LeftHandAccessorFactory = leftHandAccessorFactory;
@@ -22,8 +22,8 @@ namespace Expression.Map.MapEvent
 
         public bool CheckIsTrue(Expression.Map.MapEvent.CommandVisitContext context)
         {
-            int leftValue = LeftHandAccessorFactory.Get(context);
-            int rightValue = RightHandAccessorFactory.Get(context);
+            int leftValue = LeftHandAccessorFactory.GetInt(context);
+            int rightValue = RightHandAccessorFactory.GetInt(context);
             Debug.Log($"Compare {leftValue} & {rightValue} with {OperatorType}");
 
             switch (OperatorType)

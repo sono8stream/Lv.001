@@ -8,16 +8,16 @@ namespace Expression.Map.MapEvent
     // 【暫定】Intに限定せず、LeftHandAccessorの型に応じて計算内容を変える対応を仕込む。
     public class VariableUpdater
     {
-        public IDataAccessorFactory<int> LeftHandAccessorFactory { get; private set; }
-        public IDataAccessorFactory<int> RightHandAccessor1Factory { get; private set; }
-        public IDataAccessorFactory<int> RightHandAccessor2Factory { get; private set; }
+        public IDataAccessorFactory LeftHandAccessorFactory { get; private set; }
+        public IDataAccessorFactory RightHandAccessor1Factory { get; private set; }
+        public IDataAccessorFactory RightHandAccessor2Factory { get; private set; }
 
         public OperatorType AssignOperatorType { get; private set; }
         public OperatorType RightOperatorType { get; private set; }
 
-        public VariableUpdater(IDataAccessorFactory<int> leftHandAccessorFactory,
-            IDataAccessorFactory<int> rightHandAccessor1Factory,
-            IDataAccessorFactory<int> rightHandAccessor2Factory,
+        public VariableUpdater(IDataAccessorFactory leftHandAccessorFactory,
+            IDataAccessorFactory rightHandAccessor1Factory,
+            IDataAccessorFactory rightHandAccessor2Factory,
             OperatorType assignOperatorType,
              OperatorType rightOperatorType)
         {
@@ -30,9 +30,22 @@ namespace Expression.Map.MapEvent
 
         public void Update(CommandVisitContext context)
         {
-            int rightValue1 = RightHandAccessor1Factory.Get(context);
+            if (LeftHandAccessorFactory.TestType(context, VariableType.Number))
+            {
+                UpdateInt(context);
+            }
+            else if (LeftHandAccessorFactory.TestType(context, VariableType.String))
+            {
+                UpdateString(context);
+            }
+
+        }
+
+        private void UpdateInt(CommandVisitContext context)
+        {
+            int rightValue1 = RightHandAccessor1Factory.GetInt(context);
             int rightValue2 = RightHandAccessor2Factory == null
-                ? 0 : RightHandAccessor2Factory.Get(context);
+                ? 0 : RightHandAccessor2Factory.GetInt(context);
 
             int assignValue = 0;
 
@@ -55,7 +68,7 @@ namespace Expression.Map.MapEvent
             }
 
             // 【暫定】全ての代入演算子に対応させる
-            int leftValue = LeftHandAccessorFactory.Get(context);
+            int leftValue = LeftHandAccessorFactory.GetInt(context);
             switch (AssignOperatorType)
             {
                 case OperatorType.NormalAssign:
@@ -84,8 +97,41 @@ namespace Expression.Map.MapEvent
 
             Debug.Log($"Update {leftValue} {AssignOperatorType} {rightValue1} {RightOperatorType} {rightValue2}");
 
-            LeftHandAccessorFactory.Set(context, assignValue);
+            LeftHandAccessorFactory.SetInt(context, assignValue);
+        }
 
+        private void UpdateString(CommandVisitContext context)
+        {
+            string rightValue1 = RightHandAccessor1Factory.GetString(context);
+            string rightValue2 = RightHandAccessor2Factory == null
+                ? "" : RightHandAccessor2Factory.GetString(context);
+
+            string assignValue = "";
+
+            switch (RightOperatorType)
+            {
+                case OperatorType.Plus:
+                    assignValue = rightValue1 + rightValue2;
+                    break;
+                default:
+                    break;// +記号以外は何もしない
+            }
+
+            string leftValue = LeftHandAccessorFactory.GetString(context);
+            switch (AssignOperatorType)
+            {
+                case OperatorType.NormalAssign:
+                    break;
+                case OperatorType.PlusAssign:
+                    assignValue = leftValue + assignValue;// 追加ではなく再割り当てなのでちょっと計算コストがかかる
+                    break;
+                default:
+                    break;
+            }
+
+            Debug.Log($"Update {leftValue} {AssignOperatorType} {rightValue1} {RightOperatorType} {rightValue2}");
+
+            LeftHandAccessorFactory.SetString(context, assignValue);
         }
     }
 }

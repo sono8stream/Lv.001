@@ -84,12 +84,12 @@ namespace Expression.Map.MapEvent.CommandFactory
 
             // 【暫定】文字列が与えられることもある。数値・文字列を意識しない実装にしたい
             OperatorType assignType = GetAssignOperator(operatorType);
-            Common.IDataAccessorFactory<int> targetAccessorFactory = new Command.WolfIntAccessorFactory(false, targetVal);
-            Common.IDataAccessorFactory<int> databaseAccessorFactory
+            Common.IDataAccessorFactory targetAccessorFactory = new Command.WolfIntAccessorFactory(false, targetVal);
+            Common.IDataAccessorFactory databaseAccessorFactory
                 = new Command.WolfIntRepositoryAccessorFactory(dbType, typeNo, dataNo, fieldNo);
             // 右辺第二項は固定。何もしない
             OperatorType rightOperatorType = OperatorType.Plus;
-            Common.IDataAccessorFactory<int> rightAccessorFactory = new Command.WolfIntAccessorFactory(true, 0);
+            Common.IDataAccessorFactory rightAccessorFactory = new Command.WolfIntAccessorFactory(true, 0);
 
             if (modeType == 0)
             {

@@ -17,16 +17,16 @@ namespace UI.Action
 
         // 【暫定】文字列の戻り値渡しも後ほど対応
         private bool hasReturnValue;
-        private IDataAccessorFactory<int> returnDestinationAccessorFactory;
-        private IDataAccessorFactory<int> returnValueAccessorFactory;
+        private IDataAccessorFactory returnDestinationAccessorFactory;
+        private IDataAccessorFactory returnValueAccessorFactory;
 
         public CommonEventAction(CommonEventId eventId,
             EventCommandBase[] commands,
             ActionEnvironment actionEnv,
             CommandVisitContext context,
             bool hasReturnValue,
-            IDataAccessorFactory<int> returnDestinationAccessorFactory,
-            IDataAccessorFactory<int> returnValueAccessorFactory) : base(commands, actionEnv, context)
+            IDataAccessorFactory returnDestinationAccessorFactory,
+            IDataAccessorFactory returnValueAccessorFactory) : base(commands, actionEnv, context)
         {
             currentId = eventId;
             this.hasReturnValue = hasReturnValue;

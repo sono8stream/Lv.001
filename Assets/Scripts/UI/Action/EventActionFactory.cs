@@ -13,14 +13,14 @@ namespace UI.Action
         private EventActionBase generatedAction;
         private ActionEnvironment actionEnv;
         private CommandVisitContext commandVisitContext;
-        private IDataAccessorFactory<int>[] numberFactories;
+        private IDataAccessorFactory[] numberFactories;
 
         private bool hasReturnValue;
-        private IDataAccessorFactory<int> returnDestinationAccessor;
+        private IDataAccessorFactory returnDestinationAccessor;
 
         public EventActionFactory(ActionEnvironment actionEnv, CommandVisitContext commandVisitContext,
-            IDataAccessorFactory<int>[] numberFactories, bool hasReturnValue,
-            IDataAccessorFactory<int> returnDestinationAccessor)
+            IDataAccessorFactory[] numberFactories, bool hasReturnValue,
+            IDataAccessorFactory returnDestinationAccessor)
         {
             this.actionEnv = actionEnv;
             this.commandVisitContext = commandVisitContext;
@@ -45,7 +45,7 @@ namespace UI.Action
                 hasReturnValue, returnDestinationAccessor, commonEvent.ReturnValueAccessorFactory);
             
             // 引数をEventオブジェクトに割り当てる。
-            int[] numberArgs = numberFactories.Select(factory => factory.Get(commandVisitContext)).ToArray();
+            int[] numberArgs = numberFactories.Select(factory => factory.GetInt(commandVisitContext)).ToArray();
             commonEvent.SetNumberArgs(numberArgs);
         }
 

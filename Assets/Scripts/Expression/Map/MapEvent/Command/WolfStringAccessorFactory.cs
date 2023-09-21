@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Expression.Map.MapEvent.Command
 {
-    public class WolfStringAccessorFactory : IDataAccessorFactory<string>
+    public class WolfStringAccessorFactory : IDataAccessorFactory
     {
         private bool isConstValue;
         private string rawStr;
@@ -16,13 +16,23 @@ namespace Expression.Map.MapEvent.Command
             this.rawStr = rawVal;
         }
 
-        public string Get(CommandVisitContext context)
+        public int GetInt(CommandVisitContext context)
+        {
+            return 0;
+        }
+
+        public string GetString(CommandVisitContext context)
         {
             var accessor = Create(context);
             return accessor.Get();
         }
 
-        public void Set(CommandVisitContext context, string value)
+        public void SetInt(CommandVisitContext context, int value)
+        {
+            // 何もしない
+        }
+
+        public void SetString(CommandVisitContext context, string value)
         {
             var accessor = Create(context);
             accessor.Set(value);

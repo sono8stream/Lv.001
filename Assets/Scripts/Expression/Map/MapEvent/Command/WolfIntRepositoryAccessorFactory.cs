@@ -8,7 +8,7 @@ namespace Expression.Map.MapEvent.Command
     /// <summary>
     /// DataRefを遅延生成してデータアクセスするAccessor
     /// </summary>
-    public class WolfIntRepositoryAccessorFactory : IDataAccessorFactory<int>
+    public class WolfIntRepositoryAccessorFactory : IDataAccessorFactory
     {
         private WolfIntAccessorCreator tableIdCreator;
         private WolfIntAccessorCreator recordIdCreator;
@@ -25,31 +25,52 @@ namespace Expression.Map.MapEvent.Command
             fieldIdCreator = new WolfIntAccessorCreator(false, fieldVal);
         }
 
-        public int Get(CommandVisitContext context)
+        public int GetInt(CommandVisitContext context)
         {
-            var accessor = Create(context);
+            var accessor = CreateIntAccessor(context);
             return accessor.Get();
         }
 
-        public void Set(CommandVisitContext context, int value)
+        public string GetString(CommandVisitContext context)
         {
-            var accessor = Create(context);
+            var accessor = CreateStringAccessor(context);
+            return accessor.Get();
+        }
+
+        public void SetInt(CommandVisitContext context, int value)
+        {
+            var accessor = CreateIntAccessor(context);
+            accessor.Set(value);
+        }
+
+        public void SetString(CommandVisitContext context, string value)
+        {
+            var accessor = CreateStringAccessor(context);
             accessor.Set(value);
         }
 
         public bool TestType(CommandVisitContext context, VariableType targetType)
         {
-            var accessor = Create(context);
+            var accessor = CreateIntAccessor(context);
             return accessor.TestType(targetType);
         }
 
-        private Common.IDataAccessor<int> Create(CommandVisitContext context)
+        private Common.IDataAccessor<int> CreateIntAccessor(CommandVisitContext context)
         {
             var tableId = new Domain.Data.TableId(tableIdCreator.Create(context).Get(), "");
             var recordId = new Domain.Data.RecordId(recordIdCreator.Create(context).Get(), "");
             var fieldId = new Domain.Data.FieldId(fieldIdCreator.Create(context).Get(), "");
             var dataRef = new Domain.Data.DataRef(tableId, recordId, fieldId);
             return new Common.RepositoryIntAccessor(targetRepository, dataRef);
+        }
+
+        private Common.IDataAccessor<string> CreateStringAccessor(CommandVisitContext context)
+        {
+            var tableId = new Domain.Data.TableId(tableIdCreator.Create(context).Get(), "");
+            var recordId = new Domain.Data.RecordId(recordIdCreator.Create(context).Get(), "");
+            var fieldId = new Domain.Data.FieldId(fieldIdCreator.Create(context).Get(), "");
+            var dataRef = new Domain.Data.DataRef(tableId, recordId, fieldId);
+            return new Common.RepositoryStringAccessor(targetRepository, dataRef);
         }
 
         private IDataRepository GetRepository(WolfConfig.DatabaseType databaseType)

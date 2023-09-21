@@ -126,9 +126,9 @@ namespace Expression.Map.MapEvent
 
         private ConditionInt GenerateCondition(int flagLeft, int flagRight, int rightAndCompareParams)
         {
-            Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, flagLeft);
+            Common.IDataAccessorFactory leftAccessorFactory = new Command.WolfIntAccessorFactory(false, flagLeft);
 
-            Common.IDataAccessorFactory<int> rightAccessorFactory;
+            Common.IDataAccessorFactory rightAccessorFactory;
             bool isConst = (rightAndCompareParams >> 4) > 0;
             rightAccessorFactory = new Command.WolfIntAccessorFactory(isConst, flagRight);
 
@@ -147,9 +147,9 @@ namespace Expression.Map.MapEvent
             int operatorType = (metaCommand.NumberArgs[4] / 0x100) % 0x100;
             bool isSequential = (metaCommand.NumberArgs[4] / 0x10000) % 0x100 > 0;
 
-            Common.IDataAccessorFactory<int> leftAccessorFactory = new Command.WolfIntAccessorFactory(false, leftParamRef);
-            Common.IDataAccessorFactory<int> rightAccessor1Factory = new Command.WolfIntAccessorFactory(false, rightParamRef1);
-            Common.IDataAccessorFactory<int> rightAccessor2Factory = new Command.WolfIntAccessorFactory(false, rightParamRef2);
+            Common.IDataAccessorFactory leftAccessorFactory = new Command.WolfIntAccessorFactory(false, leftParamRef);
+            Common.IDataAccessorFactory rightAccessor1Factory = new Command.WolfIntAccessorFactory(false, rightParamRef1);
+            Common.IDataAccessorFactory rightAccessor2Factory = new Command.WolfIntAccessorFactory(false, rightParamRef2);
             OperatorType assignType = GetAssignOperator(operatorType % 0x10);
             OperatorType rightOperatorType = GetCalculateOperator(operatorType / 0x10);
 

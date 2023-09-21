@@ -8,7 +8,7 @@ namespace Expression.Map.MapEvent.CommandFactory
     {
         public EventCommandBase Create(MetaEventCommand metaCommand)
         {
-            IDataAccessorFactory<int> returnDataAccessorFactory
+            IDataAccessorFactory returnDataAccessorFactory
                 = new WolfIntAccessorFactory(false, metaCommand.NumberArgs[1]);
 
             return new EventCommandBase(metaCommand.IndentDepth);

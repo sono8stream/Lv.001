@@ -6,7 +6,7 @@ namespace Expression.Map.MapEvent.Command
 {
     public class CallEventCommand : EventCommandBase
     {
-        public Common.IDataAccessorFactory<int>[] NumberFactories { get; private set; }
+        public Common.IDataAccessorFactory[] NumberFactories { get; private set; }
 
         public string[] StringArgs { get; private set; }
 
@@ -15,12 +15,12 @@ namespace Expression.Map.MapEvent.Command
         public bool HasReturnValue { get; private set; }
 
         // 戻り値を返す先への参照
-        public IDataAccessorFactory<int> ReturnDestinationAccessor { get; private set; }
+        public IDataAccessorFactory ReturnDestinationAccessor { get; private set; }
 
         public CallEventCommand(int indentDepth,
-            Common.IDataAccessorFactory<int>[] numberFactories,
+            Common.IDataAccessorFactory[] numberFactories,
             string[] stringArgs, IEventDataAccessorFactory eventDataAccessorFactory,
-            bool hasReturnValue, IDataAccessorFactory<int> returnDestinationAccessor) : base(indentDepth)
+            bool hasReturnValue, IDataAccessorFactory returnDestinationAccessor) : base(indentDepth)
         {
             NumberFactories = numberFactories;
             StringArgs = stringArgs;

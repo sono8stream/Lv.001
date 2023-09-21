@@ -2,11 +2,13 @@
 
 namespace Expression.Common
 {
-    public interface IDataAccessorFactory<T>
+    public interface IDataAccessorFactory
     {
-        public T Get(Map.MapEvent.CommandVisitContext context);
+        public int GetInt(Map.MapEvent.CommandVisitContext context);
+        public string GetString(Map.MapEvent.CommandVisitContext context);
 
-        public void Set(Map.MapEvent.CommandVisitContext context, T value);
+        public void SetInt(Map.MapEvent.CommandVisitContext context, int value);
+        public void SetString(Map.MapEvent.CommandVisitContext context, string value);
 
         public bool TestType(CommandVisitContext context, VariableType targetType);
     }

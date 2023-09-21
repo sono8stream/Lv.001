@@ -18,12 +18,12 @@ namespace Expression.Event
         public string[] StringVariables { get; set; }
 
         // –ß‚è’l‚Æ‚µ‚Ä•Ô‚·ƒZƒ‹ƒt•Ï”‚ÌID
-        public IDataAccessorFactory<int> ReturnValueAccessorFactory { get; private set; }
+        public IDataAccessorFactory ReturnValueAccessorFactory { get; private set; }
 
         public bool HasReturnValue { get; private set; }
 
         public CommonEvent(CommonEventId id, string name, Map.MapEvent.EventCommandBase[] eventCommands,
-            IDataAccessorFactory<int> returnValueAccessorFactory)
+            IDataAccessorFactory returnValueAccessorFactory)
         {
             Id = id;
             Name = name;

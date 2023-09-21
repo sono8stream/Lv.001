@@ -97,10 +97,10 @@ namespace UI.Map
 
         public void OnVisitShowMessageAsPictureCommand(ShowMessageAsPictureCommand command)
         {
-            int id = command.IdFactory.Get(commandVisitContext);
+            int id = command.IdFactory.GetInt(commandVisitContext);
             string message = command.MessageFactory.GenerateMessage(commandVisitContext);
-            int x = command.XFactory.Get(commandVisitContext);
-            int y = command.YFactory.Get(commandVisitContext);
+            int x = command.XFactory.GetInt(commandVisitContext);
+            int y = command.YFactory.GetInt(commandVisitContext);
 
             // デバッグ用にキー待ち
             List<ActionBase> actions = new List<ActionBase>();
@@ -129,7 +129,7 @@ namespace UI.Map
             // この段階ではループ開始位置が不定なので、Action実行時に注入するようにする。
             // 【暫定】色んな所に関心ごとを要求してしまうので、美味い設計を整備したい
             var loopControlInfo = new LoopControlInfo(command.IndentDepth,
-                command.IsInfinite, command.LoopCountAccessorFactory.Get(commandVisitContext));
+                command.IsInfinite, command.LoopCountAccessorFactory.GetInt(commandVisitContext));
             GeneratedAction = new LoopStartAction(controlInfo, loopControlInfo);
         }
 
