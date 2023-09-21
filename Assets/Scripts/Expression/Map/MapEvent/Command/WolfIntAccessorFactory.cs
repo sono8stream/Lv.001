@@ -40,6 +40,7 @@ namespace Expression.Map.MapEvent.Command
 
         public void SetString(CommandVisitContext context, string value)
         {
+            // 格納先が数値とは限らない。要修正
             if (int.TryParse(value, out int val))
             {
                 creator.Create(context).Set(val);

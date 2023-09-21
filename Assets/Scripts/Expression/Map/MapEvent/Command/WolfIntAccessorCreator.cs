@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Expression.Map.MapEvent.Command
 {
+    // 【暫定】Intに絞られないDataAccessorを使用する
     public class WolfIntAccessorCreator
     {
         private bool isConstValue;
