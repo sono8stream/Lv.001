@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 namespace Expression.Map.MapEvent.Command
 {
-    public class WolfIntAccessorFactory : Common.IDataAccessorFactory
+    public class WolfVariableAccessorFactory : Common.IDataAccessorFactory
     {
         private WolfIntAccessorCreator creator;
 
-        public WolfIntAccessorFactory(bool isConstValue, int rawVal)
+        public WolfVariableAccessorFactory(bool isConstValue, int rawVal)
         {
             creator = new WolfIntAccessorCreator(isConstValue, rawVal);
         }

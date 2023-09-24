@@ -151,7 +151,7 @@ namespace Infrastructure
 
             string retMeaning = reader.ReadString(offset, out offset);
             int retAddress = 15000000 + eventId.Value * 100 + reader.ReadInt(offset, true, out offset);
-            var returnValueAccessorFactory = new WolfIntAccessorFactory(false, retAddress);
+            var returnValueAccessorFactory = new WolfVariableAccessorFactory(false, retAddress);
 
             dummy = reader.ReadByte(offset, out offset);
 
