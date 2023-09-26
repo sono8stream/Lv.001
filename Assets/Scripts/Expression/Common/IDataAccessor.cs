@@ -9,11 +9,15 @@ namespace Expression.Common
     /// <summary>
     /// 特定のデータを取得するためのインターフェース
     /// </summary>
-    public interface IDataAccessor<T>
+    public interface IDataAccessor
     {
-        public T Get();
+        public int GetInt();
 
-        public void Set(T value);
+        public string GetString();
+
+        public void SetInt(int value);
+
+        public void SetString(string value);
 
         public bool TestType(VariableType targetType);
     }

@@ -29,8 +29,19 @@ namespace Expression.Event
             Name = name;
             EventCommands = eventCommands;
 
-            NumberVariables = new int[95];
-            StringVariables = new string[5];
+            int numberCount = 95;
+            NumberVariables = new int[numberCount];
+            for (int i = 0; i < numberCount; i++)
+            {
+                NumberVariables[i] = 0;
+            }
+
+            int stringCount = 5;
+            StringVariables = new string[stringCount];
+            for(int i = 0; i < stringCount; i++)
+            {
+                StringVariables[i] = "";
+            }
 
             HasReturnValue = returnValueAccessorFactory != null;
             ReturnValueAccessorFactory = returnValueAccessorFactory;

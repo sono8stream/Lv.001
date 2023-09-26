@@ -24,7 +24,7 @@ namespace Expression.Map.MapEvent.CommandFactory
             string message = "";
             for (int i = 0; i < parts.Length; i++)
             {
-                message += Create(parts[i], context).Get();
+                message += Create(parts[i], context).GetString();
             }
 
             return message;
@@ -44,7 +44,7 @@ namespace Expression.Map.MapEvent.CommandFactory
             return @"\\(" + string.Join("|", blocks) + ")";
         }
 
-        private Common.IDataAccessor<string> Create(string str, CommandVisitContext context)
+        private Common.IDataAccessor Create(string str, CommandVisitContext context)
         {
             // そのまま値を使用する場合
 
@@ -56,7 +56,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                 if (!int.TryParse(fieldStr, out int fieldId))
                 {
                     // ID変換できない場合は定数として返す
-                    return new Common.ConstDataAccessor<string>(str);
+                    return new Common.ConstDataAccessor(str);
                 }
 
                 var repository = DI.DependencyInjector.It().MapEventStateRpository;
@@ -65,7 +65,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                     new Domain.Data.RecordId(context.EventId.Value, ""),
                     new Domain.Data.FieldId(fieldId, "")
                     );
-                return new Common.RepositoryStringAccessor(repository, dataRef);
+                return new Common.RepositoryVariableAccessor(repository, dataRef);
             }
             else if (str.StartsWith("cself["))
             {
@@ -75,15 +75,15 @@ namespace Expression.Map.MapEvent.CommandFactory
                 if (!int.TryParse(fieldStr, out int variableId))
                 {
                     // ID変換できない場合は定数として返す
-                    return new Common.ConstDataAccessor<string>(str);
+                    return new Common.ConstDataAccessor(str);
                 }
                 if (context.CommonEventId == null)
                 {
                     // コモンイベントから呼び出されていない場合は0を返す
-                    return new Common.ConstDataAccessor<string>("0");
+                    return new Common.ConstDataAccessor("0");
                 }
 
-                return new Event.CommonEventStringAccessor(
+                return new Event.CommonEventVariableAccessor(
                     new Event.CommonEventId(context.CommonEventId.Value), variableId);
             }
             else if (str.StartsWith("sdb["))
@@ -94,20 +94,20 @@ namespace Expression.Map.MapEvent.CommandFactory
                 if (int.TryParse(fieldStr, out int variableId))
                 {
                     // ID変換できない場合は定数として返す
-                    return new Common.ConstDataAccessor<string>(str);
+                    return new Common.ConstDataAccessor(str);
                 }
                 if (context.CommonEventId == null)
                 {
                     // コモンイベントから呼び出されていない場合は0を返す
-                    return new Common.ConstDataAccessor<string>("0");
+                    return new Common.ConstDataAccessor("0");
                 }
 
-                return new Event.CommonEventStringAccessor(
+                return new Event.CommonEventVariableAccessor(
                     new Event.CommonEventId(context.CommonEventId.Value), variableId);
             }
 
             // 特殊条件以外の場合、定数を取得
-            return new Common.ConstDataAccessor<string>(str);
+            return new Common.ConstDataAccessor(str);
         }
     }
 }

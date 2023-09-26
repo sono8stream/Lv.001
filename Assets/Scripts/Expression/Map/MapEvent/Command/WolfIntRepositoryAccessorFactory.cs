@@ -10,9 +10,9 @@ namespace Expression.Map.MapEvent.Command
     /// </summary>
     public class WolfIntRepositoryAccessorFactory : IDataAccessorFactory
     {
-        private WolfIntAccessorCreator tableIdCreator;
-        private WolfIntAccessorCreator recordIdCreator;
-        private WolfIntAccessorCreator fieldIdCreator;
+        private WolfVariableAccessorCreator tableIdCreator;
+        private WolfVariableAccessorCreator recordIdCreator;
+        private WolfVariableAccessorCreator fieldIdCreator;
         private IDataRepository targetRepository;
 
         public WolfIntRepositoryAccessorFactory(WolfConfig.DatabaseType databaseType,
@@ -20,57 +20,48 @@ namespace Expression.Map.MapEvent.Command
         {
             targetRepository = GetRepository(databaseType);
 
-            tableIdCreator = new WolfIntAccessorCreator(false, tableVal);
-            recordIdCreator = new WolfIntAccessorCreator(false, recordVal);
-            fieldIdCreator = new WolfIntAccessorCreator(false, fieldVal);
+            tableIdCreator = new WolfVariableAccessorCreator(false, tableVal);
+            recordIdCreator = new WolfVariableAccessorCreator(false, recordVal);
+            fieldIdCreator = new WolfVariableAccessorCreator(false, fieldVal);
         }
 
         public int GetInt(CommandVisitContext context)
         {
-            var accessor = CreateIntAccessor(context);
-            return accessor.Get();
+            var accessor = CreateRepositoryAccessor(context);
+            return accessor.GetInt();
         }
 
         public string GetString(CommandVisitContext context)
         {
-            var accessor = CreateStringAccessor(context);
-            return accessor.Get();
+            var accessor = CreateRepositoryAccessor(context);
+            return accessor.GetString();
         }
 
         public void SetInt(CommandVisitContext context, int value)
         {
-            var accessor = CreateIntAccessor(context);
-            accessor.Set(value);
+            var accessor = CreateRepositoryAccessor(context);
+            accessor.SetInt(value);
         }
 
         public void SetString(CommandVisitContext context, string value)
         {
-            var accessor = CreateStringAccessor(context);
-            accessor.Set(value);
+            var accessor = CreateRepositoryAccessor(context);
+            accessor.SetString(value);
         }
 
         public bool TestType(CommandVisitContext context, VariableType targetType)
         {
-            var accessor = CreateIntAccessor(context);
+            var accessor = CreateRepositoryAccessor(context);
             return accessor.TestType(targetType);
         }
 
-        private Common.IDataAccessor<int> CreateIntAccessor(CommandVisitContext context)
+        private Common.IDataAccessor CreateRepositoryAccessor(CommandVisitContext context)
         {
-            var tableId = new Domain.Data.TableId(tableIdCreator.Create(context).Get(), "");
-            var recordId = new Domain.Data.RecordId(recordIdCreator.Create(context).Get(), "");
-            var fieldId = new Domain.Data.FieldId(fieldIdCreator.Create(context).Get(), "");
+            var tableId = new Domain.Data.TableId(tableIdCreator.Create(context).GetInt(), "");
+            var recordId = new Domain.Data.RecordId(recordIdCreator.Create(context).GetInt(), "");
+            var fieldId = new Domain.Data.FieldId(fieldIdCreator.Create(context).GetInt(), "");
             var dataRef = new Domain.Data.DataRef(tableId, recordId, fieldId);
-            return new Common.RepositoryIntAccessor(targetRepository, dataRef);
-        }
-
-        private Common.IDataAccessor<string> CreateStringAccessor(CommandVisitContext context)
-        {
-            var tableId = new Domain.Data.TableId(tableIdCreator.Create(context).Get(), "");
-            var recordId = new Domain.Data.RecordId(recordIdCreator.Create(context).Get(), "");
-            var fieldId = new Domain.Data.FieldId(fieldIdCreator.Create(context).Get(), "");
-            var dataRef = new Domain.Data.DataRef(tableId, recordId, fieldId);
-            return new Common.RepositoryStringAccessor(targetRepository, dataRef);
+            return new Common.RepositoryVariableAccessor(targetRepository, dataRef);
         }
 
         private IDataRepository GetRepository(WolfConfig.DatabaseType databaseType)

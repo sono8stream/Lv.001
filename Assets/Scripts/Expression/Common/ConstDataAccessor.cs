@@ -5,40 +5,76 @@ namespace Expression.Common
     /// <summary>
     /// 定数を取得する
     /// </summary>
-    public class ConstDataAccessor<T> : IDataAccessor<T>
+    public class ConstDataAccessor : IDataAccessor
     {
-        private T val;
+        private int intVal;
+        private string strVal;
+        private bool isNumber;
 
-        public ConstDataAccessor(T val)
+        public ConstDataAccessor(int intVal)
         {
-            this.val = val;
+            this.intVal = intVal;
+            this.isNumber = true;
         }
 
-        public T Get()
+        public ConstDataAccessor(string strVal)
         {
-            return val;
+            this.strVal = strVal;
+            this.isNumber = false;
         }
 
-        public void Set(T value)
+        public int GetInt()
         {
-            // 再代入不可なので何もしない
+            if (isNumber)
+            {
+                return intVal;
+            }
+            else
+            {
+                if (int.TryParse(strVal, out int res))
+                {
+                    return res;
+                }
+                return 0;
+            }
+        }
+
+        public string GetString()
+        {
+            if (isNumber)
+            {
+                return intVal.ToString();
+            }
+            else
+            {
+                return strVal;
+            }
+        }
+
+        public void SetInt(int value)
+        {
+            // 代入不可なので何もしない
+            return;
+        }
+
+        public void SetString(string value)
+        {
+            // 代入不可なので何もしない
             return;
         }
 
         public bool TestType(VariableType targetType)
         {
-            System.Type currentType = typeof(T);
-            if (currentType == typeof(string))
+            if(targetType== VariableType.Number)
             {
-                return targetType == VariableType.String;
+                return isNumber;
             }
-            else if (currentType == typeof(int))
+            else if (targetType == VariableType.String)
             {
-                return targetType == VariableType.Number;
+                return !isNumber;
             }
 
             throw new Exception("想定外の型");
         }
     }
-
 }

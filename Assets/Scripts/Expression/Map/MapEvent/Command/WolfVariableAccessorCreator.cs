@@ -5,23 +5,23 @@ using System.Collections.Generic;
 namespace Expression.Map.MapEvent.Command
 {
     // 【暫定】Intに絞られないDataAccessorを使用する
-    public class WolfIntAccessorCreator
+    public class WolfVariableAccessorCreator
     {
         private bool isConstValue;
         private int rawVal;
 
-        public WolfIntAccessorCreator(bool isConstValue, int rawVal)
+        public WolfVariableAccessorCreator(bool isConstValue, int rawVal)
         {
             this.isConstValue = isConstValue;
             this.rawVal = rawVal;
         }
 
-        public Common.IDataAccessor<int> Create(CommandVisitContext context)
+        public Common.IDataAccessor Create(CommandVisitContext context)
         {
             // そのまま値を使用する場合
             if (isConstValue)
             {
-                return new Common.ConstDataAccessor<int>(rawVal);
+                return new Common.ConstDataAccessor(rawVal);
             }
 
             if (rawVal >= 1300000000)
@@ -40,7 +40,7 @@ namespace Expression.Map.MapEvent.Command
             {
                 // コモンイベントのセルフ変数呼び出し
                 int eventNo = (rawVal - 15000000) / 100;
-                return new Event.CommonEventIntAccessor(new CommonEventId(eventNo), rawVal % 100);
+                return new Event.CommonEventVariableAccessor(new CommonEventId(eventNo), rawVal % 100);
             }
             else if (rawVal >= 9900000)
             {
@@ -77,7 +77,7 @@ namespace Expression.Map.MapEvent.Command
             else if (rawVal >= 1600000)
             {
                 // 実行中のコモンイベントのセルフ変数呼び出し
-                return new Event.CommonEventIntAccessor(context.CommonEventId, rawVal % 100);
+                return new Event.CommonEventVariableAccessor(context.CommonEventId, rawVal % 100);
             }
             else if (rawVal >= 1100000)
             {
@@ -88,7 +88,7 @@ namespace Expression.Map.MapEvent.Command
                     new Domain.Data.RecordId(context.EventId.Value, ""),
                     new Domain.Data.FieldId(rawVal % 10, "")
                     );
-                return new Common.RepositoryIntAccessor(repository, dataRef);
+                return new Common.RepositoryVariableAccessor(repository, dataRef);
             }
             else if (rawVal >= 1000000)
             {
@@ -96,7 +96,7 @@ namespace Expression.Map.MapEvent.Command
             }
 
             // 特殊条件以外の場合、定数を取得
-            return new Common.ConstDataAccessor<int>(rawVal);
+            return new Common.ConstDataAccessor(rawVal);
         }
     }
 }
