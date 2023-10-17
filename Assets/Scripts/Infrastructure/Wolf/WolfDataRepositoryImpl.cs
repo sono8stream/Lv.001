@@ -20,8 +20,16 @@ namespace Infrastructure
 
         public DataField<int> FindInt(DataRef dataRef)
         {
-            int val = intDict.ContainsKey(dataRef) ? intDict[dataRef] : 0;
-            return new DataField<int>(dataRef.FieldId, val);
+            // 数値Dictに要素が無ければ何も取り出さない。nullハンドリングはアクセッサ側で処理させる。
+            if (intDict.ContainsKey(dataRef))
+            {
+                int val = intDict[dataRef];
+                return new DataField<int>(dataRef.FieldId, val);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void SetInt(DataRef dataRef, int value)
@@ -39,17 +47,15 @@ namespace Infrastructure
 
         public DataField<string> FindString(DataRef dataRef)
         {
-            // 数値を文字列として取り出したいケースがある。そういった場合は文字列変換して返す
-            string val = "";
-            if (intDict.ContainsKey(dataRef))
+            // 文字列Dictに要素が無ければ何も取り出さない。nullハンドリングはアクセッサ側で処理させる。
+            if (stringDict.ContainsKey(dataRef))
             {
-                val = intDict[dataRef].ToString();
+                return new DataField<string>(dataRef.FieldId, stringDict[dataRef].ToString());
             }
-            else if (stringDict.ContainsKey(dataRef))
+            else
             {
-                val = stringDict[dataRef];
+                return null;
             }
-            return new DataField<string>(dataRef.FieldId, val);
         }
 
         public void SetString(DataRef dataRef, string value)
