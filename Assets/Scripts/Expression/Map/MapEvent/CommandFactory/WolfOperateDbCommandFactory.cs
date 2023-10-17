@@ -89,13 +89,12 @@ namespace Expression.Map.MapEvent.CommandFactory
                 = new Command.WolfIntRepositoryAccessorFactory(dbType, typeNo, dataNo, fieldNo);
             // âEï”ëÊìÒçÄÇÕå≈íËÅBâΩÇ‡ÇµÇ»Ç¢
             OperatorType rightOperatorType = OperatorType.Plus;
-            Common.IDataAccessorFactory rightAccessorFactory = new Command.WolfVariableAccessorFactory(true, 0);
 
             if (modeType == 0)
             {
                 // DBÇ…ë„ì¸
                 VariableUpdater[] updaters = new VariableUpdater[1];
-                updaters[0] = new VariableUpdater(databaseAccessorFactory, targetAccessorFactory, rightAccessorFactory,
+                updaters[0] = new VariableUpdater(databaseAccessorFactory, targetAccessorFactory, null,
                     assignType, rightOperatorType);
 
                 return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);
@@ -105,7 +104,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                 // ïœêîÇ…ë„ì¸
 
                 VariableUpdater[] updaters = new VariableUpdater[1];
-                updaters[0] = new VariableUpdater(targetAccessorFactory, databaseAccessorFactory, rightAccessorFactory,
+                updaters[0] = new VariableUpdater(targetAccessorFactory, databaseAccessorFactory, null,
                     assignType, rightOperatorType);
 
                 return new ChangeVariableIntCommand(metaCommand.IndentDepth, updaters);
