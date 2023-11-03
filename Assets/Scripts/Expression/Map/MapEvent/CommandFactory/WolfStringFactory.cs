@@ -110,4 +110,213 @@ namespace Expression.Map.MapEvent.CommandFactory
             return new Common.ConstDataAccessor(str);
         }
     }
+
+    internal class StringBlockFactory2
+    {
+        private string text;
+        private HashSet<string> patterns;
+
+        public StringBlockFactory2(string text)
+        {
+            this.text = text;
+            patterns = BuildPatterns();
+        }
+
+        public string GenerateMessage(CommandVisitContext context)
+        {
+            int index = 0;
+            IStringBlock block = CreateBlock(text, ref index, context);
+            return block.GetMessaage();
+        }
+
+        IStringBlock CreateBlock(string text, ref int index, CommandVisitContext context)
+        {
+            // 再帰的に\XXX[]という文字列を構造化しながら取得する。
+            // \XXX[]hoge\YYY[]というように並列で複数から構成されている場合があるので、]で区切りながら取得していく
+
+            List<IStringBlock> blocks = new List<IStringBlock>();
+            while (text.Length <= index || text[index] != '\\')
+            {
+                int specialStartI = text.IndexOf('\\', index);
+                int blockStartI = text.IndexOf('[', specialStartI);
+
+                if (specialStartI < 0 || blockStartI < 0)
+                {
+                    // 特殊文字を見つけられなかった場合、以降]がやってくるまでの文字列をそのまま返す。
+                    int blockEndI = text.IndexOf(']', index);
+                    if (blockEndI == -1)
+                    {
+                        // ]が無いので末尾まで取り出して返す
+                        int currentIndex = index;
+                        index = text.Length;
+                        blocks.Add(new ConstStringBock(text.Substring(currentIndex)));
+                    }
+                    else
+                    {
+                        int currentIndex = index;
+                        index = blockEndI + 1;
+                        blocks.Add(new ConstStringBock(text.Substring(currentIndex, index - currentIndex)));
+                        continue;
+                    }
+                }
+
+                // 特殊文字なので、ブロックを取得して返す。
+                string functionString = text.Substring(specialStartI, blockStartI - specialStartI);
+                if (patterns.Contains(functionString))
+                {
+
+                }
+            }
+
+            if (blocks.Count == 1)
+            {
+                return blocks[0];
+            }
+            else
+            {
+                return new MultiStringBock(blocks);
+            }
+        }
+
+        private HashSet<string> BuildPatterns()
+        {
+            // 随時増やす
+            return new HashSet<string>
+            {
+                "self",
+                "cself",
+                "sdb",
+            };
+        }
+    }
+
+    internal interface IStringBlock
+    {
+
+        public string GetMessaage();
+    }
+
+    internal class MultiStringBock : IStringBlock
+    {
+        private List<IStringBlock> children;
+
+        public MultiStringBock(List<IStringBlock> children) : base()
+        {
+            this.children = children;
+        }
+
+        public string GetMessaage()
+        {
+            string message = "";
+            for (int i = 0; i < children.Count; i++)
+            {
+                message += children[i].GetMessaage();
+            }
+
+            return message;
+        }
+    }
+
+    internal class ConstStringBock : IStringBlock
+    {
+        private string part;
+
+        public ConstStringBock(string part) : base()
+        {
+            this.part = part;
+        }
+
+        public string GetMessaage()
+        {
+            return part;
+        }
+    }
+
+    internal class SpecialStringBock : IStringBlock
+    {
+        private List<IStringBlock> children;
+        private string functionString;
+        private CommandVisitContext context;
+
+        public SpecialStringBock(string functionString,
+            CommandVisitContext context, List<IStringBlock> children) : base()
+        {
+            this.functionString = functionString;
+            this.children = children;
+        }
+
+        public string GetMessaage()
+        {
+            string message = "";
+            for (int i = 0; i < children.Count; i++)
+            {
+                string childStr = children[i].GetMessaage();
+                if (functionString.Equals("self"))
+                {
+                    // 実行中のマップイベントのセルフ変数呼び出し
+                    if (!int.TryParse(childStr, out int fieldId))
+                    {
+                        // ID変換できない場合は定数として返す
+                        message += childStr;
+                    }
+
+                    var repository = DI.DependencyInjector.It().MapEventStateRpository;
+                    Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                        new Domain.Data.TableId(context.MapId.Value, ""),
+                        new Domain.Data.RecordId(context.EventId.Value, ""),
+                        new Domain.Data.FieldId(fieldId, "")
+                        );
+
+                    message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+                }
+                else if (functionString.Equals("cself"))
+                {
+                    // 実行中のコモンイベントのセルフ変数呼び出し
+                    if (!int.TryParse(childStr, out int variableId))
+                    {
+                        // ID変換できない場合は定数として返す
+                        message += childStr;
+                    }
+                    if (context.CommonEventId == null)
+                    {
+                        // コモンイベントから呼び出されていない場合は0を返す
+                        message += "0";
+                    }
+
+                    message += new Event.CommonEventVariableAccessor(
+                        new Event.CommonEventId(context.CommonEventId.Value), variableId).GetString();
+                }
+                else if (functionString.Equals("sdb"))
+                {
+                    // システムDBの変数呼び出し。\sdb[A:B:C]でタイプA番・データB番・項目C番を呼び出す。
+                    string[] vars = childStr.Split(':');
+                    if (vars.Length != 3)
+                    {
+                        return childStr;
+                    }
+
+                    if (!(int.TryParse(vars[0], out int tableId)
+                        && int.TryParse(vars[1], out int recordId)
+                        && int.TryParse(vars[2], out int fieldId)))
+                    {
+                        // ID変換できない場合は定数として返す
+                        return childStr;
+                    }
+
+                    var repository = DI.DependencyInjector.It().SystemDataRepository;
+                    Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                        new Domain.Data.TableId(tableId, ""),
+                        new Domain.Data.RecordId(recordId, ""),
+                        new Domain.Data.FieldId(fieldId, "")
+                        );
+
+                    message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+                }
+
+                message += childStr;
+            }
+
+            return message;
+        }
+    }
 }
