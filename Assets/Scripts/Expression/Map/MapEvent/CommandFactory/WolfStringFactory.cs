@@ -125,45 +125,44 @@ namespace Expression.Map.MapEvent.CommandFactory
         public string GenerateMessage(CommandVisitContext context)
         {
             int index = 0;
-            IStringBlock block = CreateBlock(text, ref index, context);
+
+            // 再帰的に\XXX[]という文字列を構造化しながら取得する。
+            // \XXX[]hoge\YYY[]というように並列で複数から構成されている場合があるので、]で区切りながら取得していく
+            IStringBlock block = CreateBlock(text, ref index, 0, context);
             return block.GetMessaage();
         }
 
-        IStringBlock CreateBlock(string text, ref int index, CommandVisitContext context)
+        IStringBlock CreateBlock(string text, ref int index, int depth, CommandVisitContext context)
         {
-            // 再帰的に\XXX[]という文字列を構造化しながら取得する。
-            // \XXX[]hoge\YYY[]というように並列で複数から構成されている場合があるので、]で区切りながら取得していく
+            // 末尾の位置を決める。入れ子なら初めて現れる]の手前までだが、入れ子になっていない場合は末尾まで読む。
+            int lastPos = text.Length;
+            if (depth > 0)
+            {
+                lastPos = text.IndexOf(']', index);
+                if (lastPos == -1)
+                {
+                    lastPos = text.Length;
+                }
+            }
 
+            // ブロックを読み続ける
             List<IStringBlock> blocks = new List<IStringBlock>();
-            while (index < text.Length)
+            while (index < lastPos)
             {
                 int specialStartI = text.IndexOf('\\', index);
-                if (specialStartI == -1)
+                if (specialStartI == -1 || specialStartI >= lastPos)
                 {
                     // 特殊文字がなければそのまま返す
-                    blocks.Add(new ConstStringBock(text.Substring(specialStartI)));
+                    blocks.Add(new ConstStringBlock(text.Substring(specialStartI)));
                 }
 
                 int blockStartI = text.IndexOf('[', specialStartI);
 
-                if (specialStartI < 0 || blockStartI < 0)
+                if (blockStartI == -1 || blockStartI >= lastPos)
                 {
-                    // 特殊文字を見つけられなかった場合、以降]がやってくるまでの文字列をそのまま返す。
-                    int blockEndI = text.IndexOf(']', index);
-                    if (blockEndI == -1)
-                    {
-                        // ]が無いので末尾まで取り出して返す
-                        int currentIndex = index;
-                        index = text.Length;
-                        blocks.Add(new ConstStringBock(text.Substring(currentIndex)));
-                    }
-                    else
-                    {
-                        int currentIndex = index;
-                        index = blockEndI + 1;
-                        blocks.Add(new ConstStringBock(text.Substring(currentIndex, index - currentIndex)));
-                        continue;
-                    }
+                    // 特殊文字を見つけられなかった場合、文字列をそのまま返す。
+                    blocks.Add(new ConstStringBlock(text.Substring(index, lastPos - index)));
+                    break;
                 }
 
                 string functionString = text.Substring(specialStartI, blockStartI - specialStartI);
@@ -179,7 +178,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                     else
                     {
                         // ブロックになっていない場合はそのまま足すだけ
-                        blocks.Add(new ConstStringBock($"\\{functionString}[]"));
+                        blocks.Add(new ConstStringBlock($"\\{functionString}[]"));
                     }
                 }
             }
@@ -233,11 +232,11 @@ namespace Expression.Map.MapEvent.CommandFactory
         }
     }
 
-    internal class ConstStringBock : IStringBlock
+    internal class ConstStringBlock : IStringBlock
     {
         private string part;
 
-        public ConstStringBock(string part) : base()
+        public ConstStringBlock(string part) : base()
         {
             this.part = part;
         }
