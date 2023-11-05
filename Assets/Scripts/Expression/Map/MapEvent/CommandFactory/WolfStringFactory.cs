@@ -7,10 +7,12 @@ namespace Expression.Map.MapEvent.CommandFactory
     public class WolfStringFactory : IStringFactory
     {
         private string[] parts;
+        private StringBlockFactory2 blockFactory;
 
         public WolfStringFactory(string text)
         {
             parts = CreateParts(text);
+            blockFactory = new StringBlockFactory2(text);
         }
 
         string[] CreateParts(string text)
@@ -21,6 +23,8 @@ namespace Expression.Map.MapEvent.CommandFactory
 
         public string GenerateMessage(CommandVisitContext context)
         {
+            return blockFactory.GenerateMessage(context);
+
             string message = "";
             for (int i = 0; i < parts.Length; i++)
             {
@@ -134,63 +138,100 @@ namespace Expression.Map.MapEvent.CommandFactory
 
         IStringBlock CreateBlock(string text, ref int index, int depth, CommandVisitContext context)
         {
-            // 末尾の位置を決める。入れ子なら初めて現れる]の手前までだが、入れ子になっていない場合は末尾まで読む。
-            int lastPos = text.Length;
-            if (depth > 0)
-            {
-                lastPos = text.IndexOf(']', index);
-                if (lastPos == -1)
-                {
-                    lastPos = text.Length;
-                }
-            }
-
-            // ブロックを読み続ける
             List<IStringBlock> blocks = new List<IStringBlock>();
-            while (index < lastPos)
+            string tmp = "";
+            bool isSpecial = false;
+
+            for (; index < text.Length; index++)
             {
-                int specialStartI = text.IndexOf('\\', index);
-                if (specialStartI == -1 || specialStartI >= lastPos)
+                // 前から順に読んでいく
+                if (text[index] == '\\')
                 {
-                    // 特殊文字がなければそのまま返す
-                    blocks.Add(new ConstStringBlock(text.Substring(specialStartI)));
+                    isSpecial = true;
+                    // 特殊文字が始まるので、一旦ここまでの文字列を塊で詰めておく
+                    blocks.Add(new ConstStringBlock(tmp));
+                    tmp = "";
                 }
-
-                int blockStartI = text.IndexOf('[', specialStartI);
-
-                if (blockStartI == -1 || blockStartI >= lastPos)
+                else if (text[index] == '[')
                 {
-                    // 特殊文字を見つけられなかった場合、文字列をそのまま返す。
-                    blocks.Add(new ConstStringBlock(text.Substring(index, lastPos - index)));
-                    break;
-                }
-
-                string functionString = text.Substring(specialStartI, blockStartI - specialStartI);
-                if (patterns.Contains(functionString))
-                {
-                    // 特殊文字なので、内部ブロックを取得。
-                    IStringBlock child = CreateBlock(text, ref blockStartI, context);
-                    // 部六読み取り後に]が来なければ特殊文字とみなせない。
-                    if (text[index] == ']')
+                    // 特殊文字の終わりなので、入れ子判定。
+                    if (isSpecial)
                     {
-                        return new SpecialStringBock(functionString, context, child);
+                        if (patterns.Contains(tmp))
+                        {
+                            // 特殊文字なので、内部ブロックを取得。
+                            index++;
+                            IStringBlock child = CreateBlock(text, ref index, depth + 1, context);
+                            // ブロック読み取り後の位置に]がいなければ特殊文字とみなせない。
+                            if (index < text.Length && text[index] == ']')
+                            {
+                                blocks.Add(new SpecialStringBlock(tmp, context, child));
+                            }
+                            else
+                            {
+                                // 特殊文字のブロックになっていない場合は通常の文字列として足すだけ
+                                List<IStringBlock> blocksTmp = new List<IStringBlock>();
+                                blocksTmp.Add(new ConstStringBlock($"\\{tmp}["));
+                                blocksTmp.Add(child);
+                                if (index < text.Length)
+                                {
+                                    blocksTmp.Add(new ConstStringBlock($"{text[index]}"));
+                                }
+                                blocks.Add(new MultiStringBlock(blocksTmp));
+                            }
+                        }
+                        else
+                        {
+                            // 解釈可能な特殊文字ではないが、入れ子構造にはなっているのでハンドリングしておく。
+                            index++;
+                            List<IStringBlock> blocksTmp = new List<IStringBlock>();
+                            blocksTmp.Add(new ConstStringBlock($"\\{tmp}["));
+                            IStringBlock child = CreateBlock(text, ref index, depth + 1, context);
+                            blocksTmp.Add(child);
+                            if (index < text.Length)
+                            {
+                                blocksTmp.Add(new ConstStringBlock($"{text[index]}"));
+                            }
+                            blocks.Add(new MultiStringBlock(blocksTmp));
+                        }
+                        tmp = "";
+                        isSpecial = false;
                     }
                     else
                     {
-                        // ブロックになっていない場合はそのまま足すだけ
-                        blocks.Add(new ConstStringBlock($"\\{functionString}[]"));
+                        // 特殊文字でない括弧は他の文字と同様に処理。
+                        tmp += text[index];
                     }
+                }
+                else if (text[index] == ']')
+                {
+                    if (depth > 0)
+                    {
+                        // ネストしているなら上位からの呼び出しで括弧を閉じる動作なので、上位に返す
+                        if (!string.IsNullOrEmpty(tmp))
+                        {
+                            blocks.Add(new ConstStringBlock(tmp));
+                        }
+                        return new MultiStringBlock(blocks);
+                    }
+                    else
+                    {
+                        // ネストしていない状態で括弧を閉じる動作は特殊文字ではないはずなので、通常通り処理。
+                        tmp += text[index];
+                    }
+                }
+                else
+                {
+                    tmp += text[index];
                 }
             }
 
-            if (blocks.Count == 1)
+            if (!string.IsNullOrEmpty(tmp))
             {
-                return blocks[0];
+                blocks.Add(new ConstStringBlock(tmp));
             }
-            else
-            {
-                return new MultiStringBock(blocks);
-            }
+
+            return new MultiStringBlock(blocks);
         }
 
         private HashSet<string> BuildPatterns()
@@ -211,11 +252,11 @@ namespace Expression.Map.MapEvent.CommandFactory
         public string GetMessaage();
     }
 
-    internal class MultiStringBock : IStringBlock
+    internal class MultiStringBlock : IStringBlock
     {
         private List<IStringBlock> children;
 
-        public MultiStringBock(List<IStringBlock> children) : base()
+        public MultiStringBlock(List<IStringBlock> children) : base()
         {
             this.children = children;
         }
@@ -247,22 +288,22 @@ namespace Expression.Map.MapEvent.CommandFactory
         }
     }
 
-    internal class SpecialStringBock : IStringBlock
+    internal class SpecialStringBlock : IStringBlock
     {
         private IStringBlock child;
         private string functionString;
         private CommandVisitContext context;
 
-        public SpecialStringBock(string functionString,
+        public SpecialStringBlock(string functionString,
             CommandVisitContext context, IStringBlock child) : base()
         {
             this.functionString = functionString;
             this.child = child;
+            this.context = context;
         }
 
         public string GetMessaage()
         {
-            string message = "";
             string childStr = child.GetMessaage();
             if (functionString.Equals("self"))
             {
@@ -270,7 +311,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                 if (!int.TryParse(childStr, out int fieldId))
                 {
                     // ID変換できない場合は定数として返す
-                    message += childStr;
+                    return $"\\{functionString}[{childStr}]";
                 }
 
                 var repository = DI.DependencyInjector.It().MapEventStateRpository;
@@ -280,7 +321,7 @@ namespace Expression.Map.MapEvent.CommandFactory
                     new Domain.Data.FieldId(fieldId, "")
                     );
 
-                message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+                return new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
             }
             else if (functionString.Equals("cself"))
             {
@@ -288,15 +329,16 @@ namespace Expression.Map.MapEvent.CommandFactory
                 if (!int.TryParse(childStr, out int variableId))
                 {
                     // ID変換できない場合は定数として返す
-                    message += childStr;
+                    return $"\\{functionString}[{childStr}]";
                 }
+
                 if (context.CommonEventId == null)
                 {
                     // コモンイベントから呼び出されていない場合は0を返す
-                    message += "0";
+                    return "0";
                 }
 
-                message += new Event.CommonEventVariableAccessor(
+                return new Event.CommonEventVariableAccessor(
                     new Event.CommonEventId(context.CommonEventId.Value), variableId).GetString();
             }
             else if (functionString.Equals("sdb"))
@@ -323,15 +365,13 @@ namespace Expression.Map.MapEvent.CommandFactory
                     new Domain.Data.FieldId(fieldId, "")
                     );
 
-                message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+                return new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
             }
             else
             {
                 // 処理できない場合はただ返却する
-                message += $"\\{functionString}[{childStr}]";
+                return $"\\{functionString}[{childStr}]";
             }
-
-            return message;
         }
     }
 }
