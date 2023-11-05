@@ -106,7 +106,7 @@ namespace UI.Map
             List<ActionBase> actions = new List<ActionBase>();
             actions.Add(new ShowMessageAsPictureAction(id, message, actionEnv, command.PivotPattern, x, y));
             actions.Add(new WaitForInputAction());
-            actions.Add(new CloseChoiceAction(actionEnv, false, controlInfo));
+            //actions.Add(new CloseChoiceAction(actionEnv, false, controlInfo));
 
             GeneratedAction = new MultiAction(actions);
         }
