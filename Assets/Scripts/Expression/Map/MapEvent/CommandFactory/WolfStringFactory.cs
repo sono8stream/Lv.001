@@ -135,9 +135,15 @@ namespace Expression.Map.MapEvent.CommandFactory
             // \XXX[]hoge\YYY[]というように並列で複数から構成されている場合があるので、]で区切りながら取得していく
 
             List<IStringBlock> blocks = new List<IStringBlock>();
-            while (text.Length <= index || text[index] != '\\')
+            while (index < text.Length)
             {
                 int specialStartI = text.IndexOf('\\', index);
+                if (specialStartI == -1)
+                {
+                    // 特殊文字がなければそのまま返す
+                    blocks.Add(new ConstStringBock(text.Substring(specialStartI)));
+                }
+
                 int blockStartI = text.IndexOf('[', specialStartI);
 
                 if (specialStartI < 0 || blockStartI < 0)
@@ -160,11 +166,21 @@ namespace Expression.Map.MapEvent.CommandFactory
                     }
                 }
 
-                // 特殊文字なので、ブロックを取得して返す。
                 string functionString = text.Substring(specialStartI, blockStartI - specialStartI);
                 if (patterns.Contains(functionString))
                 {
-
+                    // 特殊文字なので、内部ブロックを取得。
+                    IStringBlock child = CreateBlock(text, ref blockStartI, context);
+                    // 部六読み取り後に]が来なければ特殊文字とみなせない。
+                    if (text[index] == ']')
+                    {
+                        return new SpecialStringBock(functionString, context, child);
+                    }
+                    else
+                    {
+                        // ブロックになっていない場合はそのまま足すだけ
+                        blocks.Add(new ConstStringBock($"\\{functionString}[]"));
+                    }
                 }
             }
 
@@ -234,86 +250,86 @@ namespace Expression.Map.MapEvent.CommandFactory
 
     internal class SpecialStringBock : IStringBlock
     {
-        private List<IStringBlock> children;
+        private IStringBlock child;
         private string functionString;
         private CommandVisitContext context;
 
         public SpecialStringBock(string functionString,
-            CommandVisitContext context, List<IStringBlock> children) : base()
+            CommandVisitContext context, IStringBlock child) : base()
         {
             this.functionString = functionString;
-            this.children = children;
+            this.child = child;
         }
 
         public string GetMessaage()
         {
             string message = "";
-            for (int i = 0; i < children.Count; i++)
+            string childStr = child.GetMessaage();
+            if (functionString.Equals("self"))
             {
-                string childStr = children[i].GetMessaage();
-                if (functionString.Equals("self"))
+                // 実行中のマップイベントのセルフ変数呼び出し
+                if (!int.TryParse(childStr, out int fieldId))
                 {
-                    // 実行中のマップイベントのセルフ変数呼び出し
-                    if (!int.TryParse(childStr, out int fieldId))
-                    {
-                        // ID変換できない場合は定数として返す
-                        message += childStr;
-                    }
-
-                    var repository = DI.DependencyInjector.It().MapEventStateRpository;
-                    Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                        new Domain.Data.TableId(context.MapId.Value, ""),
-                        new Domain.Data.RecordId(context.EventId.Value, ""),
-                        new Domain.Data.FieldId(fieldId, "")
-                        );
-
-                    message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
-                }
-                else if (functionString.Equals("cself"))
-                {
-                    // 実行中のコモンイベントのセルフ変数呼び出し
-                    if (!int.TryParse(childStr, out int variableId))
-                    {
-                        // ID変換できない場合は定数として返す
-                        message += childStr;
-                    }
-                    if (context.CommonEventId == null)
-                    {
-                        // コモンイベントから呼び出されていない場合は0を返す
-                        message += "0";
-                    }
-
-                    message += new Event.CommonEventVariableAccessor(
-                        new Event.CommonEventId(context.CommonEventId.Value), variableId).GetString();
-                }
-                else if (functionString.Equals("sdb"))
-                {
-                    // システムDBの変数呼び出し。\sdb[A:B:C]でタイプA番・データB番・項目C番を呼び出す。
-                    string[] vars = childStr.Split(':');
-                    if (vars.Length != 3)
-                    {
-                        return childStr;
-                    }
-
-                    if (!(int.TryParse(vars[0], out int tableId)
-                        && int.TryParse(vars[1], out int recordId)
-                        && int.TryParse(vars[2], out int fieldId)))
-                    {
-                        // ID変換できない場合は定数として返す
-                        return childStr;
-                    }
-
-                    var repository = DI.DependencyInjector.It().SystemDataRepository;
-                    Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                        new Domain.Data.TableId(tableId, ""),
-                        new Domain.Data.RecordId(recordId, ""),
-                        new Domain.Data.FieldId(fieldId, "")
-                        );
-
-                    message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+                    // ID変換できない場合は定数として返す
+                    message += childStr;
                 }
 
-                message += childStr;
+                var repository = DI.DependencyInjector.It().MapEventStateRpository;
+                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                    new Domain.Data.TableId(context.MapId.Value, ""),
+                    new Domain.Data.RecordId(context.EventId.Value, ""),
+                    new Domain.Data.FieldId(fieldId, "")
+                    );
+
+                message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+            }
+            else if (functionString.Equals("cself"))
+            {
+                // 実行中のコモンイベントのセルフ変数呼び出し
+                if (!int.TryParse(childStr, out int variableId))
+                {
+                    // ID変換できない場合は定数として返す
+                    message += childStr;
+                }
+                if (context.CommonEventId == null)
+                {
+                    // コモンイベントから呼び出されていない場合は0を返す
+                    message += "0";
+                }
+
+                message += new Event.CommonEventVariableAccessor(
+                    new Event.CommonEventId(context.CommonEventId.Value), variableId).GetString();
+            }
+            else if (functionString.Equals("sdb"))
+            {
+                // システムDBの変数呼び出し。\sdb[A:B:C]でタイプA番・データB番・項目C番を呼び出す。
+                string[] vars = childStr.Split(':');
+                if (vars.Length != 3)
+                {
+                    return childStr;
+                }
+
+                if (!(int.TryParse(vars[0], out int tableId)
+                    && int.TryParse(vars[1], out int recordId)
+                    && int.TryParse(vars[2], out int fieldId)))
+                {
+                    // ID変換できない場合は定数として返す
+                    return childStr;
+                }
+
+                var repository = DI.DependencyInjector.It().SystemDataRepository;
+                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                    new Domain.Data.TableId(tableId, ""),
+                    new Domain.Data.RecordId(recordId, ""),
+                    new Domain.Data.FieldId(fieldId, "")
+                    );
+
+                message += new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+            }
+            else
+            {
+                // 処理できない場合はただ返却する
+                message += $"\\{functionString}[{childStr}]";
             }
 
             return message;
