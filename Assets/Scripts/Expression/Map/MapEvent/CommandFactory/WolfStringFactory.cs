@@ -1,6 +1,7 @@
 using Util.Wolf;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using static Infrastructure.WolfConfig;
 
 namespace Expression.Map.MapEvent.CommandFactory
 {
@@ -139,7 +140,11 @@ namespace Expression.Map.MapEvent.CommandFactory
         private void AddSpecialBlock(List<IStringBlock> blocks, string functionString, CommandVisitContext context, IStringBlock child)
         {
             // ファクトリクラスを作って委譲したほうがいい
-            if (functionString.Equals("sdb"))
+            if (functionString.Equals("self"))
+            {
+                blocks.Add(new SelfVariableAccessStringBlock(context, child));
+            }
+            else if (functionString.Equals("sdb"))
             {
                 blocks.Add(new DatabaseAccessStringBlock(Infrastructure.WolfConfig.DatabaseType.System, functionString, context, child));
             }
@@ -216,26 +221,9 @@ namespace Expression.Map.MapEvent.CommandFactory
 
         public virtual string GetMessaage()
         {
+            // 最終的に個別のStringBlockに分割し、if文を撲滅する
             string childStr = child.GetMessaage();
-            if (functionString.Equals("self"))
-            {
-                // 実行中のマップイベントのセルフ変数呼び出し
-                if (!int.TryParse(childStr, out int fieldId))
-                {
-                    // ID変換できない場合は定数として返す
-                    return $"\\{functionString}[{childStr}]";
-                }
-
-                var repository = DI.DependencyInjector.It().MapEventStateRpository;
-                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                    new Domain.Data.TableId(context.MapId.Value, ""),
-                    new Domain.Data.RecordId(context.EventId.Value, ""),
-                    new Domain.Data.FieldId(fieldId, "")
-                    );
-
-                return new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
-            }
-            else if (functionString.Equals("cself"))
+            if (functionString.Equals("cself"))
             {
                 // 実行中のコモンイベントのセルフ変数呼び出し
                 if (!int.TryParse(childStr, out int variableId))
@@ -261,6 +249,35 @@ namespace Expression.Map.MapEvent.CommandFactory
         }
     }
 
+    internal class SelfVariableAccessStringBlock : SpecialStringBlock
+    {
+        public SelfVariableAccessStringBlock(CommandVisitContext context, IStringBlock child)
+            : base("self", context, child)
+        {
+        }
+
+        public override string GetMessaage()
+        {
+            string childStr = child.GetMessaage();
+
+            // 実行中のマップイベントのセルフ変数呼び出し
+            if (!int.TryParse(childStr, out int fieldId))
+            {
+                // ID変換できない場合は定数として返す
+                return $"\\{functionString}[{childStr}]";
+            }
+
+            var repository = DI.DependencyInjector.It().MapEventStateRpository;
+            Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
+                new Domain.Data.TableId(context.MapId.Value, ""),
+                new Domain.Data.RecordId(context.EventId.Value, ""),
+                new Domain.Data.FieldId(fieldId, "")
+                );
+
+            return new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
+        }
+    }
+
     internal class DatabaseAccessStringBlock : SpecialStringBlock
     {
         Infrastructure.WolfConfig.DatabaseType databaseType;
@@ -275,7 +292,7 @@ namespace Expression.Map.MapEvent.CommandFactory
         public override string GetMessaage()
         {
             string childStr = child.GetMessaage();
-            string originalString = $"{functionString}[{childStr}]";
+            string originalString = $"\\{functionString}[{childStr}]";
 
             // DBの変数呼び出し。\sdb[A:B:C]でタイプA番・データB番・項目C番を呼び出す。
             string[] vars = childStr.Split(':');
