@@ -54,11 +54,11 @@ namespace Expression.Map.MapEvent.CommandFactory
                             // ブロック読み取り後の位置に]がいなければ特殊文字とみなせない。
                             if (index < text.Length && text[index] == ']')
                             {
-                                blocks.Add(new SpecialStringBlock(tmp, context, child));
+                                AddSpecialBlock(blocks, tmp, context, child);
                             }
                             else
                             {
-                                // 特殊文字のブロックになっていない場合は通常の文字列として足すだけ
+                                // 特殊文字のブロックになっていない場合（閉じ括弧が無い場合など）は通常の文字列として足すだけ
                                 List<IStringBlock> blocksTmp = new List<IStringBlock>();
                                 blocksTmp.Add(new ConstStringBlock($"\\{tmp}["));
                                 blocksTmp.Add(child);
@@ -131,7 +131,30 @@ namespace Expression.Map.MapEvent.CommandFactory
                 "self",
                 "cself",
                 "sdb",
+                "cdb",
+                "udb",
             };
+        }
+
+        private void AddSpecialBlock(List<IStringBlock> blocks, string functionString, CommandVisitContext context, IStringBlock child)
+        {
+            // ファクトリクラスを作って委譲したほうがいい
+            if (functionString.Equals("sdb"))
+            {
+                blocks.Add(new DatabaseAccessStringBlock(Infrastructure.WolfConfig.DatabaseType.System, functionString, context, child));
+            }
+            else if (functionString.Equals("cdb"))
+            {
+                blocks.Add(new DatabaseAccessStringBlock(Infrastructure.WolfConfig.DatabaseType.Changable, functionString, context, child));
+            }
+            else if (functionString.Equals("udb"))
+            {
+                blocks.Add(new DatabaseAccessStringBlock(Infrastructure.WolfConfig.DatabaseType.User, functionString, context, child));
+            }
+            else
+            {
+                blocks.Add(new SpecialStringBlock(functionString, context, child));
+            }
         }
     }
 
@@ -179,9 +202,9 @@ namespace Expression.Map.MapEvent.CommandFactory
 
     internal class SpecialStringBlock : IStringBlock
     {
-        private IStringBlock child;
-        private string functionString;
-        private CommandVisitContext context;
+        protected string functionString;
+        protected IStringBlock child;
+        protected CommandVisitContext context;
 
         public SpecialStringBlock(string functionString,
             CommandVisitContext context, IStringBlock child) : base()
@@ -191,7 +214,7 @@ namespace Expression.Map.MapEvent.CommandFactory
             this.context = context;
         }
 
-        public string GetMessaage()
+        public virtual string GetMessaage()
         {
             string childStr = child.GetMessaage();
             if (functionString.Equals("self"))
@@ -230,37 +253,47 @@ namespace Expression.Map.MapEvent.CommandFactory
                 return new Event.CommonEventVariableAccessor(
                     new Event.CommonEventId(context.CommonEventId.Value), variableId).GetString();
             }
-            else if (functionString.Equals("sdb"))
-            {
-                // システムDBの変数呼び出し。\sdb[A:B:C]でタイプA番・データB番・項目C番を呼び出す。
-                string[] vars = childStr.Split(':');
-                if (vars.Length != 3)
-                {
-                    return childStr;
-                }
-
-                if (!(int.TryParse(vars[0], out int tableId)
-                    && int.TryParse(vars[1], out int recordId)
-                    && int.TryParse(vars[2], out int fieldId)))
-                {
-                    // ID変換できない場合は定数として返す
-                    return childStr;
-                }
-
-                var repository = DI.DependencyInjector.It().SystemDataRepository;
-                Domain.Data.DataRef dataRef = new Domain.Data.DataRef(
-                    new Domain.Data.TableId(tableId, ""),
-                    new Domain.Data.RecordId(recordId, ""),
-                    new Domain.Data.FieldId(fieldId, "")
-                    );
-
-                return new Common.RepositoryVariableAccessor(repository, dataRef).GetString();
-            }
             else
             {
                 // 処理できない場合はただ返却する
                 return $"\\{functionString}[{childStr}]";
             }
+        }
+    }
+
+    internal class DatabaseAccessStringBlock : SpecialStringBlock
+    {
+        Infrastructure.WolfConfig.DatabaseType databaseType;
+
+        public DatabaseAccessStringBlock(Infrastructure.WolfConfig.DatabaseType databaseType,
+            string functionString, CommandVisitContext context, IStringBlock child)
+            : base(functionString, context, child)
+        {
+            this.databaseType = databaseType;
+        }
+
+        public override string GetMessaage()
+        {
+            string childStr = child.GetMessaage();
+            string originalString = $"{functionString}[{childStr}]";
+
+            // DBの変数呼び出し。\sdb[A:B:C]でタイプA番・データB番・項目C番を呼び出す。
+            string[] vars = childStr.Split(':');
+            if (vars.Length != 3)
+            {
+                return originalString;
+            }
+
+            if (!(int.TryParse(vars[0], out int tableId)
+                && int.TryParse(vars[1], out int recordId)
+                && int.TryParse(vars[2], out int fieldId)))
+            {
+                // ID変換できない場合は定数として返す
+                return originalString;
+            }
+
+            var accessor = new Command.WolfRepositoryAccessorFactory(databaseType, tableId, recordId, fieldId);
+            return accessor.GetString(context);
         }
     }
 }

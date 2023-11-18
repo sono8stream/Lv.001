@@ -8,14 +8,14 @@ namespace Expression.Map.MapEvent.Command
     /// <summary>
     /// DataRefを遅延生成してデータアクセスするAccessor
     /// </summary>
-    public class WolfIntRepositoryAccessorFactory : IDataAccessorFactory
+    public class WolfRepositoryAccessorFactory : IDataAccessorFactory
     {
         private WolfVariableAccessorCreator tableIdCreator;
         private WolfVariableAccessorCreator recordIdCreator;
         private WolfVariableAccessorCreator fieldIdCreator;
         private IDataRepository targetRepository;
 
-        public WolfIntRepositoryAccessorFactory(WolfConfig.DatabaseType databaseType,
+        public WolfRepositoryAccessorFactory(WolfConfig.DatabaseType databaseType,
             int tableVal, int recordVal, int fieldVal)
         {
             targetRepository = GetRepository(databaseType);

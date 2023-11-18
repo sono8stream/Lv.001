@@ -86,7 +86,7 @@ namespace Expression.Map.MapEvent.CommandFactory
             OperatorType assignType = GetAssignOperator(operatorType);
             Common.IDataAccessorFactory targetAccessorFactory = new Command.WolfVariableAccessorFactory(false, targetVal);
             Common.IDataAccessorFactory databaseAccessorFactory
-                = new Command.WolfIntRepositoryAccessorFactory(dbType, typeNo, dataNo, fieldNo);
+                = new Command.WolfRepositoryAccessorFactory(dbType, typeNo, dataNo, fieldNo);
             // âEï”ëÊìÒçÄÇÕå≈íËÅBâΩÇ‡ÇµÇ»Ç¢
             OperatorType rightOperatorType = OperatorType.Plus;
 
