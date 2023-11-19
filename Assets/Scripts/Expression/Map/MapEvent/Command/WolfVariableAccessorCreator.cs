@@ -27,6 +27,9 @@ namespace Expression.Map.MapEvent.Command
             if (rawVal >= 1300000000)
             {
                 // システムDB読み出し
+                //var repository=getrepository
+                //new Common.RepositoryVariableAccessor();
+                //return new WolfRepositoryAccessorFactory().c
             }
             else if (rawVal >= 1100000000)
             {

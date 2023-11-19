@@ -15,6 +15,8 @@ namespace Expression.Map.MapEvent.Command
 
         public int GetInt(CommandVisitContext context)
         {
+            // 【暫定】VariableAccessorCreator内でRepositoryAccessorFactoryを直接呼べるよう、処理を集約させたい。
+            // 最終的にはCreator内でFactory生成とAccessor取得を集約させたい。
             return creator.Create(context).GetInt();
         }
 

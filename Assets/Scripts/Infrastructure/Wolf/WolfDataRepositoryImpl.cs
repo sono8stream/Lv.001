@@ -6,6 +6,7 @@ namespace Infrastructure
 {
     /// <summary>
     /// WolfRPGのDBを読み出すためのリポジトリ実装クラス
+    /// 【暫定】Get/Setのロジックがアクセッサ側にも書かれているので、ロジックを集約させる。
     /// </summary>
     public class WolfDataRepositoryImpl
     {

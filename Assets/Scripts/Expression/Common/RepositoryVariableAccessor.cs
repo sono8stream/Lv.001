@@ -53,20 +53,12 @@ namespace Expression.Common
 
         public void SetInt(int value)
         {
-            Domain.Data.DataField<int> intField = repository.FindInt(dataRef);
-            if (intField != null)
-            {
-                intField.Val = value;
-            }
+            repository.SetInt(dataRef, value);
         }
 
         public void SetString(string value)
         {
-            Domain.Data.DataField<string> strField = repository.FindString(dataRef);
-            if (strField != null)
-            {
-                strField.Val = value;
-            }
+            repository.SetString(dataRef, value);
         }
 
         public bool TestType(VariableType targetType)
