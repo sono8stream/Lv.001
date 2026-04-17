@@ -117,6 +117,25 @@ export interface ChangeVariableCommand {
   updaters: Updater[]
 }
 
+export interface ChangeStringCommand {
+  kind: 'changeString'
+  indent: number
+  targetRaw: number
+  opRaw: number
+  sourceRaw: number | null
+  texts: string[]
+}
+
+export interface ChangeStringDatabaseCommand {
+  kind: 'changeStringDatabase'
+  indent: number
+  targetRaw: number
+  database: DatabaseType
+  table: number
+  record: number
+  field: number
+}
+
 export interface MovePositionCommand {
   kind: 'movePosition'
   indent: number
@@ -197,6 +216,8 @@ export type WolfCommand =
   | ForkEndCommand
   | ConditionalForkCommand
   | ChangeVariableCommand
+  | ChangeStringCommand
+  | ChangeStringDatabaseCommand
   | MovePositionCommand
   | CallEventCommand
   | LoopStartCommand

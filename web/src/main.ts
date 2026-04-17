@@ -19,6 +19,7 @@ app.innerHTML = `
         <div><dt>スマホ</dt><dd>画面下の仮想キー</dd></div>
       </dl>
       <pre id="statusPanel" class="panel">booting...</pre>
+      <pre id="debugPanel" class="panel debug-panel">debug: booting...</pre>
     </aside>
     <main class="game-area">
       <div class="viewport-frame">
@@ -64,6 +65,7 @@ app.innerHTML = `
 const runtime = new WolfRuntime({
   canvas: document.querySelector<HTMLCanvasElement>('#gameCanvas')!,
   statusPanel: document.querySelector<HTMLPreElement>('#statusPanel')!,
+  debugPanel: document.querySelector<HTMLPreElement>('#debugPanel')!,
   messageBox: document.querySelector<HTMLDivElement>('#messageBox')!,
   messageText: document.querySelector<HTMLDivElement>('#messageText')!,
   choiceBox: document.querySelector<HTMLDivElement>('#choiceBox')!,

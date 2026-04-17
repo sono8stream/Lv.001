@@ -95,6 +95,12 @@ select {
   white-space: pre-wrap;
 }
 
+.debug-panel {
+  flex: 0 0 320px;
+  color: #9ad8ff;
+  font-size: 0.8rem;
+}
+
 .game-area {
   display: grid;
   place-items: center;

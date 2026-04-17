@@ -7,6 +7,8 @@ import {
 } from './data'
 import type {
   CallEventCommand,
+  ChangeStringDatabaseCommand,
+  ChangeStringCommand,
   ChangeVariableCommand,
   ChoiceCommand,
   CommandContext,
@@ -29,6 +31,7 @@ import { TILE_SIZE } from './types'
 interface RuntimeElements {
   canvas: HTMLCanvasElement
   statusPanel: HTMLPreElement
+  debugPanel?: HTMLPreElement
   messageBox: HTMLDivElement
   messageText: HTMLDivElement
   choiceBox: HTMLDivElement
@@ -39,8 +42,17 @@ interface RuntimeElements {
 }
 
 type PictureEntry = HTMLImageElement | HTMLDivElement
+type InterpolationToken =
+  | { kind: 'self'; index: number }
+  | { kind: 'cself'; index: number }
+  | { kind: 'db'; database: 'system' | 'changeable' | 'user'; table: number; record: number; field: number }
+type InterpolationSegment = string | InterpolationToken
 
 export class WolfRuntime {
+  private static readonly COMMAND_STEP_LIMIT = 20000
+  private static readonly UNSUPPORTED_BATTLE_EVENT_NAMES = new Set(['◆バトルの発生', 'X◆戦闘処理'])
+  private static readonly INTERPOLATION_TOKEN_PATTERN = /\\(self\[(\d+)\]|cself\[(\d+)\]|([ucs])db\[(\d+):(\d+):(\d+)])/g
+
   private readonly elements: RuntimeElements
   private readonly context: CanvasRenderingContext2D
   private readonly pictureEntries = new Map<number, PictureEntry>()
@@ -48,6 +60,7 @@ export class WolfRuntime {
   private readonly virtualKeyTimers = new Map<string, number>()
   private readonly currentMapEventVariables = new Map<string, number[]>()
   private readonly triggeredAutoEvents = new Set<string>()
+  private readonly stringTemplateCache = new Map<string, readonly InterpolationSegment[]>()
 
   private repository: WolfDataRepository | null = null
   private currentMap: WolfMapData | null = null
@@ -77,6 +90,7 @@ export class WolfRuntime {
       fallbackContext.fillStyle = '#0b2540'
       fallbackContext.fillRect(2, 2, TILE_SIZE - 4, TILE_SIZE - 4)
     }
+    this.setDebugInfo('debug: booting...')
   }
 
   async boot(): Promise<void> {
@@ -95,6 +109,7 @@ export class WolfRuntime {
 
       this.installInput()
       await this.changeMap(this.startLocation.mapId, this.startLocation.x, this.startLocation.y)
+      this.setDebugIdle()
       this.render()
       requestAnimationFrame(() => this.loop())
     } catch (error) {
@@ -336,77 +351,97 @@ export class WolfRuntime {
   private async executeCommands(commands: WolfCommand[], context: CommandContext): Promise<void> {
     const loops: Array<{ indent: number; startIndex: number; currentCount: number; maxCount: number; isInfinite: boolean }> = []
     let index = 0
+    let steps = 0
 
-    while (index < commands.length) {
-      const command = commands[index]
-      switch (command.kind) {
-        case 'message':
-          await this.showMessage(this.interpolateString(command.text, context))
-          index += 1
-          break
-        case 'choice': {
-          const choiceIndex = await this.showChoices(command)
-          const nextIndex = this.findLabelIndex(commands, index, `${command.indent}.${choiceIndex + 2}`)
-          index = nextIndex >= 0 ? nextIndex + 1 : index + 1
-          break
+    try {
+      while (index < commands.length) {
+        steps += 1
+        if (steps > WolfRuntime.COMMAND_STEP_LIMIT) {
+          throw new Error(`Command execution exceeded step limit (${WolfRuntime.COMMAND_STEP_LIMIT}) on map ${context.mapId} (event=${context.eventId ?? '-'} common=${context.commonEventId ?? '-'})`)
         }
-        case 'conditionalFork': {
-          const nextIndex = this.jumpForConditionalFork(commands, index, command, context)
-          index = nextIndex
-          break
+
+        const command = commands[index]
+        this.setDebugCommand(context, command, index, commands.length)
+
+        switch (command.kind) {
+          case 'message':
+            await this.showMessage(this.interpolateString(command.text, context))
+            index += 1
+            break
+          case 'choice': {
+            const choiceIndex = await this.showChoices(command)
+            const nextIndex = this.findLabelIndex(commands, index, `${command.indent}.${choiceIndex + 2}`)
+            index = nextIndex >= 0 ? nextIndex + 1 : index + 1
+            break
+          }
+          case 'conditionalFork': {
+            const nextIndex = this.jumpForConditionalFork(commands, index, command, context)
+            index = nextIndex
+            break
+          }
+          case 'forkBegin': {
+            const nextIndex = this.findLabelIndex(commands, index, `${command.indent}.0`)
+            index = nextIndex >= 0 ? nextIndex + 1 : commands.length
+            break
+          }
+          case 'forkEnd':
+            index += 1
+            break
+          case 'changeVariable':
+            this.applyChangeVariable(command, context)
+            index += 1
+            break
+          case 'changeString':
+            this.applyChangeString(command, context)
+            index += 1
+            break
+          case 'changeStringDatabase':
+            this.applyChangeStringDatabase(command, context)
+            index += 1
+            break
+          case 'movePosition':
+            await this.changeMap(command.mapId, command.x, command.y)
+            context.mapId = command.mapId
+            index += 1
+            break
+          case 'callEvent':
+            await this.executeCallEvent(command, context)
+            index += 1
+            break
+          case 'loopStart': {
+            const nextIndex = this.enterLoop(command, commands, index, context, loops)
+            index = nextIndex
+            break
+          }
+          case 'loopEnd': {
+            const nextIndex = this.handleLoopEnd(command, index, loops)
+            index = nextIndex
+            break
+          }
+          case 'loopBreak': {
+            const nextIndex = this.handleLoopBreak(commands, loops)
+            index = nextIndex
+            break
+          }
+          case 'showPicture':
+            await this.showPicture(command, context)
+            index += 1
+            break
+          case 'showMessagePicture':
+            this.showMessagePicture(command, context)
+            index += 1
+            break
+          case 'removePicture':
+            this.removePicture(command.pictureId)
+            index += 1
+            break
+          case 'unknown':
+            index += 1
+            break
         }
-        case 'forkBegin': {
-          const nextIndex = this.findLabelIndex(commands, index, `${command.indent}.0`)
-          index = nextIndex >= 0 ? nextIndex + 1 : commands.length
-          break
-        }
-        case 'forkEnd':
-          index += 1
-          break
-        case 'changeVariable':
-          this.applyChangeVariable(command, context)
-          index += 1
-          break
-        case 'movePosition':
-          await this.changeMap(command.mapId, command.x, command.y)
-          context.mapId = command.mapId
-          index += 1
-          break
-        case 'callEvent':
-          await this.executeCallEvent(command, context)
-          index += 1
-          break
-        case 'loopStart': {
-          const nextIndex = this.enterLoop(command, commands, index, context, loops)
-          index = nextIndex
-          break
-        }
-        case 'loopEnd': {
-          const nextIndex = this.handleLoopEnd(command, index, loops)
-          index = nextIndex
-          break
-        }
-        case 'loopBreak': {
-          const nextIndex = this.handleLoopBreak(commands, loops)
-          index = nextIndex
-          break
-        }
-        case 'showPicture':
-          await this.showPicture(command, context)
-          index += 1
-          break
-        case 'showMessagePicture':
-          this.showMessagePicture(command, context)
-          index += 1
-          break
-        case 'removePicture':
-          this.removePicture(command.pictureId)
-          index += 1
-          break
-        case 'unknown':
-          index += 1
-          break
       }
+    } finally {
+      this.setDebugIdle()
     }
   }
 
@@ -531,6 +566,14 @@ export class WolfRuntime {
       commonEvent.numberVariables[index] = args[index]
     }
 
+    if (WolfRuntime.UNSUPPORTED_BATTLE_EVENT_NAMES.has(commonEvent.name)) {
+      if (command.hasReturnValue && command.returnDestination !== null) {
+        this.assignNumberRef(command.returnDestination, 0, context)
+      }
+      await this.showMessage('戦闘はまだ Web 版で未対応です。')
+      return
+    }
+
     await this.executeCommands(commonEvent.commands, {
       mapId: context.mapId,
       eventId: context.eventId,
@@ -554,6 +597,96 @@ export class WolfRuntime {
     for (const updater of command.updaters) {
       this.applyUpdater(updater, context)
     }
+  }
+
+  private applyChangeString(command: ChangeStringCommand, context: CommandContext): void {
+    let currentValue: string | null = null
+    let sourceString: string | null = null
+    let sourceNumber: string | null = null
+    let literal: string | null = null
+    let replacementText: string | null = null
+
+    const getCurrentValue = (): string => {
+      if (currentValue === null) {
+        currentValue = this.resolveStringRef(command.targetRaw, context)
+      }
+      return currentValue
+    }
+
+    const getSourceString = (): string => {
+      if (sourceString === null) {
+        sourceString = command.sourceRaw === null ? '' : this.resolveStringRef(command.sourceRaw, context)
+      }
+      return sourceString
+    }
+
+    const getSourceNumber = (): string => {
+      if (sourceNumber === null) {
+        sourceNumber = command.sourceRaw === null
+          ? ''
+          : String(this.resolveNumberRef({ kind: 'raw', value: command.sourceRaw }, context))
+      }
+      return sourceNumber
+    }
+
+    const getLiteral = (): string => {
+      if (literal === null) {
+        literal = this.interpolateString(command.texts[0] ?? '', context)
+      }
+      return literal
+    }
+
+    const getReplacementText = (): string => {
+      if (replacementText === null) {
+        replacementText = this.interpolateString(command.texts[1] ?? '', context)
+      }
+      return replacementText
+    }
+
+    let nextValue = getCurrentValue()
+    switch (command.opRaw) {
+      case 0:
+      case 2048:
+        nextValue = getLiteral()
+        break
+      case 1:
+        nextValue = getSourceString()
+        break
+      case 2:
+        nextValue = getSourceNumber()
+        break
+      case 256:
+        nextValue = `${getCurrentValue()}${getLiteral()}`
+        break
+      case 769:
+        nextValue = getSourceString()
+        break
+      case 2304: {
+        const from = command.texts[0] ?? ''
+        nextValue = from.length === 0 ? getCurrentValue() : getCurrentValue().split(from).join(getReplacementText())
+        break
+      }
+      default:
+        if ((command.opRaw & 0x01) > 0 && command.sourceRaw !== null) {
+          nextValue = (command.opRaw & 0x100) > 0 ? `${getCurrentValue()}${getSourceString()}` : getSourceString()
+        } else if ((command.opRaw & 0x02) > 0 && command.sourceRaw !== null) {
+          nextValue = (command.opRaw & 0x100) > 0 ? `${getCurrentValue()}${getSourceNumber()}` : getSourceNumber()
+        } else {
+          nextValue = (command.opRaw & 0x100) > 0 ? `${getCurrentValue()}${getLiteral()}` : getLiteral()
+        }
+        break
+    }
+
+    this.assignStringRef(command.targetRaw, nextValue, context)
+  }
+
+  private applyChangeStringDatabase(command: ChangeStringDatabaseCommand, context: CommandContext): void {
+    if (this.repository === null) {
+      return
+    }
+
+    const value = this.repository.getDatabase(command.database).getString(command.table, command.record, command.field)
+    this.assignStringRef(command.targetRaw, value, context)
   }
 
   private applyUpdater(updater: Updater, context: CommandContext): void {
@@ -651,9 +784,8 @@ export class WolfRuntime {
 
     const rawValue = ref.value
     if (rawValue >= 15000000) {
-      const commonEventId = Math.trunc((rawValue - 15000000) / 100)
       const variableIndex = rawValue % 100
-      const commonEvent = this.repository.getCommonEventById(commonEventId)
+      const commonEvent = this.getCommonEvent(Math.trunc((rawValue - 15000000) / 100))
       if (commonEvent === null) {
         return 0
       }
@@ -662,7 +794,7 @@ export class WolfRuntime {
     }
 
     if (rawValue >= 1600000 && context.commonEventId !== null) {
-      const commonEvent = this.repository.getCommonEventById(context.commonEventId)
+      const commonEvent = this.getCommonEvent(context.commonEventId)
       if (commonEvent === null) {
         return 0
       }
@@ -693,9 +825,8 @@ export class WolfRuntime {
 
     const rawValue = ref.value
     if (rawValue >= 15000000) {
-      const commonEventId = Math.trunc((rawValue - 15000000) / 100)
       const variableIndex = rawValue % 100
-      const commonEvent = this.repository.getCommonEventById(commonEventId)
+      const commonEvent = this.getCommonEvent(Math.trunc((rawValue - 15000000) / 100))
       if (commonEvent === null) {
         return
       }
@@ -707,7 +838,7 @@ export class WolfRuntime {
     }
 
     if (rawValue >= 1600000 && context.commonEventId !== null) {
-      const commonEvent = this.repository.getCommonEventById(context.commonEventId)
+      const commonEvent = this.getCommonEvent(context.commonEventId)
       if (commonEvent === null) {
         return
       }
@@ -721,6 +852,54 @@ export class WolfRuntime {
     if (rawValue >= 1100000 && context.eventId !== null) {
       this.setMapEventVariable(context.mapId, context.eventId, rawValue % 10, value)
     }
+  }
+
+  private resolveStringRef(rawValue: number, context: CommandContext): string {
+    if (this.repository === null) {
+      return ''
+    }
+
+    if (rawValue >= 15000000) {
+      return this.resolveCommonEventVariableText(Math.trunc((rawValue - 15000000) / 100), rawValue % 100)
+    }
+
+    if (rawValue >= 1600000 && context.commonEventId !== null) {
+      return this.resolveCommonEventVariableText(context.commonEventId, rawValue % 100)
+    }
+
+    if (rawValue >= 1100000 && context.eventId !== null) {
+      return String(this.getMapEventVariable(context.mapId, context.eventId, rawValue % 10))
+    }
+
+    return ''
+  }
+
+  private assignStringRef(rawValue: number, value: string, context: CommandContext): void {
+    if (this.repository === null) {
+      return
+    }
+
+    if (rawValue >= 15000000) {
+      this.assignCommonEventStringValue(Math.trunc((rawValue - 15000000) / 100), rawValue % 100, value)
+      return
+    }
+
+    if (rawValue >= 1600000 && context.commonEventId !== null) {
+      this.assignCommonEventStringValue(context.commonEventId, rawValue % 100, value)
+    }
+  }
+
+  private resolveCommonEventVariableText(commonEventId: number, variableId: number): string {
+    return this.readCommonEventVariableText(this.getCommonEvent(commonEventId), variableId)
+  }
+
+  private assignCommonEventStringValue(commonEventId: number, variableId: number, value: string): void {
+    const commonEvent = this.getCommonEvent(commonEventId)
+    if (commonEvent === null || variableId < 5 || variableId > 9) {
+      return
+    }
+
+    commonEvent.stringVariables[variableId - 5] = value
   }
 
   private getMapEventVariable(mapId: number, eventId: number, fieldIndex: number): number {
@@ -744,29 +923,143 @@ export class WolfRuntime {
       return text
     }
 
-    return text.replace(/\\(self\[(\d+)\]|cself\[(\d+)\]|([ucs])db\[(\d+):(\d+):(\d+)])/g, (_, _whole, selfIndex, cselfIndex, dbKind, table, record, field) => {
+    if (!text.includes('\\')) {
+      return text
+    }
+
+    const segments = this.getInterpolationSegments(text)
+    if (segments.length === 1 && typeof segments[0] === 'string') {
+      return segments[0]
+    }
+
+    const commonEvent = this.getCommonEvent(context.commonEventId)
+    const mapEventVariables = context.eventId === null
+      ? null
+      : this.currentMapEventVariables.get(`${context.mapId}:${context.eventId}`) ?? null
+    const databaseStores = {
+      system: this.repository.systemDb,
+      changeable: this.repository.changeableDb,
+      user: this.repository.userDb,
+    } as const
+
+    let selfValues: string[] | null = null
+    let commonValues: string[] | null = null
+    let databaseValues: Map<string, string> | null = null
+    const parts: string[] = []
+
+    for (const segment of segments) {
+      if (typeof segment === 'string') {
+        parts.push(segment)
+        continue
+      }
+
+      switch (segment.kind) {
+        case 'self': {
+          const cached = selfValues?.[segment.index]
+          if (cached !== undefined) {
+            parts.push(cached)
+            continue
+          }
+          const value = mapEventVariables === null ? '0' : String(mapEventVariables[segment.index] ?? 0)
+          ;(selfValues ??= [])[segment.index] = value
+          parts.push(value)
+          break
+        }
+        case 'cself': {
+          const cached = commonValues?.[segment.index]
+          if (cached !== undefined) {
+            parts.push(cached)
+            continue
+          }
+          const value = commonEvent === null ? '0' : this.readCommonEventVariableText(commonEvent, segment.index)
+          ;(commonValues ??= [])[segment.index] = value
+          parts.push(value)
+          break
+        }
+        case 'db': {
+          const key = `${segment.database}:${segment.table}:${segment.record}:${segment.field}`
+          const cached = databaseValues?.get(key)
+          if (cached !== undefined) {
+            parts.push(cached)
+            continue
+          }
+          const value = databaseStores[segment.database].getString(segment.table, segment.record, segment.field)
+          ;(databaseValues ??= new Map()).set(key, value)
+          parts.push(value)
+          break
+        }
+      }
+    }
+
+    return parts.join('')
+  }
+
+  private getCommonEvent(commonEventId: number | null): CommonEventData | null {
+    if (this.repository === null || commonEventId === null) {
+      return null
+    }
+
+    return this.repository.getCommonEventById(commonEventId)
+  }
+
+  private readCommonEventVariableText(commonEvent: CommonEventData | null, variableId: number): string {
+    if (commonEvent === null) {
+      return ''
+    }
+
+    if (variableId >= 5 && variableId <= 9) {
+      return commonEvent.stringVariables[variableId - 5] ?? ''
+    }
+
+    const resolvedIndex = toCommonNumberVariableIndex(variableId)
+    return resolvedIndex >= 0 ? String(commonEvent.numberVariables[resolvedIndex] ?? 0) : ''
+  }
+
+  private getInterpolationSegments(text: string): readonly InterpolationSegment[] {
+    const cached = this.stringTemplateCache.get(text)
+    if (cached !== undefined) {
+      return cached
+    }
+
+    const segments: InterpolationSegment[] = []
+    const matcher = new RegExp(WolfRuntime.INTERPOLATION_TOKEN_PATTERN)
+    let cursor = 0
+    let match = matcher.exec(text)
+
+    while (match !== null) {
+      if (match.index > cursor) {
+        segments.push(text.slice(cursor, match.index))
+      }
+
+      const [, , selfIndex, cselfIndex, dbKind, table, record, field] = match
       if (selfIndex !== undefined) {
-        if (context.eventId === null) {
-          return '0'
-        }
-        return String(this.getMapEventVariable(context.mapId, context.eventId, Number(selfIndex)))
+        segments.push({ kind: 'self', index: Number(selfIndex) })
+      } else if (cselfIndex !== undefined) {
+        segments.push({ kind: 'cself', index: Number(cselfIndex) })
+      } else {
+        segments.push({
+          kind: 'db',
+          database: dbKind === 'u' ? 'user' : dbKind === 'c' ? 'changeable' : 'system',
+          table: Number(table),
+          record: Number(record),
+          field: Number(field),
+        })
       }
 
-      if (cselfIndex !== undefined) {
-        if (context.commonEventId === null) {
-          return '0'
-        }
-        const commonEvent = this.repository?.getCommonEventById(context.commonEventId) ?? null
-        if (commonEvent === null) {
-          return '0'
-        }
-        const index = toCommonNumberVariableIndex(Number(cselfIndex))
-        return index >= 0 ? String(commonEvent.numberVariables[index] ?? 0) : ''
-      }
+      cursor = match.index + match[0].length
+      match = matcher.exec(text)
+    }
 
-      const dbType = dbKind === 'u' ? 'user' : dbKind === 'c' ? 'changeable' : 'system'
-      return this.repository!.getDatabase(dbType).getString(Number(table), Number(record), Number(field))
-    })
+    if (cursor < text.length) {
+      segments.push(text.slice(cursor))
+    }
+
+    if (segments.length === 0) {
+      segments.push(text)
+    }
+
+    this.stringTemplateCache.set(text, segments)
+    return segments
   }
 
   private getActivePage(event: WolfMapEvent): EventPage | null {
@@ -1070,6 +1363,57 @@ export class WolfRuntime {
 
   private setStatus(text: string): void {
     this.elements.statusPanel.textContent = text
+  }
+
+  private setDebugInfo(text: string): void {
+    if (this.elements.debugPanel !== undefined) {
+      this.elements.debugPanel.textContent = text
+    }
+  }
+
+  private setDebugIdle(): void {
+    const lines = ['debug: idle']
+    if (this.currentMap !== null) {
+      lines.push(`map: ${this.currentMap.id}`)
+      lines.push(`player: (${this.playerX}, ${this.playerY})`)
+    }
+    this.setDebugInfo(lines.join('\n'))
+  }
+
+  private setDebugCommand(context: CommandContext, command: WolfCommand, index: number, total: number): void {
+    const lines = [
+      'debug: executing',
+      `map: ${context.mapId}`,
+      `mapEvent: ${this.describeMapEvent(context)}`,
+      `commonEvent: ${this.describeCommonEvent(context.commonEventId)}`,
+      `command: ${index + 1}/${total}`,
+      `kind: ${command.kind}`,
+      '',
+      this.formatCommandDebug(command),
+    ]
+    this.setDebugInfo(lines.join('\n'))
+  }
+
+  private describeMapEvent(context: CommandContext): string {
+    if (context.eventId === null) {
+      return '-'
+    }
+    const event = this.currentMap?.id === context.mapId
+      ? this.currentMap.events.find((entry) => entry.id === context.eventId)
+      : null
+    return event === undefined || event === null ? String(context.eventId) : `${event.id} ${event.name}`
+  }
+
+  private describeCommonEvent(commonEventId: number | null): string {
+    if (commonEventId === null) {
+      return '-'
+    }
+    const commonEvent = this.getCommonEvent(commonEventId)
+    return commonEvent === null ? String(commonEventId) : `${commonEvent.id} ${commonEvent.name}`
+  }
+
+  private formatCommandDebug(command: WolfCommand): string {
+    return JSON.stringify(command, null, 2)
   }
 
   private showError(error: unknown): void {

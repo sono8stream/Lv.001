@@ -1,6 +1,8 @@
 import { WolfBinaryReader, createCanvas, loadBinary, loadImage } from './binary'
 import type {
   CallEventCommand,
+  ChangeStringDatabaseCommand,
+  ChangeStringCommand,
   ChangeVariableCommand,
   CommonEventData,
   CommandContext,
@@ -651,6 +653,8 @@ export class WolfDataRepository {
           indent: meta.indentDepth,
           updaters: [this.createStandardUpdater(meta)],
         } satisfies ChangeVariableCommand
+      case 0x7a:
+        return this.createChangeString(meta)
       case 0x82:
         return {
           kind: 'movePosition',
@@ -671,11 +675,7 @@ export class WolfDataRepository {
       case 0xd2:
         return this.createCallEventById(meta)
       case 0xfa:
-        return {
-          kind: 'changeVariable',
-          indent: meta.indentDepth,
-          updaters: [this.createDatabaseUpdater(meta)],
-        } satisfies ChangeVariableCommand
+        return this.createDatabaseCommand(meta)
       case 0x12c:
         return this.createCallEventByName(meta)
       case 0x191:
@@ -713,6 +713,17 @@ export class WolfDataRepository {
       right2: rawRef(meta.numberArgs[3] ?? 0),
       assignOperator: operatorType % 0x10,
       rightOperator: Math.trunc(operatorType / 0x10),
+    }
+  }
+
+  private createChangeString(meta: MetaCommand): ChangeStringCommand {
+    return {
+      kind: 'changeString',
+      indent: meta.indentDepth,
+      targetRaw: meta.numberArgs[1] ?? 0,
+      opRaw: meta.numberArgs[2] ?? 0,
+      sourceRaw: meta.numberArgs.length > 3 ? (meta.numberArgs[3] ?? 0) : null,
+      texts: meta.stringArgs,
     }
   }
 
@@ -761,6 +772,63 @@ export class WolfDataRepository {
       assignOperator: this.toDbAssignOperator(operatorRaw),
       rightOperator: 0,
     }
+  }
+
+  private createDatabaseCommand(meta: MetaCommand): WolfCommand {
+    const typeNoRaw = meta.numberArgs[1] ?? 0
+    const dataNoRaw = meta.numberArgs[2] ?? 0
+    const fieldNoRaw = meta.numberArgs[3] ?? 0
+    const configRaw = meta.numberArgs[4] ?? 0
+    const targetValueRaw = meta.numberArgs[5] ?? 0
+
+    const targetDatabase = (configRaw >> 8) & 0x0f
+    const modeType = (configRaw >> 12) & 0x0f
+    const nameFlags = (configRaw >> 16) & 0x0f
+
+    const database = this.toDatabaseType(targetDatabase)
+    const store = this.getDatabase(database)
+
+    let typeNo = typeNoRaw
+    let dataNo = dataNoRaw
+    let fieldNo = fieldNoRaw
+
+    if ((nameFlags & 0x01) > 0) {
+      typeNo = store.findTableIndexByName(meta.stringArgs[1] ?? '')
+    }
+    if ((nameFlags & 0x02) > 0) {
+      dataNo = store.findRecordIndexByName(typeNo, meta.stringArgs[2] ?? '')
+    }
+    if ((nameFlags & 0x04) > 0) {
+      fieldNo = store.findFieldIndexByName(typeNo, meta.stringArgs[3] ?? '')
+    }
+
+    const fieldType = store.schemas[typeNo]?.columns[fieldNo]?.type ?? 'int'
+    if (modeType !== 0 && fieldType === 'string' && this.isStringVariableRaw(targetValueRaw)) {
+      return {
+        kind: 'changeStringDatabase',
+        indent: meta.indentDepth,
+        targetRaw: targetValueRaw,
+        database,
+        table: typeNo,
+        record: dataNo,
+        field: fieldNo,
+      } satisfies ChangeStringDatabaseCommand
+    }
+
+    return {
+      kind: 'changeVariable',
+      indent: meta.indentDepth,
+      updaters: [this.createDatabaseUpdater(meta)],
+    } satisfies ChangeVariableCommand
+  }
+
+  private isStringVariableRaw(rawValue: number): boolean {
+    if (rawValue < 1600000) {
+      return false
+    }
+
+    const variableId = rawValue % 100
+    return variableId >= 5 && variableId <= 9
   }
 
   private createPictureCommand(meta: MetaCommand): WolfCommand {

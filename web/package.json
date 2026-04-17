@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build",
+    "test:debug": "node --test tests/string-runtime.test.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "serve": "vite preview --host 127.0.0.1"
   },
