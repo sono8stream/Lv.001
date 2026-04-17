@@ -63,6 +63,8 @@ type InterpolationSegment = string | InterpolationToken
 
 export class WolfRuntime {
   private static readonly COMMAND_STEP_LIMIT = 20000
+  private static readonly PLAYER_MOVE_REPEAT_FRAMES = 9
+  private static readonly PLAYER_ANIMATION_SETTLE_FRAMES = 6
   private static readonly UNSUPPORTED_BATTLE_EVENT_NAMES = new Set(['◆バトルの発生', 'X◆戦闘処理'])
   private static readonly INTERPOLATION_TOKEN_PATTERN = /\\(self\[(\d+)\]|cself\[(\d+)\]|([ucs])db\[(\d+):(\d+):(\d+)])/g
 
@@ -82,6 +84,10 @@ export class WolfRuntime {
   private playerX = 0
   private playerY = 0
   private playerDirection: Direction = 'down'
+  private playerAnimationFrame = 1
+  private playerAnimationFlip = false
+  private nextPlayerMoveTick = 0
+  private playerAnimationResetTick = 0
   private eventBusy = false
   private tickCount = 0
   private currentMessageResolver: (() => void) | null = null
@@ -185,6 +191,10 @@ export class WolfRuntime {
     if (existingTimer !== undefined) {
       window.clearTimeout(existingTimer)
     }
+    if (this.isMovementKey(key)) {
+      this.virtualKeyTimers.delete(key)
+      return
+    }
     const timer = window.setTimeout(() => {
       this.releaseVirtualKey(key)
     }, 160)
@@ -221,21 +231,32 @@ export class WolfRuntime {
 
       if (!this.eventBusy) {
         if (this.isMovementKeyDown()) {
-          await this.stepPlayer()
+          if (this.tickCount >= this.nextPlayerMoveTick) {
+            await this.stepPlayer()
+            this.nextPlayerMoveTick = this.tickCount + WolfRuntime.PLAYER_MOVE_REPEAT_FRAMES
+          }
         } else if (this.isAnyPressed(['z', 'Z', 'Enter', ' '])) {
+          this.nextPlayerMoveTick = 0
           this.consumeKey('z')
           this.consumeKey('Z')
           this.consumeKey('Enter')
           this.consumeKey(' ')
           await this.tryInteract()
         } else if (this.isAnyPressed(['Escape', 'Backspace', 'x', 'X'])) {
+          this.nextPlayerMoveTick = 0
           this.consumeKey('Escape')
           this.consumeKey('Backspace')
           this.consumeKey('x')
           this.consumeKey('X')
           await this.tryOpenMenu()
+        } else {
+          this.nextPlayerMoveTick = 0
         }
       }
+    }
+
+    if (!this.isMovementKeyDown() && this.tickCount >= this.playerAnimationResetTick) {
+      this.playerAnimationFrame = 1
     }
 
     this.render()
@@ -243,6 +264,10 @@ export class WolfRuntime {
 
   private isMovementKeyDown(): boolean {
     return this.isAnyPressed(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 'a', 'A', 's', 'S', 'd', 'D'])
+  }
+
+  private isMovementKey(key: string): boolean {
+    return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 'a', 'A', 's', 'S', 'd', 'D'].includes(key)
   }
 
   private isAnyPressed(keys: string[]): boolean {
@@ -263,27 +288,15 @@ export class WolfRuntime {
     if (this.isAnyPressed(['ArrowLeft', 'a', 'A'])) {
       this.playerDirection = 'left'
       nextX -= 1
-      this.consumeKey('ArrowLeft')
-      this.consumeKey('a')
-      this.consumeKey('A')
     } else if (this.isAnyPressed(['ArrowRight', 'd', 'D'])) {
       this.playerDirection = 'right'
       nextX += 1
-      this.consumeKey('ArrowRight')
-      this.consumeKey('d')
-      this.consumeKey('D')
     } else if (this.isAnyPressed(['ArrowUp', 'w', 'W'])) {
       this.playerDirection = 'up'
       nextY -= 1
-      this.consumeKey('ArrowUp')
-      this.consumeKey('w')
-      this.consumeKey('W')
     } else if (this.isAnyPressed(['ArrowDown', 's', 'S'])) {
       this.playerDirection = 'down'
       nextY += 1
-      this.consumeKey('ArrowDown')
-      this.consumeKey('s')
-      this.consumeKey('S')
     }
 
     if (!this.isInsideMap(nextX, nextY)) {
@@ -311,6 +324,7 @@ export class WolfRuntime {
 
     this.playerX = nextX
     this.playerY = nextY
+    this.advancePlayerAnimation()
 
     if (rangeEvent !== null) {
       await this.runMapEvent(rangeEvent)
@@ -1294,6 +1308,10 @@ export class WolfRuntime {
     this.currentMap = await this.repository.loadMap(mapId)
     this.playerX = clamp(x, 0, this.currentMap.width - 1)
     this.playerY = clamp(y, 0, this.currentMap.height - 1)
+    this.playerAnimationFrame = 1
+    this.playerAnimationFlip = false
+    this.nextPlayerMoveTick = 0
+    this.playerAnimationResetTick = 0
     this.tickCount = 0
     this.eventStates.clear()
     this.triggeredAutoEvents.clear()
@@ -1884,7 +1902,7 @@ export class WolfRuntime {
       return
     }
 
-    const frame = this.getCharacterFrame(this.playerDirection, this.playerSpriteSheet.width, this.playerSpriteSheet.height)
+    const frame = this.getCharacterFrame(this.playerDirection, this.playerSpriteSheet.width, this.playerSpriteSheet.height, this.playerAnimationFrame)
     this.context.drawImage(
       this.playerSpriteSheet,
       frame.sx,
@@ -1937,10 +1955,9 @@ export class WolfRuntime {
     }
   }
 
-  private getCharacterFrame(direction: Direction, width: number, height: number): { sx: number; sy: number; sw: number; sh: number } {
+  private getCharacterFrame(direction: Direction, width: number, height: number, column = 1): { sx: number; sy: number; sw: number; sh: number } {
     const frameWidth = Math.trunc(width / 6)
     const frameHeight = Math.trunc(height / 4)
-    const column = 1
     const row = direction === 'down' ? 0 : direction === 'left' ? 1 : direction === 'right' ? 2 : 3
     return {
       sx: column * frameWidth,
@@ -1948,6 +1965,12 @@ export class WolfRuntime {
       sw: frameWidth,
       sh: frameHeight,
     }
+  }
+
+  private advancePlayerAnimation(): void {
+    this.playerAnimationFlip = !this.playerAnimationFlip
+    this.playerAnimationFrame = this.playerAnimationFlip ? 0 : 2
+    this.playerAnimationResetTick = this.tickCount + WolfRuntime.PLAYER_ANIMATION_SETTLE_FRAMES
   }
 
   private setStatus(text: string): void {

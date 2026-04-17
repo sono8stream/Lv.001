@@ -1103,6 +1103,125 @@ test('moving eventContact respects expanded trigger range', async () => {
   assert.deepEqual(result.triggered, [{ id: 22, eventX: 2, eventY: 2 }])
 })
 
+test('holding a movement key repeats player movement across ticks', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_hold_move_repeat=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 128
+      layer.height = 128
+      runtime.repository = { commonEvents: [] }
+      runtime.currentMap = {
+        id: 1,
+        width: 8,
+        height: 4,
+        movableGrid: Array.from({ length: 4 }, () => Array.from({ length: 8 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.playerX = 1
+      runtime.playerY = 1
+
+      runtime.pressedKeys.add('ArrowRight')
+      for (let index = 0; index < 12; index += 1) {
+        await runtime.tick()
+      }
+      return { x: runtime.playerX, y: runtime.playerY }
+    }),
+  )
+
+  assert.equal(result.x, 3)
+  assert.equal(result.y, 1)
+})
+
+test('virtual movement keys stay pressed until released explicitly', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_virtual_hold=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.pressVirtualKey('ArrowRight')
+      await new Promise((resolve) => window.setTimeout(resolve, 220))
+      const stillPressed = runtime.pressedKeys.has('ArrowRight')
+      runtime.releaseVirtualKey('ArrowRight')
+      return { stillPressed, released: runtime.pressedKeys.has('ArrowRight') }
+    }),
+  )
+
+  assert.equal(result.stillPressed, true)
+  assert.equal(result.released, false)
+})
+
+test('player walking animation advances on movement and returns to standing frame when idle', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_player_walk_anim=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 128
+      layer.height = 128
+      runtime.repository = { commonEvents: [] }
+      runtime.currentMap = {
+        id: 1,
+        width: 8,
+        height: 4,
+        movableGrid: Array.from({ length: 4 }, () => Array.from({ length: 8 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.playerX = 1
+      runtime.playerY = 1
+
+      runtime.pressedKeys.add('ArrowRight')
+      await runtime.stepPlayer()
+      runtime.pressedKeys.delete('ArrowRight')
+      const movingFrame = runtime.playerAnimationFrame
+      for (let index = 0; index < 8; index += 1) {
+        await runtime.tick()
+      }
+      return { movingFrame, idleFrame: runtime.playerAnimationFrame }
+    }),
+  )
+
+  assert.notEqual(result.movingFrame, 1)
+  assert.equal(result.idleFrame, 1)
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
