@@ -1,0 +1,17 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "serve": "vite preview --host 127.0.0.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.4"
+  }
+}
