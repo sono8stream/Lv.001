@@ -1,5 +1,8 @@
 import { WolfBinaryReader, createCanvas, loadBinary, loadImage } from './binary'
 import type {
+  AbortEventCommand,
+  BlankCommand,
+  BranchElseCommand,
   CallEventCommand,
   ChangeStringDatabaseCommand,
   ChangeStringCommand,
@@ -10,12 +13,16 @@ import type {
   DatabaseRecord,
   DatabaseSchema,
   DatabaseType,
+  DebugCommentCommand,
   Direction,
   EventMoveData,
   EventPage,
   EventTriggerType,
   ForkBeginCommand,
   ForkEndCommand,
+  KeyInputCommand,
+  LabelJumpCommand,
+  LabelSetCommand,
   LoopBreakCommand,
   LoopEndCommand,
   LoopStartCommand,
@@ -28,6 +35,7 @@ import type {
   ShowMessagePictureCommand,
   ShowPictureCommand,
   StartLocation,
+  WaitCommand,
   TileSetData,
   UnitTile,
   UnknownCommand,
@@ -553,37 +561,67 @@ export class WolfDataRepository {
     offset: number,
   ): { moveData: EventMoveData; nextOffset: number } {
     let currentOffset = offset
-    currentOffset = reader.readByte(currentOffset).nextOffset
-    currentOffset = reader.readByte(currentOffset).nextOffset
-    currentOffset = reader.readByte(currentOffset).nextOffset
-    currentOffset = reader.readByte(currentOffset).nextOffset
+    const animationSpeed = reader.readByte(currentOffset)
+    currentOffset = animationSpeed.nextOffset
+    const moveSpeed = reader.readByte(currentOffset)
+    currentOffset = moveSpeed.nextOffset
+    const moveFrequency = reader.readByte(currentOffset)
+    currentOffset = moveFrequency.nextOffset
+    const moveType = reader.readByte(currentOffset)
+    currentOffset = moveType.nextOffset
     const optionType = reader.readByte(currentOffset)
     currentOffset = optionType.nextOffset
-    currentOffset = reader.readByte(currentOffset).nextOffset
+    const moveFlags = reader.readByte(currentOffset)
+    currentOffset = moveFlags.nextOffset
     const commandCount = reader.readInt(currentOffset)
     currentOffset = commandCount.nextOffset
+    const moveCommands = []
 
     for (let index = 0; index < commandCount.value; index += 1) {
-      currentOffset = this.skipMoveCommand(reader, currentOffset)
+      const moveCommand = this.readMoveCommand(reader, currentOffset)
+      moveCommands.push(moveCommand.command)
+      currentOffset = moveCommand.nextOffset
     }
 
     return {
-      moveData: { canPass: (optionType.value & 8) > 0 },
+      moveData: {
+        animationSpeed: animationSpeed.value,
+        moveSpeed: moveSpeed.value,
+        moveFrequency: moveFrequency.value,
+        moveType: moveType.value,
+        optionFlags: optionType.value,
+        moveFlags: moveFlags.value,
+        canPass: (optionType.value & 8) > 0,
+        moveCommands,
+      },
       nextOffset: currentOffset,
     }
   }
 
-  private skipMoveCommand(reader: WolfBinaryReader, offset: number): number {
+  private readMoveCommand(
+    reader: WolfBinaryReader,
+    offset: number,
+  ): { command: { commandType: number; args: number[] }; nextOffset: number } {
     let currentOffset = offset
-    currentOffset = reader.readByte(currentOffset).nextOffset
+    const commandType = reader.readByte(currentOffset)
+    currentOffset = commandType.nextOffset
     const variableCount = reader.readByte(currentOffset)
     currentOffset = variableCount.nextOffset
+    const args: number[] = []
     for (let index = 0; index < variableCount.value; index += 1) {
-      currentOffset = reader.readInt(currentOffset).nextOffset
+      const value = reader.readInt(currentOffset)
+      args.push(value.value)
+      currentOffset = value.nextOffset
     }
     currentOffset = reader.readByte(currentOffset).nextOffset
     currentOffset = reader.readByte(currentOffset).nextOffset
-    return currentOffset
+    return {
+      command: {
+        commandType: commandType.value,
+        args,
+      },
+      nextOffset: currentOffset,
+    }
   }
 
   private readCommand(
@@ -637,8 +675,12 @@ export class WolfDataRepository {
   private createCommand(meta: MetaCommand): WolfCommand {
     const key = meta.numberArgs[0] ?? -1
     switch (key) {
+      case 0x00:
+        return { kind: 'blank', indent: meta.indentDepth } satisfies BlankCommand
       case 0x65:
         return { kind: 'message', indent: meta.indentDepth, text: meta.stringArgs[0] ?? '' } satisfies MessageCommand
+      case 0x67:
+        return { kind: 'debugComment', indent: meta.indentDepth, text: meta.stringArgs[0] ?? '' } satisfies DebugCommentCommand
       case 0x66:
         return { kind: 'choice', indent: meta.indentDepth, options: meta.stringArgs } satisfies WolfCommand
       case 0x6f:
@@ -664,20 +706,32 @@ export class WolfDataRepository {
           y: meta.numberArgs[3] ?? 0,
           mapId: meta.numberArgs[4] ?? 0,
         } satisfies MovePositionCommand
+      case 0x7b:
+        return this.createKeyInputCommand(meta)
       case 0x96:
         return this.createPictureCommand(meta)
       case 0xaa:
         return { kind: 'loopStart', indent: meta.indentDepth, isInfinite: true, loopCount: null } satisfies LoopStartCommand
       case 0xab:
         return { kind: 'loopBreak', indent: meta.indentDepth } satisfies LoopBreakCommand
+      case 0xac:
+        return { kind: 'abortEvent', indent: meta.indentDepth } satisfies AbortEventCommand
       case 0xb3:
         return { kind: 'loopStart', indent: meta.indentDepth, isInfinite: false, loopCount: rawRef(meta.numberArgs[1] ?? 0) } satisfies LoopStartCommand
+      case 0xb4:
+        return { kind: 'wait', indent: meta.indentDepth, frames: meta.numberArgs[1] ?? 0 } satisfies WaitCommand
       case 0xd2:
         return this.createCallEventById(meta)
+      case 0xd4:
+        return { kind: 'labelSet', indent: meta.indentDepth, name: meta.stringArgs[0] ?? '' } satisfies LabelSetCommand
+      case 0xd5:
+        return { kind: 'labelJump', indent: meta.indentDepth, name: meta.stringArgs[0] ?? '' } satisfies LabelJumpCommand
       case 0xfa:
         return this.createDatabaseCommand(meta)
       case 0x12c:
         return this.createCallEventByName(meta)
+      case 0x1a4:
+        return { kind: 'branchElse', indent: meta.indentDepth } satisfies BranchElseCommand
       case 0x191:
         return { kind: 'forkBegin', indent: meta.indentDepth, label: `${meta.indentDepth}.${meta.numberArgs[1] ?? 0}` } satisfies ForkBeginCommand
       case 0x1f2:
@@ -703,6 +757,40 @@ export class WolfDataRepository {
       })
     }
     return conditions
+  }
+
+  private createKeyInputCommand(meta: MetaCommand): KeyInputCommand {
+    const flagsRaw = meta.numberArgs[2] ?? 0
+    const deviceRaw = (flagsRaw >> 8) & 0xff
+    const deviceCode = deviceRaw & 0x0f
+    const device =
+      deviceCode === 0x01
+        ? 'keyboard'
+        : deviceCode === 0x02
+          ? 'pad'
+          : deviceCode === 0x03
+            ? 'mouse'
+            : deviceCode === 0x04
+              ? 'padStick'
+              : deviceCode === 0x05
+                ? 'padPov'
+                : deviceCode === 0x06
+                  ? 'multiTouch'
+                  : 'basic'
+
+    return {
+      kind: 'keyInput',
+      indent: meta.indentDepth,
+      targetRaw: meta.numberArgs[1] ?? 0,
+      device,
+      mode: (flagsRaw & 0x80) !== 0 ? 'wait' : 'pressed',
+      flagsRaw,
+      specificKeyCode: meta.numberArgs[3] ?? null,
+      acceptDirections: (flagsRaw & 0x0f) as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7,
+      acceptConfirm: (flagsRaw & 0x10) !== 0,
+      acceptCancel: (flagsRaw & 0x20) !== 0,
+      acceptSub: (flagsRaw & 0x40) !== 0,
+    } satisfies KeyInputCommand
   }
 
   private createStandardUpdater(meta: MetaCommand): Updater {

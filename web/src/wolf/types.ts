@@ -49,11 +49,34 @@ export interface PageCondition {
 }
 
 export interface EventMoveData {
+  animationSpeed: number
+  moveSpeed: number
+  moveFrequency: number
+  moveType: number
+  optionFlags: number
+  moveFlags: number
   canPass: boolean
+  moveCommands: EventMoveCommand[]
+}
+
+export interface EventMoveCommand {
+  commandType: number
+  args: number[]
 }
 
 export interface MessageCommand {
   kind: 'message'
+  indent: number
+  text: string
+}
+
+export interface BlankCommand {
+  kind: 'blank'
+  indent: number
+}
+
+export interface DebugCommentCommand {
+  kind: 'debugComment'
   indent: number
   text: string
 }
@@ -101,6 +124,11 @@ export interface ConditionalForkCommand {
   kind: 'conditionalFork'
   indent: number
   conditions: ConditionEntry[]
+}
+
+export interface BranchElseCommand {
+  kind: 'branchElse'
+  indent: number
 }
 
 export interface Updater {
@@ -156,6 +184,23 @@ export interface CallEventCommand {
   returnDestination: NumberRef | null
 }
 
+export type KeyInputDevice = 'basic' | 'keyboard' | 'mouse' | 'pad' | 'padStick' | 'padPov' | 'multiTouch'
+export type KeyInputMode = 'pressed' | 'wait'
+
+export interface KeyInputCommand {
+  kind: 'keyInput'
+  indent: number
+  targetRaw: number
+  device: KeyInputDevice
+  mode: KeyInputMode
+  flagsRaw: number
+  specificKeyCode: number | null
+  acceptDirections: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+  acceptConfirm: boolean
+  acceptCancel: boolean
+  acceptSub: boolean
+}
+
 export interface LoopStartCommand {
   kind: 'loopStart'
   indent: number
@@ -203,6 +248,29 @@ export interface RemovePictureCommand {
   pictureId: number
 }
 
+export interface WaitCommand {
+  kind: 'wait'
+  indent: number
+  frames: number
+}
+
+export interface LabelSetCommand {
+  kind: 'labelSet'
+  indent: number
+  name: string
+}
+
+export interface LabelJumpCommand {
+  kind: 'labelJump'
+  indent: number
+  name: string
+}
+
+export interface AbortEventCommand {
+  kind: 'abortEvent'
+  indent: number
+}
+
 export interface UnknownCommand {
   kind: 'unknown'
   indent: number
@@ -210,22 +278,30 @@ export interface UnknownCommand {
 }
 
 export type WolfCommand =
+  | BlankCommand
+  | DebugCommentCommand
   | MessageCommand
   | ChoiceCommand
   | ForkBeginCommand
   | ForkEndCommand
   | ConditionalForkCommand
+  | BranchElseCommand
   | ChangeVariableCommand
   | ChangeStringCommand
   | ChangeStringDatabaseCommand
   | MovePositionCommand
   | CallEventCommand
+  | KeyInputCommand
   | LoopStartCommand
   | LoopEndCommand
   | LoopBreakCommand
   | ShowPictureCommand
   | ShowMessagePictureCommand
   | RemovePictureCommand
+  | WaitCommand
+  | LabelSetCommand
+  | LabelJumpCommand
+  | AbortEventCommand
   | UnknownCommand
 
 export interface EventPage {

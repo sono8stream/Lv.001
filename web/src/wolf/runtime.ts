@@ -11,6 +11,8 @@ import type {
   ChangeStringCommand,
   ChangeVariableCommand,
   ChoiceCommand,
+  KeyInputCommand,
+  LabelJumpCommand,
   CommandContext,
   CommonEventData,
   ConditionalForkCommand,
@@ -42,6 +44,17 @@ interface RuntimeElements {
 }
 
 type PictureEntry = HTMLImageElement | HTMLDivElement
+interface EventRuntimeState {
+  x: number
+  y: number
+  direction: Direction
+  canPass: boolean
+  moveSpeed: number
+  moveFrequency: number
+  moveRouteIndex: number
+  moveCooldownRemaining: number
+}
+
 type InterpolationToken =
   | { kind: 'self'; index: number }
   | { kind: 'cself'; index: number }
@@ -61,6 +74,7 @@ export class WolfRuntime {
   private readonly currentMapEventVariables = new Map<string, number[]>()
   private readonly triggeredAutoEvents = new Set<string>()
   private readonly stringTemplateCache = new Map<string, readonly InterpolationSegment[]>()
+  private readonly eventStates = new Map<string, EventRuntimeState>()
 
   private repository: WolfDataRepository | null = null
   private currentMap: WolfMapData | null = null
@@ -69,6 +83,7 @@ export class WolfRuntime {
   private playerY = 0
   private playerDirection: Direction = 'down'
   private eventBusy = false
+  private tickCount = 0
   private currentMessageResolver: (() => void) | null = null
   private currentChoiceResolver: ((value: number) => void) | null = null
   private playerSpriteSheet: HTMLImageElement | null = null
@@ -195,8 +210,14 @@ export class WolfRuntime {
       return
     }
 
+    this.tickCount += 1
+
     if (!this.eventBusy) {
       await this.processAutoEvents()
+
+      if (!this.eventBusy) {
+        await this.processEventMovement()
+      }
 
       if (!this.eventBusy) {
         if (this.isMovementKeyDown()) {
@@ -259,42 +280,72 @@ export class WolfRuntime {
       this.consumeKey('S')
     }
 
-    if (!this.canMoveTo(nextX, nextY)) {
+    if (!this.isInsideMap(nextX, nextY)) {
+      return
+    }
+
+    const contactEvent = this.findEventAt(nextX, nextY)
+    const contactPage = contactEvent === null ? null : this.getActivePage(contactEvent)
+    const tilePassable = this.currentMap.movableGrid[nextY][nextX]
+    const eventPassable = contactEvent === null || contactPage === null
+      ? true
+      : this.getEventState(contactEvent, contactPage).canPass
+
+    if (contactEvent !== null && this.isContactTrigger(contactPage?.triggerType) && (!tilePassable || !eventPassable)) {
+      await this.runMapEvent(contactEvent)
+      return
+    }
+
+    if (!tilePassable || (contactEvent !== null && !eventPassable)) {
       return
     }
 
     this.playerX = nextX
     this.playerY = nextY
 
-    const contactEvent = this.findEventAt(nextX, nextY)
-    if (contactEvent !== null) {
-      const page = this.getActivePage(contactEvent)
-      if (page?.triggerType === 'playerContact') {
-        await this.runMapEvent(contactEvent)
-      }
+    if (contactEvent !== null && this.isContactTrigger(contactPage?.triggerType)) {
+      await this.runMapEvent(contactEvent)
     }
   }
 
-  private canMoveTo(x: number, y: number): boolean {
+  private isInsideMap(x: number, y: number): boolean {
     if (this.currentMap === null) {
       return false
     }
 
-    if (x < 0 || y < 0 || x >= this.currentMap.width || y >= this.currentMap.height) {
-      return false
+    return x >= 0 && y >= 0 && x < this.currentMap.width && y < this.currentMap.height
+  }
+
+  private isContactTrigger(triggerType: EventPage['triggerType'] | undefined): boolean {
+    return triggerType === 'playerContact' || triggerType === 'eventContact'
+  }
+
+  private async processEventMovement(): Promise<void> {
+    if (this.currentMap === null) {
+      return
     }
 
-    if (!this.currentMap.movableGrid[y][x]) {
-      return false
-    }
+    const mapId = this.currentMap.id
+    for (const event of this.currentMap.events) {
+      const page = this.getActivePage(event)
+      if (page === null || page.moveData.moveType === 0) {
+        continue
+      }
 
-    const event = this.findEventAt(x, y)
-    if (event === null) {
-      return true
-    }
+      const state = this.getEventState(event, page)
+      if (state.moveCooldownRemaining > 0) {
+        state.moveCooldownRemaining -= 1
+        continue
+      }
 
-    const page = this.getActivePage(event)
-    return page?.moveData.canPass ?? true
+      await this.moveEventStep(event, page, state)
+      if (this.currentMap === null || this.currentMap.id !== mapId || this.eventBusy) {
+        return
+      }
+      if (state.moveCooldownRemaining <= 0) {
+        state.moveCooldownRemaining = this.getMoveCooldownFrames(state.moveFrequency)
+      }
+    }
   }
 
   private async tryInteract(): Promise<void> {
@@ -364,6 +415,11 @@ export class WolfRuntime {
         this.setDebugCommand(context, command, index, commands.length)
 
         switch (command.kind) {
+          case 'blank':
+          case 'debugComment':
+          case 'labelSet':
+            index += 1
+            break
           case 'message':
             await this.showMessage(this.interpolateString(command.text, context))
             index += 1
@@ -377,6 +433,11 @@ export class WolfRuntime {
           case 'conditionalFork': {
             const nextIndex = this.jumpForConditionalFork(commands, index, command, context)
             index = nextIndex
+            break
+          }
+          case 'branchElse': {
+            const nextIndex = this.findForkEndIndex(commands, index, command.indent)
+            index = nextIndex >= 0 ? nextIndex + 1 : commands.length
             break
           }
           case 'forkBegin': {
@@ -408,6 +469,10 @@ export class WolfRuntime {
             await this.executeCallEvent(command, context)
             index += 1
             break
+          case 'keyInput':
+            this.assignNumberRef({ kind: 'raw', value: command.targetRaw }, await this.resolveKeyInput(command), context)
+            index += 1
+            break
           case 'loopStart': {
             const nextIndex = this.enterLoop(command, commands, index, context, loops)
             index = nextIndex
@@ -435,6 +500,20 @@ export class WolfRuntime {
             this.removePicture(command.pictureId)
             index += 1
             break
+          case 'wait':
+            await this.waitFrames(command.frames)
+            index += 1
+            break
+          case 'labelJump': {
+            const nextIndex = this.findNamedLabelIndex(commands, command, context)
+            if (nextIndex < 0) {
+              throw new Error(`Label "${this.interpolateString(command.name, context)}" not found on map ${context.mapId} (event=${context.eventId ?? '-'} common=${context.commonEventId ?? '-'})`)
+            }
+            index = nextIndex + 1
+            break
+          }
+          case 'abortEvent':
+            return
           case 'unknown':
             index += 1
             break
@@ -452,9 +531,18 @@ export class WolfRuntime {
     context: CommandContext,
   ): number {
     const matchIndex = command.conditions.findIndex((condition) => this.evaluateCondition(condition.operator, this.resolveNumberRef(condition.left, context), this.resolveNumberRef(condition.right, context)))
-    const label = `${command.indent}.${matchIndex >= 0 ? matchIndex + 1 : 0}`
-    const nextIndex = this.findLabelIndex(commands, index, label)
-    return nextIndex >= 0 ? nextIndex + 1 : index + 1
+    if (matchIndex >= 0) {
+      const nextIndex = this.findLabelIndex(commands, index, `${command.indent}.${matchIndex + 1}`)
+      return nextIndex >= 0 ? nextIndex + 1 : index + 1
+    }
+
+    const elseIndex = this.findBranchElseIndex(commands, index, command.indent)
+    if (elseIndex >= 0) {
+      return elseIndex + 1
+    }
+
+    const endIndex = this.findForkEndIndex(commands, index, command.indent)
+    return endIndex >= 0 ? endIndex + 1 : index + 1
   }
 
   private enterLoop(
@@ -1085,13 +1173,20 @@ export class WolfRuntime {
     return event.pages[0] ?? null
   }
 
-  private findEventAt(x: number, y: number): WolfMapEvent | null {
+  private findEventAt(x: number, y: number, excludeEventId?: number): WolfMapEvent | null {
     if (this.currentMap === null) {
       return null
     }
     return this.currentMap.events.find((event) => {
+      if (excludeEventId !== undefined && event.id === excludeEventId) {
+        return false
+      }
       const page = this.getActivePage(event)
-      return page !== null && event.x === x && event.y === y
+      if (page === null) {
+        return false
+      }
+      const state = this.getEventState(event, page)
+      return state.x === x && state.y === y
     }) ?? null
   }
 
@@ -1123,6 +1218,8 @@ export class WolfRuntime {
     this.currentMap = await this.repository.loadMap(mapId)
     this.playerX = clamp(x, 0, this.currentMap.width - 1)
     this.playerY = clamp(y, 0, this.currentMap.height - 1)
+    this.tickCount = 0
+    this.eventStates.clear()
     this.triggeredAutoEvents.clear()
     this.pictureEntries.forEach((entry) => entry.remove())
     this.pictureEntries.clear()
@@ -1130,6 +1227,10 @@ export class WolfRuntime {
       const key = `${this.currentMap.id}:${event.id}`
       if (!this.currentMapEventVariables.has(key)) {
         this.currentMapEventVariables.set(key, Array.from({ length: 10 }, () => 0))
+      }
+      const page = this.getActivePage(event)
+      if (page !== null) {
+        this.getEventState(event, page)
       }
     }
     this.setStatus([
@@ -1249,6 +1350,95 @@ export class WolfRuntime {
     })
   }
 
+  private async resolveKeyInput(command: KeyInputCommand): Promise<number> {
+    if (command.device !== 'basic') {
+      return 0
+    }
+
+    if (command.mode === 'wait') {
+      while (true) {
+        const value = this.readBasicKeyInput(command)
+        if (value !== 0) {
+          return value
+        }
+        await this.waitFrames(1)
+      }
+    }
+
+    return this.readBasicKeyInput(command)
+  }
+
+  private readBasicKeyInput(command: KeyInputCommand): number {
+    const directions = this.readBasicDirectionInput(command.acceptDirections)
+    if (directions !== 0) {
+      return directions
+    }
+
+    if (command.acceptConfirm) {
+      const confirm = this.consumeFirstPressed(['Enter', ' ', 'z', 'Z'])
+      if (confirm !== null) {
+        return 10
+      }
+    }
+
+    if (command.acceptCancel) {
+      const cancel = this.consumeFirstPressed(['Escape', 'Backspace', 'x', 'X'])
+      if (cancel !== null) {
+        return 11
+      }
+    }
+
+    if (command.acceptSub) {
+      const sub = this.consumeFirstPressed(['c', 'C', 'Shift'])
+      if (sub !== null) {
+        return 12
+      }
+    }
+
+    return 0
+  }
+
+  private readBasicDirectionInput(mode: KeyInputCommand['acceptDirections']): number {
+    if (mode === 0) {
+      return 0
+    }
+
+    if ((mode === 1 || mode === 2 || mode === 5) && this.consumeFirstPressed(['ArrowLeft', 'a', 'A']) !== null) {
+      return 4
+    }
+
+    if ((mode === 1 || mode === 2 || mode === 6) && this.consumeFirstPressed(['ArrowRight', 'd', 'D']) !== null) {
+      return 6
+    }
+
+    if ((mode === 1 || mode === 2 || mode === 3 || mode === 7) && this.consumeFirstPressed(['ArrowUp', 'w', 'W']) !== null) {
+      return 8
+    }
+
+    if ((mode === 1 || mode === 2 || mode === 4 || mode === 7) && this.consumeFirstPressed(['ArrowDown', 's', 'S']) !== null) {
+      return 2
+    }
+
+    return 0
+  }
+
+  private consumeFirstPressed(keys: readonly string[]): string | null {
+    for (const key of keys) {
+      if (this.pressedKeys.has(key)) {
+        this.consumeKey(key)
+        return key
+      }
+    }
+    return null
+  }
+
+  private async waitFrames(frames: number): Promise<void> {
+    const frameCount = Math.max(0, Math.trunc(frames))
+    for (let index = 0; index < frameCount; index += 1) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    }
+  }
+
   private findLabelIndex(commands: WolfCommand[], startIndex: number, label: string): number {
     for (let cursor = startIndex + 1; cursor < commands.length; cursor += 1) {
       const command = commands[cursor]
@@ -1260,6 +1450,328 @@ export class WolfRuntime {
       }
     }
     return -1
+  }
+
+  private findForkEndIndex(commands: WolfCommand[], startIndex: number, indent: number): number {
+    for (let cursor = startIndex + 1; cursor < commands.length; cursor += 1) {
+      const command = commands[cursor]
+      if (command.kind === 'forkEnd' && command.indent === indent) {
+        return cursor
+      }
+    }
+    return -1
+  }
+
+  private findBranchElseIndex(commands: WolfCommand[], startIndex: number, indent: number): number {
+    for (let cursor = startIndex + 1; cursor < commands.length; cursor += 1) {
+      const command = commands[cursor]
+      if (command.kind === 'branchElse' && command.indent === indent) {
+        return cursor
+      }
+      if (command.kind === 'forkEnd' && command.indent === indent) {
+        break
+      }
+    }
+    return -1
+  }
+
+  private findNamedLabelIndex(commands: WolfCommand[], command: LabelJumpCommand, context: CommandContext): number {
+    const targetName = this.interpolateString(command.name, context)
+    for (let cursor = 0; cursor < commands.length; cursor += 1) {
+      const candidate = commands[cursor]
+      if (candidate.kind === 'labelSet' && this.interpolateString(candidate.name, context) === targetName) {
+        return cursor
+      }
+    }
+    return -1
+  }
+
+  private async moveEventStep(event: WolfMapEvent, page: EventPage, state: EventRuntimeState): Promise<void> {
+    switch (page.moveData.moveType) {
+      case 1:
+        await this.executeCustomMoveRoute(event, page, state)
+        return
+      case 2:
+        await this.tryMoveEvent(event, page, state, this.getRandomDirectionDelta())
+        return
+      case 3:
+        await this.tryMoveEvent(event, page, state, this.getApproachDirectionDelta(state))
+        return
+      default:
+        return
+    }
+  }
+
+  private async executeCustomMoveRoute(event: WolfMapEvent, page: EventPage, state: EventRuntimeState): Promise<void> {
+    const moveCommands = page.moveData.moveCommands
+    if (moveCommands.length === 0) {
+      return
+    }
+
+    const routeIndex = Math.min(state.moveRouteIndex, moveCommands.length - 1)
+    const command = moveCommands[routeIndex]
+    let shouldAdvance = true
+
+    switch (command.commandType) {
+      case 0x00:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: 0, dy: 1, direction: 'down' })
+        break
+      case 0x01:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: -1, dy: 0, direction: 'left' })
+        break
+      case 0x02:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: 1, dy: 0, direction: 'right' })
+        break
+      case 0x03:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: 0, dy: -1, direction: 'up' })
+        break
+      case 0x04:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: -1, dy: 1, direction: 'left' })
+        break
+      case 0x05:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: 1, dy: 1, direction: 'right' })
+        break
+      case 0x06:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: -1, dy: -1, direction: 'left' })
+        break
+      case 0x07:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, { dx: 1, dy: -1, direction: 'right' })
+        break
+      case 0x08:
+      case 0x09:
+      case 0x0A:
+      case 0x0B:
+        state.direction = this.directionFromFacingCommand(command.commandType)
+        break
+      case 0x10:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, this.getRandomDirectionDelta())
+        break
+      case 0x11:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, this.getApproachDirectionDelta(state))
+        break
+      case 0x12:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, this.getRetreatDirectionDelta(state))
+        break
+      case 0x13:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, this.getDirectionDelta(state.direction))
+        break
+      case 0x14:
+        shouldAdvance = await this.tryMoveEvent(event, page, state, this.getDirectionDelta(this.reverseDirection(state.direction)))
+        break
+      case 0x16:
+        state.direction = this.rotateDirection(state.direction, 1)
+        break
+      case 0x17:
+        state.direction = this.rotateDirection(state.direction, -1)
+        break
+      case 0x18:
+        state.direction = this.rotateDirection(state.direction, Math.random() < 0.5 ? -1 : 1)
+        break
+      case 0x19:
+        state.direction = this.getRandomDirectionDelta().direction
+        break
+      case 0x1A:
+        state.direction = this.getApproachDirectionDelta(state).direction
+        break
+      case 0x1B:
+        state.direction = this.getRetreatDirectionDelta(state).direction
+        break
+      case 0x1D:
+        state.moveSpeed = Math.max(1, Math.trunc(command.args[0] ?? state.moveSpeed))
+        break
+      case 0x1E:
+        state.moveFrequency = Math.max(1, Math.trunc(command.args[0] ?? state.moveFrequency))
+        break
+      case 0x26:
+        state.canPass = true
+        break
+      case 0x27:
+        state.canPass = false
+        break
+      case 0x2F:
+        state.moveCooldownRemaining = Math.max(1, Math.trunc(command.args[0] ?? 1))
+        break
+      default:
+        break
+    }
+
+    if (shouldAdvance) {
+      const repeats = (page.moveData.moveFlags & 0x01) !== 0
+      if (repeats) {
+        state.moveRouteIndex = (routeIndex + 1) % moveCommands.length
+      } else if (routeIndex < moveCommands.length - 1) {
+        state.moveRouteIndex = routeIndex + 1
+      }
+    }
+  }
+
+  private async tryMoveEvent(
+    event: WolfMapEvent,
+    page: EventPage,
+    state: EventRuntimeState,
+    step: { dx: number; dy: number; direction: Direction },
+  ): Promise<boolean> {
+    if (step.dx === 0 && step.dy === 0) {
+      return true
+    }
+
+    state.direction = step.direction
+    if (this.currentMap === null) {
+      return false
+    }
+
+    const nextX = state.x + step.dx
+    const nextY = state.y + step.dy
+    const skipBlockedMove = (page.moveData.moveFlags & 0x02) !== 0
+    if (!this.isInsideMap(nextX, nextY)) {
+      return skipBlockedMove
+    }
+
+    const tilePassable = this.currentMap.movableGrid[nextY][nextX]
+    const targetIsPlayer = this.playerX === nextX && this.playerY === nextY
+    const targetEvent = this.findEventAt(nextX, nextY, event.id)
+    const targetPage = targetEvent === null ? null : this.getActivePage(targetEvent)
+    const targetEventPassable = targetEvent === null || targetPage === null
+      ? true
+      : this.getEventState(targetEvent, targetPage).canPass
+
+    if (!state.canPass && !tilePassable) {
+      if (targetIsPlayer && page.triggerType === 'eventContact') {
+        await this.runMapEvent(event)
+        return true
+      }
+      return skipBlockedMove
+    }
+
+    if (targetEvent !== null && !state.canPass && !targetEventPassable) {
+      return skipBlockedMove
+    }
+
+    if (targetIsPlayer && !state.canPass) {
+      if (page.triggerType === 'eventContact') {
+        await this.runMapEvent(event)
+        return true
+      }
+      return skipBlockedMove
+    }
+
+    state.x = nextX
+    state.y = nextY
+    if (targetIsPlayer && page.triggerType === 'eventContact') {
+      await this.runMapEvent(event)
+    }
+    return true
+  }
+
+  private getMoveCooldownFrames(moveFrequency: number): number {
+    switch (moveFrequency) {
+      case 5:
+        return 6
+      case 4:
+        return 12
+      case 3:
+        return 20
+      case 2:
+        return 32
+      case 1:
+        return 48
+      default:
+        return 24
+    }
+  }
+
+  private getRandomDirectionDelta(): { dx: number; dy: number; direction: Direction } {
+    const directions: Direction[] = ['down', 'left', 'right', 'up']
+    return this.getDirectionDelta(directions[Math.floor(Math.random() * directions.length)] ?? 'down')
+  }
+
+  private getApproachDirectionDelta(state: EventRuntimeState): { dx: number; dy: number; direction: Direction } {
+    const dx = this.playerX - state.x
+    const dy = this.playerY - state.y
+    if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) {
+      return this.getDirectionDelta(dx < 0 ? 'left' : 'right')
+    }
+    if (dy !== 0) {
+      return this.getDirectionDelta(dy < 0 ? 'up' : 'down')
+    }
+    return this.getDirectionDelta(state.direction)
+  }
+
+  private getRetreatDirectionDelta(state: EventRuntimeState): { dx: number; dy: number; direction: Direction } {
+    return this.getDirectionDelta(this.reverseDirection(this.getApproachDirectionDelta(state).direction))
+  }
+
+  private getDirectionDelta(direction: Direction): { dx: number; dy: number; direction: Direction } {
+    switch (direction) {
+      case 'left':
+        return { dx: -1, dy: 0, direction }
+      case 'right':
+        return { dx: 1, dy: 0, direction }
+      case 'up':
+        return { dx: 0, dy: -1, direction }
+      case 'down':
+      default:
+        return { dx: 0, dy: 1, direction: 'down' }
+    }
+  }
+
+  private reverseDirection(direction: Direction): Direction {
+    switch (direction) {
+      case 'left':
+        return 'right'
+      case 'right':
+        return 'left'
+      case 'up':
+        return 'down'
+      case 'down':
+      default:
+        return 'up'
+    }
+  }
+
+  private rotateDirection(direction: Direction, delta: -1 | 1): Direction {
+    const order: Direction[] = ['up', 'right', 'down', 'left']
+    const index = order.indexOf(direction)
+    return order[(index + delta + order.length) % order.length] ?? direction
+  }
+
+  private directionFromFacingCommand(commandType: number): Direction {
+    switch (commandType) {
+      case 0x09:
+        return 'left'
+      case 0x0A:
+        return 'right'
+      case 0x0B:
+        return 'up'
+      case 0x08:
+      default:
+        return 'down'
+    }
+  }
+
+  private getEventStateKey(event: WolfMapEvent): string {
+    return `${this.currentMap?.id ?? 0}:${event.id}`
+  }
+
+  private getEventState(event: WolfMapEvent, page: EventPage): EventRuntimeState {
+    const key = this.getEventStateKey(event)
+    const existing = this.eventStates.get(key)
+    if (existing !== undefined) {
+      return existing
+    }
+
+    const created: EventRuntimeState = {
+      x: event.x,
+      y: event.y,
+      direction: page.direction,
+      canPass: page.moveData.canPass,
+      moveSpeed: page.moveData.moveSpeed,
+      moveFrequency: page.moveData.moveFrequency,
+      moveRouteIndex: 0,
+      moveCooldownRemaining: 0,
+    }
+    this.eventStates.set(key, created)
+    return created
   }
 
   private render(): void {
@@ -1315,15 +1827,16 @@ export class WolfRuntime {
       return
     }
 
-    const screenX = (event.x * TILE_SIZE - cameraX) * 3
-    const screenY = (event.y * TILE_SIZE - cameraY) * 3
+    const state = this.getEventState(event, page)
+    const screenX = (state.x * TILE_SIZE - cameraX) * 3
+    const screenY = (state.y * TILE_SIZE - cameraY) * 3
     if (page.hasDirection && page.chipImgName.length > 0) {
       const image = this.repository.getLoadedImage(page.chipImgName)
       if (image === null) {
         void this.repository.loadImage(page.chipImgName)
         return
       }
-      const frame = this.getCharacterFrame(page.direction, image.width, image.height)
+      const frame = this.getCharacterFrame(state.direction, image.width, image.height)
       this.context.drawImage(
         image,
         frame.sx,
