@@ -1403,7 +1403,8 @@ export class WolfRuntime {
   private showMessagePicture(command: ShowMessagePictureCommand, context: CommandContext): void {
     const entry = document.createElement('div')
     entry.className = 'picture-entry'
-    entry.textContent = this.interpolateString(command.message, context)
+    entry.textContent = this.sanitizePictureText(this.interpolateString(command.message, context))
+    entry.style.whiteSpace = 'pre'
     this.placePictureEntry(
       entry,
       this.resolveNumberRef(command.pictureId, context),
@@ -1445,10 +1446,13 @@ export class WolfRuntime {
   private showWindowPicture(command: ShowWindowPictureCommand, context: CommandContext): void {
     const entry = document.createElement('div')
     entry.className = 'picture-entry'
-    const width = this.resolveNumberRef(command.width, context)
-    const height = this.resolveNumberRef(command.height, context)
+    const resolvedWidth = this.resolveNumberRef(command.width, context)
+    const resolvedHeight = this.resolveNumberRef(command.height, context)
     const opacity = this.resolveNumberRef(command.opacity, context)
     const renderedText = this.sanitizePictureText(this.interpolateString(command.message, context))
+    const fallbackSize = this.estimatePictureTextSize(renderedText)
+    const width = resolvedWidth > 1 ? resolvedWidth : fallbackSize.width
+    const height = resolvedHeight > 1 ? resolvedHeight : fallbackSize.height
     entry.textContent = renderedText
     entry.style.width = `${Math.max(0, width)}px`
     entry.style.height = `${Math.max(0, height)}px`
@@ -1582,6 +1586,7 @@ export class WolfRuntime {
 
   private sanitizePictureText(text: string): string {
     return text
+      .replace(/<[^>]+>/g, '')
       .replace(/\\f\[[^\]]*\]/g, '')
       .replace(/\\ax\[[^\]]*\]/g, '')
       .replace(/\\ay\[[^\]]*\]/g, '')
@@ -1590,6 +1595,19 @@ export class WolfRuntime {
       .replace(/\\E/g, '')
       .replace(/<R>/g, '')
       .trim()
+  }
+
+  private estimatePictureTextSize(text: string): { width: number; height: number } {
+    if (text.length === 0) {
+      return { width: 160, height: 24 }
+    }
+
+    const lines = text.split('\n')
+    const maxLength = lines.reduce((longest, line) => Math.max(longest, line.length), 0)
+    return {
+      width: Math.max(48, maxLength * 8 + 8),
+      height: Math.max(24, lines.length * 16 + 8),
+    }
   }
 
   private removePicture(pictureId: number): void {

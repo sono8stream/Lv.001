@@ -1512,6 +1512,124 @@ test('menu common event produces window-like picture entries after draw helpers 
   assert.ok(result.windowHelperCount >= 3)
 })
 
+test('menu picture text strips formatting control tokens before rendering', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_text_rendering=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_text_rendering=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      return [...runtime.elements.pictureLayer.children]
+        .map((node) => node.textContent ?? '')
+        .filter((text) => text.length > 0)
+    }),
+  )
+
+  assert.equal(result.some((text) => /\\f\[|\\ax\[|\\ay\[|<R>|\\A|\\E/.test(text)), false)
+})
+
+test('menu window helper entries have non-zero size', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_window_size=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_window_size=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const helpers = [...runtime.elements.pictureLayer.children].map((node) => ({
+        background: node.style.background,
+        width: node.style.width,
+        height: node.style.height,
+      })).filter((entry) => entry.background.length > 0 || entry.width.length > 0 || entry.height.length > 0)
+
+      return {
+        helperCount: helpers.length,
+        nonZeroSizeCount: helpers.filter((entry) => entry.width !== '0px' || entry.height !== '0px').length,
+      }
+    }),
+  )
+
+  assert.ok(result.helperCount >= 3)
+  assert.ok(result.nonZeroSizeCount >= 3)
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
