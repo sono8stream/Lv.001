@@ -1273,6 +1273,94 @@ test('command inventory snapshot matches current repository data', async () => {
   assert.deepEqual(result.generated, result.committed)
 })
 
+test('menu common event parses loop-continue commands with a dedicated kind', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const dataMod = await import('/src/wolf/data.ts?test_menu_loop_continue_kind=1')
+      const repo = await dataMod.WolfDataRepository.create()
+      const commonEvent = repo.getCommonEventById(127)
+
+      return {
+        name: commonEvent.name,
+        continueKinds: [
+          commonEvent.commands[80].kind,
+          commonEvent.commands[88].kind,
+          commonEvent.commands[103].kind,
+        ],
+      }
+    }),
+  )
+
+  assert.equal(result.name, 'X[移]メニュー起動')
+  assert.deepEqual(result.continueKinds, ['loopContinue', 'loopContinue', 'loopContinue'])
+})
+
+test('loop-continue jumps back to the current loop start without running the rest of the body', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_loop_continue_runtime=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = { id: 127, name: 'X[移]メニュー起動', commands: [], returnValueRaw: null, numberVariables: [], stringVariables: [] }
+      runtime.repository = {
+        commonEvents: [],
+        getCommonEventById(id) {
+          return id === 127 ? commonEvent : null
+        },
+        getCommonEventByName() {
+          return null
+        },
+      }
+
+      const context = { mapId: 1, eventId: null, commonEventId: 127 }
+      const countRaw = 1600010
+      const bodyRaw = 1600011
+      const commands = [
+        { kind: 'loopStart', indent: 0, isInfinite: false, loopCount: { kind: 'raw', value: 3 } },
+        {
+          kind: 'changeVariable',
+          indent: 1,
+          updaters: [{ left: { kind: 'raw', value: countRaw }, right1: { kind: 'raw', value: 1 }, right2: { kind: 'raw', value: 0 }, assignOperator: 1, rightOperator: 0 }],
+        },
+        {
+          kind: 'conditionalFork',
+          indent: 1,
+          conditions: [{ left: { kind: 'raw', value: countRaw }, right: { kind: 'raw', value: 2 }, operator: 2 }],
+        },
+        { kind: 'forkBegin', indent: 1, label: '1.1' },
+        { kind: 'loopContinue', indent: 2 },
+        { kind: 'blank', indent: 2 },
+        { kind: 'forkEnd', indent: 1, label: '1.0' },
+        {
+          kind: 'changeVariable',
+          indent: 1,
+          updaters: [{ left: { kind: 'raw', value: bodyRaw }, right1: { kind: 'raw', value: 1 }, right2: { kind: 'raw', value: 0 }, assignOperator: 1, rightOperator: 0 }],
+        },
+        { kind: 'loopEnd', indent: 0 },
+      ]
+
+      await runtime.executeCommands(commands, context)
+      return {
+        count: runtime.resolveNumberRef({ kind: 'raw', value: countRaw }, context),
+        body: runtime.resolveNumberRef({ kind: 'raw', value: bodyRaw }, context),
+      }
+    }),
+  )
+
+  assert.equal(result.count, 3)
+  assert.equal(result.body, 2)
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {

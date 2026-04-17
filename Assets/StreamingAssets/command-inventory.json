@@ -86,6 +86,10 @@
       "count": 55
     },
     {
+      "kind": "loopContinue",
+      "count": 50
+    },
+    {
       "kind": "choice",
       "count": 8
     },
@@ -493,52 +497,6 @@
           "eventId": 13,
           "eventName": "街の出口（エンド）",
           "pageIndex": 0
-        }
-      ]
-    },
-    {
-      "key": 176,
-      "count": 50,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 25,
-          "commonEventName": "▲特殊技能の有無取得"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 75,
-          "commonEventName": "X[移]状態付与/消去"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 109,
-          "commonEventName": "X[移]装備欄_選択実行"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 109,
-          "commonEventName": "X[移]装備欄_選択実行"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 109,
-          "commonEventName": "X[移]装備欄_選択実行"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 109,
-          "commonEventName": "X[移]装備欄_選択実行"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 109,
-          "commonEventName": "X[移]装備欄_選択実行"
         }
       ]
     },

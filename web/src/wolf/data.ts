@@ -24,6 +24,7 @@ import type {
   LabelJumpCommand,
   LabelSetCommand,
   LoopBreakCommand,
+  LoopContinueCommand,
   LoopEndCommand,
   LoopStartCommand,
   MessageCommand,
@@ -720,6 +721,8 @@ export class WolfDataRepository {
         return { kind: 'loopBreak', indent: meta.indentDepth } satisfies LoopBreakCommand
       case 0xac:
         return { kind: 'abortEvent', indent: meta.indentDepth } satisfies AbortEventCommand
+      case 0xb0:
+        return { kind: 'loopContinue', indent: meta.indentDepth } satisfies LoopContinueCommand
       case 0xb3:
         return { kind: 'loopStart', indent: meta.indentDepth, isInfinite: false, loopCount: rawRef(meta.numberArgs[1] ?? 0) } satisfies LoopStartCommand
       case 0xb4:

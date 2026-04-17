@@ -218,6 +218,11 @@ export interface LoopBreakCommand {
   indent: number
 }
 
+export interface LoopContinueCommand {
+  kind: 'loopContinue'
+  indent: number
+}
+
 export type PicturePivot = 'leftTop' | 'center' | 'leftBottom' | 'rightTop' | 'rightBottom'
 
 export interface ShowPictureCommand {
@@ -295,6 +300,7 @@ export type WolfCommand =
   | LoopStartCommand
   | LoopEndCommand
   | LoopBreakCommand
+  | LoopContinueCommand
   | ShowPictureCommand
   | ShowMessagePictureCommand
   | RemovePictureCommand

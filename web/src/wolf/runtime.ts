@@ -578,6 +578,11 @@ export class WolfRuntime {
             index = nextIndex
             break
           }
+          case 'loopContinue': {
+            const nextIndex = this.handleLoopContinue(commands, index, loops)
+            index = nextIndex
+            break
+          }
           case 'showPicture':
             await this.showPicture(command, context)
             index += 1
@@ -687,6 +692,25 @@ export class WolfRuntime {
     if (loop === undefined) {
       return commands.length
     }
+    return this.findLoopExit(commands, loop.indent, loop.startIndex)
+  }
+
+  private handleLoopContinue(
+    commands: WolfCommand[],
+    index: number,
+    loops: Array<{ indent: number; startIndex: number; currentCount: number; maxCount: number; isInfinite: boolean }>,
+  ): number {
+    const loop = loops.at(-1)
+    if (loop === undefined) {
+      return index + 1
+    }
+
+    if (loop.isInfinite || loop.currentCount < loop.maxCount) {
+      loop.currentCount += 1
+      return loop.startIndex + 1
+    }
+
+    loops.pop()
     return this.findLoopExit(commands, loop.indent, loop.startIndex)
   }
 
