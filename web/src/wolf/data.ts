@@ -13,6 +13,7 @@ import type {
   DatabaseRecord,
   DatabaseSchema,
   DatabaseType,
+  CheckpointCommand,
   DebugCommentCommand,
   Direction,
   EventMoveData,
@@ -29,12 +30,17 @@ import type {
   LoopStartCommand,
   MessageCommand,
   MovePositionCommand,
+  MovePictureCommand,
   NumberRef,
   PageCondition,
+  PictureEffectCommand,
   PicturePivot,
+  ReadPicturePropertyCommand,
   RemovePictureCommand,
   ShowMessagePictureCommand,
   ShowPictureCommand,
+  ShowPictureStringCommand,
+  ShowWindowPictureCommand,
   StartLocation,
   WaitCommand,
   TileSetData,
@@ -686,6 +692,8 @@ export class WolfDataRepository {
         return { kind: 'message', indent: meta.indentDepth, text: meta.stringArgs[0] ?? '' } satisfies MessageCommand
       case 0x67:
         return { kind: 'debugComment', indent: meta.indentDepth, text: meta.stringArgs[0] ?? '' } satisfies DebugCommentCommand
+      case 0x63:
+        return { kind: 'checkpoint', indent: meta.indentDepth } satisfies CheckpointCommand
       case 0x66:
         return { kind: 'choice', indent: meta.indentDepth, options: meta.stringArgs } satisfies WolfCommand
       case 0x6f:
@@ -713,8 +721,12 @@ export class WolfDataRepository {
         } satisfies MovePositionCommand
       case 0x7b:
         return this.createKeyInputCommand(meta)
+      case 0x7c:
+        return this.createVariablePlusCommand(meta)
       case 0x96:
         return this.createPictureCommand(meta)
+      case 0x122:
+        return this.createPictureEffectCommand(meta)
       case 0xaa:
         return { kind: 'loopStart', indent: meta.indentDepth, isInfinite: true, loopCount: null } satisfies LoopStartCommand
       case 0xab:
@@ -956,13 +968,82 @@ export class WolfDataRepository {
           scale: (meta.numberArgs[10] ?? 100) * 0.01,
         } satisfies ShowMessagePictureCommand
       }
+
+      if (sourceType === 0x01 || sourceType === 0x04) {
+        return {
+          kind: 'showPictureString',
+          indent: meta.indentDepth,
+          pictureId: rawRef(meta.numberArgs[2] ?? 0),
+          filePathRaw: meta.numberArgs.at(-1) ?? 0,
+          pivot: convertPivot(pivot),
+          x: rawRef(meta.numberArgs[8] ?? 0),
+          y: rawRef(meta.numberArgs[9] ?? 0),
+          scale: rawRef(meta.numberArgs[10] ?? 100),
+        } satisfies ShowPictureStringCommand
+      }
+
+      if (sourceType === 0x03) {
+        return {
+          kind: 'showWindowPicture',
+          indent: meta.indentDepth,
+          pictureId: rawRef(meta.numberArgs[2] ?? 0),
+          message: meta.stringArgs[0] ?? '',
+          width: rawRef(meta.numberArgs[4] ?? 0),
+          height: rawRef(meta.numberArgs[5] ?? 0),
+          x: rawRef(meta.numberArgs[8] ?? 0),
+          y: rawRef(meta.numberArgs[9] ?? 0),
+          scale: rawRef(meta.numberArgs[10] ?? 100),
+          opacity: rawRef(meta.numberArgs[7] ?? 255),
+        } satisfies ShowWindowPictureCommand
+      }
+    }
+
+    if (operationType === 0x01) {
+      return {
+        kind: 'movePicture',
+        indent: meta.indentDepth,
+        pictureId: rawRef(meta.numberArgs[2] ?? 0),
+        x: rawRef(meta.numberArgs[8] ?? -1000000),
+        y: rawRef(meta.numberArgs[9] ?? -1000000),
+        scale: rawRef(meta.numberArgs[10] ?? -1000000),
+      } satisfies MovePictureCommand
     }
 
     if (operationType === 0x02) {
       return { kind: 'removePicture', indent: meta.indentDepth, pictureId: meta.numberArgs[2] ?? 0 } satisfies RemovePictureCommand
     }
 
+    if (operationType === 0x03 && meta.numberArgs.length <= 4) {
+      return { kind: 'removePicture', indent: meta.indentDepth, pictureId: meta.numberArgs[2] ?? 0 } satisfies RemovePictureCommand
+    }
+
     return { kind: 'unknown', indent: meta.indentDepth, key: meta.numberArgs[0] ?? -1 } satisfies UnknownCommand
+  }
+
+  private createVariablePlusCommand(meta: MetaCommand): WolfCommand {
+    const mode = meta.numberArgs[2] ?? 0
+    if (mode === 0x4000 || mode === 0x4400) {
+      return {
+        kind: 'readPictureProperty',
+        indent: meta.indentDepth,
+        targetRaw: meta.numberArgs[1] ?? 0,
+        pictureId: rawRef(meta.numberArgs[3] ?? 0),
+        propertyId: meta.numberArgs[4] ?? 0,
+      } satisfies ReadPicturePropertyCommand
+    }
+
+    return { kind: 'unknown', indent: meta.indentDepth, key: meta.numberArgs[0] ?? -1 } satisfies UnknownCommand
+  }
+
+  private createPictureEffectCommand(meta: MetaCommand): WolfCommand {
+    return {
+      kind: 'pictureEffect',
+      indent: meta.indentDepth,
+      effectType: meta.numberArgs[1] ?? 0,
+      pictureId: rawRef(meta.numberArgs[3] ?? meta.numberArgs[2] ?? 0),
+      x: rawRef(meta.numberArgs[5] ?? 0),
+      y: rawRef(meta.numberArgs[6] ?? 0),
+    } satisfies PictureEffectCommand
   }
 
   private createCallEventById(meta: MetaCommand): CallEventCommand {

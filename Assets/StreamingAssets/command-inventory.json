@@ -50,8 +50,20 @@
       "count": 287
     },
     {
+      "kind": "removePicture",
+      "count": 281
+    },
+    {
+      "kind": "movePicture",
+      "count": 264
+    },
+    {
       "kind": "message",
       "count": 185
+    },
+    {
+      "kind": "pictureEffect",
+      "count": 177
     },
     {
       "kind": "branchElse",
@@ -70,10 +82,6 @@
       "count": 82
     },
     {
-      "kind": "removePicture",
-      "count": 76
-    },
-    {
       "kind": "loopBreak",
       "count": 68
     },
@@ -82,12 +90,28 @@
       "count": 66
     },
     {
+      "kind": "showWindowPicture",
+      "count": 64
+    },
+    {
+      "kind": "showPictureString",
+      "count": 61
+    },
+    {
       "kind": "keyInput",
       "count": 55
     },
     {
       "kind": "loopContinue",
       "count": 50
+    },
+    {
+      "kind": "checkpoint",
+      "count": 49
+    },
+    {
+      "kind": "readPictureProperty",
+      "count": 25
     },
     {
       "kind": "choice",
@@ -103,52 +127,6 @@
     }
   ],
   "unsupportedCommandKeys": [
-    {
-      "key": 99,
-      "count": 49,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 64,
-          "commonEventName": "X[共]万能ｳｨﾝﾄﾞｳ描画処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 64,
-          "commonEventName": "X[共]万能ｳｨﾝﾄﾞｳ描画処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 70,
-          "commonEventName": "X[移]パラメータ増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 70,
-          "commonEventName": "X[移]パラメータ増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 74,
-          "commonEventName": "X[移]レベルアップ処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        }
-      ]
-    },
     {
       "key": 106,
       "count": 51,
@@ -254,7 +232,7 @@
     },
     {
       "key": 124,
-      "count": 32,
+      "count": 7,
       "samples": [
         {
           "scope": "common",
@@ -268,33 +246,28 @@
         },
         {
           "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
+          "commonEventId": 126,
+          "commonEventName": "X[移]歩行時_並列キー処理"
         },
         {
           "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
+          "commonEventId": 126,
+          "commonEventName": "X[移]歩行時_並列キー処理"
         },
         {
           "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
+          "commonEventId": 126,
+          "commonEventName": "X[移]歩行時_並列キー処理"
         },
         {
           "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
+          "commonEventId": 126,
+          "commonEventName": "X[移]歩行時_並列キー処理"
         },
         {
           "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 64,
-          "commonEventName": "X[共]万能ｳｨﾝﾄﾞｳ描画処理"
+          "commonEventId": 188,
+          "commonEventName": "X◆戦闘処理"
         }
       ]
     },
@@ -367,52 +340,6 @@
           "scope": "common",
           "commonEventId": 188,
           "commonEventName": "X◆戦闘処理"
-        }
-      ]
-    },
-    {
-      "key": 150,
-      "count": 594,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
         }
       ]
     },
@@ -643,52 +570,6 @@
           "eventId": 14,
           "eventName": "エフェクト女",
           "pageIndex": 0
-        }
-      ]
-    },
-    {
-      "key": 290,
-      "count": 177,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 64,
-          "commonEventName": "X[共]万能ｳｨﾝﾄﾞｳ描画処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
         }
       ]
     },

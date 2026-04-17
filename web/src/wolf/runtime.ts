@@ -19,9 +19,14 @@ import type {
   Direction,
   EventPage,
   LoopStartCommand,
+  MovePictureCommand,
   NumberRef,
+  PictureEffectCommand,
+  ReadPicturePropertyCommand,
+  ShowPictureStringCommand,
   ShowMessagePictureCommand,
   ShowPictureCommand,
+  ShowWindowPictureCommand,
   StartLocation,
   Updater,
   WolfCommand,
@@ -506,6 +511,7 @@ export class WolfRuntime {
 
         switch (command.kind) {
           case 'blank':
+          case 'checkpoint':
           case 'debugComment':
           case 'labelSet':
             index += 1
@@ -593,6 +599,26 @@ export class WolfRuntime {
             break
           case 'removePicture':
             this.removePicture(command.pictureId)
+            index += 1
+            break
+          case 'showPictureString':
+            await this.showPictureString(command, context)
+            index += 1
+            break
+          case 'showWindowPicture':
+            this.showWindowPicture(command, context)
+            index += 1
+            break
+          case 'movePicture':
+            this.movePicture(command, context)
+            index += 1
+            break
+          case 'readPictureProperty':
+            this.readPictureProperty(command, context)
+            index += 1
+            break
+          case 'pictureEffect':
+            this.applyPictureEffect(command, context)
             index += 1
             break
           case 'wait':
@@ -1369,17 +1395,16 @@ export class WolfRuntime {
     const entry = document.createElement('img')
     entry.src = image.src
     entry.className = 'picture-entry'
-    this.applyPictureLayout(entry, command.pictureId, command.x, command.y, command.scale, command.pivot, context)
-    this.pictureEntries.get(command.pictureId)?.remove()
-    this.pictureEntries.set(command.pictureId, entry)
-    this.elements.pictureLayer.append(entry)
+    entry.dataset.baseWidth = String(image.naturalWidth || image.width || 0)
+    entry.dataset.baseHeight = String(image.naturalHeight || image.height || 0)
+    this.placePictureEntry(entry, command.pictureId, command.x, command.y, command.scale, command.pivot, context)
   }
 
   private showMessagePicture(command: ShowMessagePictureCommand, context: CommandContext): void {
     const entry = document.createElement('div')
     entry.className = 'picture-entry'
     entry.textContent = this.interpolateString(command.message, context)
-    this.applyPictureLayout(
+    this.placePictureEntry(
       entry,
       this.resolveNumberRef(command.pictureId, context),
       this.resolveNumberRef(command.x, context),
@@ -1388,7 +1413,120 @@ export class WolfRuntime {
       command.pivot,
       context,
     )
+  }
+
+  private async showPictureString(command: ShowPictureStringCommand, context: CommandContext): Promise<void> {
+    if (this.repository === null) {
+      return
+    }
+
+    const filePath = this.resolveStringRef(command.filePathRaw, context)
+    if (filePath.length === 0) {
+      return
+    }
+
+    const image = await this.repository.loadImage(filePath)
+    const entry = document.createElement('img')
+    entry.src = image.src
+    entry.className = 'picture-entry'
+    entry.dataset.baseWidth = String(image.naturalWidth || image.width || 0)
+    entry.dataset.baseHeight = String(image.naturalHeight || image.height || 0)
+    this.placePictureEntry(
+      entry,
+      this.resolveNumberRef(command.pictureId, context),
+      this.resolveNumberRef(command.x, context),
+      this.resolveNumberRef(command.y, context),
+      this.resolveNumberRef(command.scale, context) * 0.01,
+      command.pivot,
+      context,
+    )
+  }
+
+  private showWindowPicture(command: ShowWindowPictureCommand, context: CommandContext): void {
+    const entry = document.createElement('div')
+    entry.className = 'picture-entry'
+    const width = this.resolveNumberRef(command.width, context)
+    const height = this.resolveNumberRef(command.height, context)
+    const opacity = this.resolveNumberRef(command.opacity, context)
+    const renderedText = this.sanitizePictureText(this.interpolateString(command.message, context))
+    entry.textContent = renderedText
+    entry.style.width = `${Math.max(0, width)}px`
+    entry.style.height = `${Math.max(0, height)}px`
+    entry.style.opacity = `${Math.max(0, Math.min(255, opacity)) / 255}`
+    entry.style.boxSizing = 'border-box'
+    entry.style.border = '1px solid rgba(255,255,255,0.7)'
+    entry.style.background = renderedText.length === 0
+      ? 'linear-gradient(180deg, rgba(50, 80, 120, 0.9), rgba(15, 25, 45, 0.9))'
+      : 'rgba(15, 25, 45, 0.82)'
+    entry.style.color = '#fff'
+    entry.style.whiteSpace = 'pre'
+    entry.style.padding = '2px 4px'
+    entry.dataset.baseWidth = String(Math.max(0, width))
+    entry.dataset.baseHeight = String(Math.max(0, height))
+    this.placePictureEntry(
+      entry,
+      this.resolveNumberRef(command.pictureId, context),
+      this.resolveNumberRef(command.x, context),
+      this.resolveNumberRef(command.y, context),
+      this.resolveNumberRef(command.scale, context) * 0.01,
+      'leftTop',
+      context,
+    )
+  }
+
+  private movePicture(command: MovePictureCommand, context: CommandContext): void {
     const pictureId = this.resolveNumberRef(command.pictureId, context)
+    const entry = this.pictureEntries.get(pictureId)
+    if (entry === undefined) {
+      return
+    }
+
+    const currentLeft = this.readPictureMetric(entry, 'x')
+    const currentTop = this.readPictureMetric(entry, 'y')
+    const currentScale = this.readPictureMetric(entry, 'scale')
+    const nextLeft = this.resolveNumberRef(command.x, context)
+    const nextTop = this.resolveNumberRef(command.y, context)
+    const nextScaleRaw = this.resolveNumberRef(command.scale, context)
+
+    entry.style.left = `${nextLeft <= -1000000 ? currentLeft : nextLeft}px`
+    entry.style.top = `${nextTop <= -1000000 ? currentTop : nextTop}px`
+    entry.style.transform = `scale(${nextScaleRaw <= -1000000 ? currentScale : nextScaleRaw * 0.01})`
+  }
+
+  private readPictureProperty(command: ReadPicturePropertyCommand, context: CommandContext): void {
+    const pictureId = this.resolveNumberRef(command.pictureId, context)
+    const entry = this.pictureEntries.get(pictureId)
+    const value = entry === undefined ? 0 : this.readPictureMetric(entry, command.propertyId)
+    this.assignNumberRef({ kind: 'raw', value: command.targetRaw }, value, context)
+  }
+
+  private applyPictureEffect(command: PictureEffectCommand, context: CommandContext): void {
+    if (command.effectType !== 32) {
+      return
+    }
+
+    const pictureId = this.resolveNumberRef(command.pictureId, context)
+    const entry = this.pictureEntries.get(pictureId)
+    if (entry === undefined) {
+      return
+    }
+
+    const currentLeft = this.readPictureMetric(entry, 'x')
+    const currentTop = this.readPictureMetric(entry, 'y')
+    entry.style.left = `${currentLeft + this.resolveNumberRef(command.x, context)}px`
+    entry.style.top = `${currentTop + this.resolveNumberRef(command.y, context)}px`
+  }
+
+  private placePictureEntry(
+    entry: PictureEntry,
+    pictureId: number,
+    x: number,
+    y: number,
+    scale: number,
+    pivot: string,
+    context: CommandContext,
+  ): void {
+    this.applyPictureLayout(entry, pictureId, x, y, scale, pivot, context)
     this.pictureEntries.get(pictureId)?.remove()
     this.pictureEntries.set(pictureId, entry)
     this.elements.pictureLayer.append(entry)
@@ -1409,6 +1547,49 @@ export class WolfRuntime {
     element.style.left = `${x}px`
     element.style.top = `${y}px`
     element.style.transform = `scale(${scale})`
+  }
+
+  private readPictureMetric(entry: PictureEntry, property: number | 'x' | 'y' | 'scale'): number {
+    const element = entry
+    const bounds = element.getBoundingClientRect()
+    switch (property) {
+      case 'x':
+      case 0:
+        return Number.parseFloat(element.style.left || '0') || 0
+      case 'y':
+      case 1:
+        return Number.parseFloat(element.style.top || '0') || 0
+      case 2:
+        return Math.round(bounds.width
+          || Number.parseFloat(element.dataset.baseWidth || '0')
+          || (element instanceof HTMLImageElement ? element.naturalWidth : element.clientWidth))
+      case 3:
+        return Math.round(bounds.height
+          || Number.parseFloat(element.dataset.baseHeight || '0')
+          || (element instanceof HTMLImageElement ? element.naturalHeight : element.clientHeight))
+      case 5: {
+        const opacity = Number.parseFloat(element.style.opacity || '1')
+        return Number.isFinite(opacity) ? Math.round(opacity * 255) : 255
+      }
+      case 'scale': {
+        const match = /scale\(([^)]+)\)/.exec(element.style.transform)
+        return match === null ? 1 : Number.parseFloat(match[1]) || 1
+      }
+      default:
+        return 0
+    }
+  }
+
+  private sanitizePictureText(text: string): string {
+    return text
+      .replace(/\\f\[[^\]]*\]/g, '')
+      .replace(/\\ax\[[^\]]*\]/g, '')
+      .replace(/\\ay\[[^\]]*\]/g, '')
+      .replace(/\\space\[[^\]]*\]/g, ' ')
+      .replace(/\\A/g, '')
+      .replace(/\\E/g, '')
+      .replace(/<R>/g, '')
+      .trim()
   }
 
   private removePicture(pictureId: number): void {

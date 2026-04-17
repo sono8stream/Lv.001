@@ -1361,6 +1361,157 @@ test('loop-continue jumps back to the current loop start without running the res
   assert.equal(result.body, 2)
 })
 
+test('menu draw common events parse dedicated picture helper kinds', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const dataMod = await import('/src/wolf/data.ts?test_menu_draw_kinds=1')
+      const repo = await dataMod.WolfDataRepository.create()
+      const windowDraw = repo.getCommonEventById(64)
+      const menuDraw = repo.getCommonEventById(88)
+      const characterDraw = repo.getCommonEventById(90)
+
+      return {
+        dynamicPictureKind: windowDraw.commands[177].kind,
+        movePictureKind: menuDraw.commands[192].kind,
+        checkpointKind: menuDraw.commands[199].kind,
+        picturePropertyKind: menuDraw.commands[186].kind,
+        pictureEffectKind: characterDraw.commands[241].kind,
+      }
+    }),
+  )
+
+  assert.equal(result.dynamicPictureKind, 'showPictureString')
+  assert.equal(result.movePictureKind, 'movePicture')
+  assert.equal(result.checkpointKind, 'checkpoint')
+  assert.equal(result.picturePropertyKind, 'readPictureProperty')
+  assert.equal(result.pictureEffectKind, 'pictureEffect')
+})
+
+test('picture helper commands read size and move an existing picture entry', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_picture_helpers_runtime=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = { id: 127, name: 'X[移]メニュー起動', commands: [], returnValueRaw: null, numberVariables: [], stringVariables: [] }
+      runtime.repository = {
+        commonEvents: [],
+        getCommonEventById(id) {
+          return id === 127 ? commonEvent : null
+        },
+        getCommonEventByName() {
+          return null
+        },
+      }
+
+      const entry = document.createElement('div')
+      entry.className = 'picture-entry'
+      entry.style.position = 'absolute'
+      entry.style.width = '96px'
+      entry.style.height = '32px'
+      entry.style.left = '12px'
+      entry.style.top = '20px'
+      entry.style.transform = 'scale(1)'
+      runtime.elements.pictureLayer.append(entry)
+      runtime.pictureEntries.set(7, entry)
+
+      const context = { mapId: 1, eventId: null, commonEventId: 127 }
+      await runtime.executeCommands([
+        { kind: 'readPictureProperty', indent: 0, targetRaw: 1600010, pictureId: { kind: 'raw', value: 7 }, propertyId: 2 },
+        { kind: 'readPictureProperty', indent: 0, targetRaw: 1600011, pictureId: { kind: 'raw', value: 7 }, propertyId: 3 },
+        { kind: 'movePicture', indent: 0, pictureId: { kind: 'raw', value: 7 }, x: { kind: 'raw', value: 48 }, y: { kind: 'raw', value: 72 }, scale: { kind: 'raw', value: 200 } },
+      ], context)
+
+      return {
+        width: runtime.resolveNumberRef({ kind: 'raw', value: 1600010 }, context),
+        height: runtime.resolveNumberRef({ kind: 'raw', value: 1600011 }, context),
+        left: entry.style.left,
+        top: entry.style.top,
+        transform: entry.style.transform,
+      }
+    }),
+  )
+
+  assert.equal(result.width, 96)
+  assert.equal(result.height, 32)
+  assert.equal(result.left, '48px')
+  assert.equal(result.top, '72px')
+  assert.equal(result.transform, 'scale(2)')
+})
+
+test('menu common event produces window-like picture entries after draw helpers run', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_draw_positions=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_draw_positions=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const entries = [...runtime.elements.pictureLayer.children].map((node) => ({
+        background: node.style.background,
+        width: node.style.width,
+        height: node.style.height,
+      }))
+
+      return {
+        pictureCount: entries.length,
+        windowHelperCount: entries.filter((entry) => entry.background.length > 0 || entry.width.length > 0 || entry.height.length > 0).length,
+      }
+    }),
+  )
+
+  assert.ok(result.pictureCount >= 10)
+  assert.ok(result.windowHelperCount >= 3)
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {

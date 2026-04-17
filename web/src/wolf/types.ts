@@ -81,6 +81,11 @@ export interface DebugCommentCommand {
   text: string
 }
 
+export interface CheckpointCommand {
+  kind: 'checkpoint'
+  indent: number
+}
+
 export interface ChoiceCommand {
   kind: 'choice'
   indent: number
@@ -253,6 +258,56 @@ export interface RemovePictureCommand {
   pictureId: number
 }
 
+export interface ShowPictureStringCommand {
+  kind: 'showPictureString'
+  indent: number
+  pictureId: NumberRef
+  filePathRaw: number
+  pivot: PicturePivot
+  x: NumberRef
+  y: NumberRef
+  scale: NumberRef
+}
+
+export interface ShowWindowPictureCommand {
+  kind: 'showWindowPicture'
+  indent: number
+  pictureId: NumberRef
+  message: string
+  width: NumberRef
+  height: NumberRef
+  x: NumberRef
+  y: NumberRef
+  scale: NumberRef
+  opacity: NumberRef
+}
+
+export interface MovePictureCommand {
+  kind: 'movePicture'
+  indent: number
+  pictureId: NumberRef
+  x: NumberRef
+  y: NumberRef
+  scale: NumberRef
+}
+
+export interface ReadPicturePropertyCommand {
+  kind: 'readPictureProperty'
+  indent: number
+  targetRaw: number
+  pictureId: NumberRef
+  propertyId: number
+}
+
+export interface PictureEffectCommand {
+  kind: 'pictureEffect'
+  indent: number
+  effectType: number
+  pictureId: NumberRef
+  x: NumberRef
+  y: NumberRef
+}
+
 export interface WaitCommand {
   kind: 'wait'
   indent: number
@@ -285,6 +340,7 @@ export interface UnknownCommand {
 export type WolfCommand =
   | BlankCommand
   | DebugCommentCommand
+  | CheckpointCommand
   | MessageCommand
   | ChoiceCommand
   | ForkBeginCommand
@@ -304,6 +360,11 @@ export type WolfCommand =
   | ShowPictureCommand
   | ShowMessagePictureCommand
   | RemovePictureCommand
+  | ShowPictureStringCommand
+  | ShowWindowPictureCommand
+  | MovePictureCommand
+  | ReadPicturePropertyCommand
+  | PictureEffectCommand
   | WaitCommand
   | LabelSetCommand
   | LabelJumpCommand
