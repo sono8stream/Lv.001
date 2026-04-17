@@ -228,6 +228,12 @@ export class WolfRuntime {
           this.consumeKey('Enter')
           this.consumeKey(' ')
           await this.tryInteract()
+        } else if (this.isAnyPressed(['Escape', 'Backspace', 'x', 'X'])) {
+          this.consumeKey('Escape')
+          this.consumeKey('Backspace')
+          this.consumeKey('x')
+          this.consumeKey('X')
+          await this.tryOpenMenu()
         }
       }
     }
@@ -357,6 +363,41 @@ export class WolfRuntime {
     const page = this.getActivePage(target)
     if (page?.triggerType === 'check') {
       await this.runMapEvent(target)
+    }
+  }
+
+  private async tryOpenMenu(): Promise<void> {
+    if (this.repository === null || this.currentMap === null) {
+      return
+    }
+    if (this.currentMessageResolver !== null || this.currentChoiceResolver !== null) {
+      return
+    }
+
+    const commonEvent = this.repository.getCommonEventByName('X[移]メニュー起動')
+      ?? this.repository.getCommonEventById(127)
+    if (commonEvent === null) {
+      return
+    }
+
+    const command: CallEventCommand = {
+      kind: 'callEvent',
+      indent: 0,
+      eventLookup: { type: 'name', name: commonEvent.name },
+      numberArgs: [],
+      hasReturnValue: false,
+      returnDestination: null,
+    }
+
+    this.eventBusy = true
+    try {
+      await this.runCommonEvent(commonEvent, command, {
+        mapId: this.currentMap.id,
+        eventId: null,
+        commonEventId: null,
+      })
+    } finally {
+      this.eventBusy = false
     }
   }
 

@@ -747,6 +747,138 @@ test('pass-through moving event can overlap the player and trigger eventContact'
   assert.deepEqual(result.triggered, [{ id: 14, eventX: 0, eventY: 0 }])
 })
 
+test('cancel key opens the menu common event when the player is idle', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_open_menu_idle=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 64
+      layer.height = 64
+      runtime.repository = {
+        commonEvents: [],
+        getCommonEventByName(name) {
+          return name === 'X[移]メニュー起動'
+            ? { id: 127, name, commands: [], returnValueRaw: null, numberVariables: [], stringVariables: [] }
+            : null
+        },
+        getCommonEventById() {
+          return null
+        },
+      }
+      runtime.currentMap = {
+        id: 1,
+        width: 4,
+        height: 4,
+        movableGrid: [
+          [true, true, true, true],
+          [true, true, true, true],
+          [true, true, true, true],
+          [true, true, true, true],
+        ],
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+
+      const calls = []
+      runtime.runCommonEvent = async (commonEvent, command, context) => {
+        calls.push({
+          id: commonEvent.id,
+          name: commonEvent.name,
+          lookupType: command.eventLookup.type,
+          mapId: context.mapId,
+        })
+      }
+
+      runtime.pressedKeys.add('Escape')
+      await runtime.tick()
+      return {
+        calls,
+        escapeStillPressed: runtime.pressedKeys.has('Escape'),
+      }
+    }),
+  )
+
+  assert.deepEqual(result.calls, [{ id: 127, name: 'X[移]メニュー起動', lookupType: 'name', mapId: 1 }])
+  assert.equal(result.escapeStillPressed, false)
+})
+
+test('cancel key does not open the menu while another event is running', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_open_menu_busy=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 64
+      layer.height = 64
+      runtime.repository = {
+        commonEvents: [],
+        getCommonEventByName(name) {
+          return name === 'X[移]メニュー起動'
+            ? { id: 127, name, commands: [], returnValueRaw: null, numberVariables: [], stringVariables: [] }
+            : null
+        },
+        getCommonEventById() {
+          return null
+        },
+      }
+      runtime.currentMap = {
+        id: 1,
+        width: 4,
+        height: 4,
+        movableGrid: [
+          [true, true, true, true],
+          [true, true, true, true],
+          [true, true, true, true],
+          [true, true, true, true],
+        ],
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+
+      let callCount = 0
+      runtime.runCommonEvent = async () => {
+        callCount += 1
+      }
+
+      runtime.eventBusy = true
+      runtime.pressedKeys.add('Escape')
+      await runtime.tick()
+      return {
+        callCount,
+        escapeStillPressed: runtime.pressedKeys.has('Escape'),
+      }
+    }),
+  )
+
+  assert.equal(result.callCount, 0)
+  assert.equal(result.escapeStillPressed, true)
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
