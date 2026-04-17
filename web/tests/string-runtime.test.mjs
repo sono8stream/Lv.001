@@ -1222,6 +1222,57 @@ test('player walking animation advances on movement and returns to standing fram
   assert.equal(result.idleFrame, 1)
 })
 
+test('command inventory groups supported kinds and unsupported raw keys', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const inventoryMod = await import('/src/wolf/command-inventory.ts?test_inventory_grouping=1')
+      return inventoryMod.buildCommandInventory(
+        [{ id: 1, name: 'common-a', commands: [{ kind: 'message' }, { kind: 'unknown', key: 999 }, { kind: 'message' }] }],
+        [{ id: 1, events: [{ id: 3, name: 'map-a', pages: [{ pageIndex: 0, commands: [{ kind: 'choice' }, { kind: 'unknown', key: 999 }, { kind: 'unknown', key: 314 }] }] }] }],
+      )
+    }),
+  )
+
+  assert.equal(result.totalCommands, 6)
+  assert.deepEqual(result.supportedKinds, [
+    { kind: 'message', count: 2 },
+    { kind: 'choice', count: 1 },
+  ])
+  assert.deepEqual(result.unsupportedCommandKeys, [
+    { key: 314, count: 1, samples: [{ scope: 'map', mapId: 1, eventId: 3, eventName: 'map-a', pageIndex: 0 }] },
+    { key: 999, count: 2, samples: [
+      { scope: 'common', commonEventId: 1, commonEventName: 'common-a' },
+      { scope: 'map', mapId: 1, eventId: 3, eventName: 'map-a', pageIndex: 0 },
+    ] },
+  ])
+})
+
+test('command inventory snapshot matches current repository data', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const inventoryMod = await import('/src/wolf/command-inventory.ts?test_inventory_snapshot=1')
+      const dataMod = await import('/src/wolf/data.ts?test_inventory_snapshot=1')
+      const repo = await dataMod.WolfDataRepository.create()
+      const maps = []
+      let consecutiveMisses = 0
+      for (let mapId = 1; mapId <= 300 && consecutiveMisses < 40; mapId += 1) {
+        try {
+          maps.push(await repo.loadMap(mapId))
+          consecutiveMisses = 0
+        } catch {
+          consecutiveMisses += 1
+        }
+      }
+
+      const generated = inventoryMod.buildCommandInventory(repo.commonEvents, maps)
+      const committed = await fetch('/command-inventory.json').then((response) => response.json())
+      return { generated, committed }
+    }),
+  )
+
+  assert.deepEqual(result.generated, result.committed)
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
