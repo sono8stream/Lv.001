@@ -879,6 +879,230 @@ test('cancel key does not open the menu while another event is running', async (
   assert.equal(result.escapeStillPressed, true)
 })
 
+test('check trigger respects expanded trigger range', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_check_range=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 96
+      layer.height = 96
+      runtime.currentMap = {
+        id: 1,
+        width: 6,
+        height: 6,
+        movableGrid: Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => true)),
+        events: [{
+          id: 20,
+          name: 'wide-check',
+          x: 3,
+          y: 2,
+          pages: [{
+            pageIndex: 0,
+            tileNo: -1,
+            chipImgName: '',
+            direction: 'left',
+            hasDirection: false,
+            triggerType: 'check',
+            conditions: [],
+            rangeExtendX: 1,
+            rangeExtendY: 0,
+            moveData: {
+              animationSpeed: 3,
+              moveSpeed: 3,
+              moveFrequency: 3,
+              moveType: 0,
+              optionFlags: 8,
+              moveFlags: 0,
+              canPass: true,
+              moveCommands: [],
+            },
+            commands: [],
+          }],
+        }],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.playerX = 1
+      runtime.playerY = 2
+      runtime.playerDirection = 'right'
+
+      const triggered = []
+      runtime.runMapEvent = async (event) => {
+        triggered.push(event.id)
+      }
+
+      await runtime.tryInteract()
+      return triggered
+    }),
+  )
+
+  assert.deepEqual(result, [20])
+})
+
+test('playerContact respects expanded trigger range', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_player_contact_range=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 96
+      layer.height = 96
+      runtime.currentMap = {
+        id: 1,
+        width: 6,
+        height: 6,
+        movableGrid: Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => true)),
+        events: [{
+          id: 21,
+          name: 'wide-player-contact',
+          x: 3,
+          y: 2,
+          pages: [{
+            pageIndex: 0,
+            tileNo: -1,
+            chipImgName: '',
+            direction: 'down',
+            hasDirection: false,
+            triggerType: 'playerContact',
+            conditions: [],
+            rangeExtendX: 1,
+            rangeExtendY: 0,
+            moveData: {
+              animationSpeed: 3,
+              moveSpeed: 3,
+              moveFrequency: 3,
+              moveType: 0,
+              optionFlags: 8,
+              moveFlags: 0,
+              canPass: true,
+              moveCommands: [],
+            },
+            commands: [],
+          }],
+        }],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.playerX = 1
+      runtime.playerY = 2
+
+      const triggered = []
+      runtime.runMapEvent = async (event) => {
+        triggered.push({ id: event.id, x: runtime.playerX, y: runtime.playerY })
+      }
+
+      runtime.pressedKeys.add('ArrowRight')
+      await runtime.stepPlayer()
+      return { x: runtime.playerX, y: runtime.playerY, triggered }
+    }),
+  )
+
+  assert.equal(result.x, 2)
+  assert.equal(result.y, 2)
+  assert.deepEqual(result.triggered, [{ id: 21, x: 2, y: 2 }])
+})
+
+test('moving eventContact respects expanded trigger range', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_event_contact_range=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 96
+      layer.height = 96
+      runtime.currentMap = {
+        id: 1,
+        width: 6,
+        height: 6,
+        movableGrid: Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => true)),
+        events: [{
+          id: 22,
+          name: 'wide-event-contact',
+          x: 3,
+          y: 2,
+          pages: [{
+            pageIndex: 0,
+            tileNo: -1,
+            chipImgName: '',
+            direction: 'left',
+            hasDirection: false,
+            triggerType: 'eventContact',
+            conditions: [],
+            rangeExtendX: 1,
+            rangeExtendY: 0,
+            moveData: {
+              animationSpeed: 3,
+              moveSpeed: 3,
+              moveFrequency: 5,
+              moveType: 3,
+              optionFlags: 0,
+              moveFlags: 0,
+              canPass: false,
+              moveCommands: [],
+            },
+            commands: [],
+          }],
+        }],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.playerX = 1
+      runtime.playerY = 2
+
+      const triggered = []
+      runtime.runMapEvent = async (event) => {
+        const pageData = runtime.getActivePage(event)
+        const state = runtime.getEventState(event, pageData)
+        triggered.push({ id: event.id, eventX: state.x, eventY: state.y })
+      }
+
+      await runtime.processEventMovement()
+      const event = runtime.currentMap.events[0]
+      const pageData = runtime.getActivePage(event)
+      const state = runtime.getEventState(event, pageData)
+      return { x: state.x, y: state.y, triggered }
+    }),
+  )
+
+  assert.equal(result.x, 2)
+  assert.equal(result.y, 2)
+  assert.deepEqual(result.triggered, [{ id: 22, eventX: 2, eventY: 2 }])
+})
+
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {

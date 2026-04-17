@@ -312,6 +312,8 @@ export interface EventPage {
   hasDirection: boolean
   triggerType: EventTriggerType
   conditions: PageCondition[]
+  rangeExtendX: number
+  rangeExtendY: number
   moveData: EventMoveData
   commands: WolfCommand[]
 }

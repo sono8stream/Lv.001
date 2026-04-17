@@ -530,8 +530,10 @@ export class WolfDataRepository {
 
     currentOffset = reader.readInt(currentOffset).nextOffset
     currentOffset = reader.readByte(currentOffset).nextOffset
-    currentOffset = reader.readByte(currentOffset).nextOffset
-    currentOffset = reader.readByte(currentOffset).nextOffset
+    const rangeExtendX = reader.readByte(currentOffset)
+    currentOffset = rangeExtendX.nextOffset
+    const rangeExtendY = reader.readByte(currentOffset)
+    currentOffset = rangeExtendY.nextOffset
     currentOffset = reader.readByte(currentOffset).nextOffset
 
     const conditions = conditionOps.map<PageCondition>((operatorRaw, index) => ({
@@ -549,6 +551,8 @@ export class WolfDataRepository {
         hasDirection: tileNo.value === -1 && chipImgName.value.length > 0,
         triggerType: convertTrigger(triggerType.value),
         conditions,
+        rangeExtendX: rangeExtendX.value,
+        rangeExtendY: rangeExtendY.value,
         moveData: moveData.moveData,
         commands,
       },

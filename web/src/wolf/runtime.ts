@@ -292,13 +292,16 @@ export class WolfRuntime {
 
     const contactEvent = this.findEventAt(nextX, nextY)
     const contactPage = contactEvent === null ? null : this.getActivePage(contactEvent)
+    const rangeEvent = this.findTriggeredEventAt(nextX, nextY, ['playerContact', 'eventContact'])
     const tilePassable = this.currentMap.movableGrid[nextY][nextX]
     const eventPassable = contactEvent === null || contactPage === null
       ? true
       : this.getEventState(contactEvent, contactPage).canPass
 
-    if (contactEvent !== null && this.isContactTrigger(contactPage?.triggerType) && (!tilePassable || !eventPassable)) {
-      await this.runMapEvent(contactEvent)
+    if (rangeEvent !== null && (!tilePassable || (contactEvent !== null && !eventPassable))) {
+      if (contactEvent !== null && rangeEvent.id === contactEvent.id && this.isContactTrigger(contactPage?.triggerType)) {
+        await this.runMapEvent(rangeEvent)
+      }
       return
     }
 
@@ -309,8 +312,9 @@ export class WolfRuntime {
     this.playerX = nextX
     this.playerY = nextY
 
-    if (contactEvent !== null && this.isContactTrigger(contactPage?.triggerType)) {
-      await this.runMapEvent(contactEvent)
+    if (rangeEvent !== null) {
+      await this.runMapEvent(rangeEvent)
+      return
     }
   }
 
@@ -324,6 +328,36 @@ export class WolfRuntime {
 
   private isContactTrigger(triggerType: EventPage['triggerType'] | undefined): boolean {
     return triggerType === 'playerContact' || triggerType === 'eventContact'
+  }
+
+  private findTriggeredEventAt(
+    x: number,
+    y: number,
+    triggerTypes: ReadonlyArray<EventPage['triggerType']>,
+    excludeEventId?: number,
+  ): WolfMapEvent | null {
+    if (this.currentMap === null) {
+      return null
+    }
+
+    return this.currentMap.events.find((event) => {
+      if (excludeEventId !== undefined && event.id === excludeEventId) {
+        return false
+      }
+      const page = this.getActivePage(event)
+      return page !== null && triggerTypes.includes(page.triggerType) && this.isInsideTriggerRange(event, page, x, y)
+    }) ?? null
+  }
+
+  private isInsideTriggerRange(event: WolfMapEvent, page: EventPage, x: number, y: number): boolean {
+    const state = this.getEventState(event, page)
+    return this.isInsideTriggerRangeAt(page, state.x, state.y, x, y)
+  }
+
+  private isInsideTriggerRangeAt(page: EventPage, originX: number, originY: number, x: number, y: number): boolean {
+    const rangeX = page.rangeExtendX ?? 0
+    const rangeY = page.rangeExtendY ?? 0
+    return Math.abs(x - originX) <= rangeX && Math.abs(y - originY) <= rangeY
   }
 
   private async processEventMovement(): Promise<void> {
@@ -355,7 +389,8 @@ export class WolfRuntime {
   }
 
   private async tryInteract(): Promise<void> {
-    const target = this.findFacingEvent()
+    const facingPosition = this.getFacingPosition()
+    const target = this.findTriggeredEventAt(facingPosition.x, facingPosition.y, ['check'])
     if (target === null) {
       return
     }
@@ -1231,7 +1266,7 @@ export class WolfRuntime {
     }) ?? null
   }
 
-  private findFacingEvent(): WolfMapEvent | null {
+  private getFacingPosition(): { x: number; y: number } {
     let x = this.playerX
     let y = this.playerY
     switch (this.playerDirection) {
@@ -1248,7 +1283,7 @@ export class WolfRuntime {
         y += 1
         break
     }
-    return this.findEventAt(x, y)
+    return { x, y }
   }
 
   private async changeMap(mapId: number, x: number, y: number): Promise<void> {
@@ -1698,7 +1733,7 @@ export class WolfRuntime {
 
     state.x = nextX
     state.y = nextY
-    if (targetIsPlayer && page.triggerType === 'eventContact') {
+    if (page.triggerType === 'eventContact' && this.isInsideTriggerRangeAt(page, nextX, nextY, this.playerX, this.playerY)) {
       await this.runMapEvent(event)
     }
     return true
