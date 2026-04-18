@@ -538,6 +538,8 @@ export class WolfRuntime {
           case 'playSystemSe':
           case 'playSeFile':
           case 'saveSlot':
+          case 'walkParallelKey':
+          case 'itemUseEffect':
             index += 1
             break
           case 'message':

@@ -130,6 +130,14 @@
       "count": 8
     },
     {
+      "kind": "itemUseEffect",
+      "count": 4
+    },
+    {
+      "kind": "walkParallelKey",
+      "count": 4
+    },
+    {
       "kind": "movePosition",
       "count": 3
     },
@@ -188,32 +196,6 @@
           "scope": "common",
           "commonEventId": 188,
           "commonEventName": "X◆戦闘処理"
-        }
-      ]
-    },
-    {
-      "key": 126,
-      "count": 4,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 126,
-          "commonEventName": "X[移]歩行時_並列キー処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 126,
-          "commonEventName": "X[移]歩行時_並列キー処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 126,
-          "commonEventName": "X[移]歩行時_並列キー処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 126,
-          "commonEventName": "X[移]歩行時_並列キー処理"
         }
       ]
     },
@@ -316,32 +298,6 @@
           "eventId": 4,
           "eventName": "俺の畑の人",
           "pageIndex": 0
-        }
-      ]
-    },
-    {
-      "key": 211,
-      "count": 4,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 118,
-          "commonEventName": "X[移]ｱｲﾃﾑ使用効果処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 119,
-          "commonEventName": "X[移]技能使用効果処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 126,
-          "commonEventName": "X[移]歩行時_並列キー処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 126,
-          "commonEventName": "X[移]歩行時_並列キー処理"
         }
       ]
     },

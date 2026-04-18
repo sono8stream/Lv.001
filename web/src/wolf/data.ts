@@ -53,6 +53,8 @@ import type {
   PlaySystemSeCommand,
   PlaySeFileCommand,
   SaveSlotCommand,
+  WalkParallelKeyCommand,
+  ItemUseEffectCommand,
 } from './types'
 import { TILE_SIZE } from './types'
 
@@ -786,6 +788,10 @@ export class WolfDataRepository {
         return { kind: 'playSystemSe', indent: meta.indentDepth } satisfies PlaySystemSeCommand
       case 0x8c:
         return { kind: 'playSeFile', indent: meta.indentDepth } satisfies PlaySeFileCommand
+      case 0x7e:
+        return { kind: 'walkParallelKey', indent: meta.indentDepth } satisfies WalkParallelKeyCommand
+      case 0xd3:
+        return { kind: 'itemUseEffect', indent: meta.indentDepth } satisfies ItemUseEffectCommand
       case 0xdc:
       case 0xdd:
       case 0xde:

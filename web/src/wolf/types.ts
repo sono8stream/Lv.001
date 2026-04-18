@@ -362,6 +362,16 @@ export interface SaveSlotCommand {
   indent: number
 }
 
+export interface WalkParallelKeyCommand {
+  kind: 'walkParallelKey'
+  indent: number
+}
+
+export interface ItemUseEffectCommand {
+  kind: 'itemUseEffect'
+  indent: number
+}
+
 export type WolfCommand =
   | BlankCommand
   | DebugCommentCommand
@@ -397,6 +407,8 @@ export type WolfCommand =
   | PlaySystemSeCommand
   | PlaySeFileCommand
   | SaveSlotCommand
+  | WalkParallelKeyCommand
+  | ItemUseEffectCommand
   | UnknownCommand
 
 export interface EventPage {
