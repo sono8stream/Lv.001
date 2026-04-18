@@ -819,6 +819,7 @@ export class WolfRuntime {
     command: CallEventCommand,
     context: CommandContext,
   ): Promise<void> {
+    this.initializeSystemUiDefaults()
     const args = command.numberArgs.map((ref) => this.resolveNumberRef(ref, context))
     for (let index = 1; index <= 4; index += 1) {
       commonEvent.numberVariables[index] = 0
@@ -1779,6 +1780,7 @@ export class WolfRuntime {
     return text
       .replace(/<[^>]+>/g, '')
       .replace(/\\f\[[^\]]*\]/g, '')
+      .replace(/\\-\[[^\]]*\]/g, '')
       .replace(/\\ax\[[^\]]*\]/g, '')
       .replace(/\\ay\[[^\]]*\]/g, '')
       .replace(/\\space\[[^\]]*\]/g, ' ')
@@ -1890,13 +1892,21 @@ export class WolfRuntime {
       return
     }
 
-    const systemUiTable = 18
     const changeableDb = this.repository.changeableDb
+    if (
+      changeableDb === undefined
+      || typeof changeableDb.getInt !== 'function'
+      || typeof changeableDb.setInt !== 'function'
+    ) {
+      return
+    }
+
+    const systemUiTable = 18
     const defaults = [
-      { record: 3, value: 10 },
-      { record: 5, value: 10 },
-      { record: 6, value: 8 },
-      { record: 7, value: 6 },
+      { record: 3, value: 100 },
+      { record: 5, value: 100 }, // font height in sub-pixel units (10px × scale 10)
+      { record: 6, value: 80 },  // secondary font height in sub-pixel units (8px × scale 10)
+      { record: 7, value: 60 },  // tertiary font height in sub-pixel units (6px × scale 10)
       { record: 97, value: 10 },
       { record: 98, value: 10 },
     ] as const

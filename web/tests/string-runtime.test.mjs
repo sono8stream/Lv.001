@@ -2305,7 +2305,7 @@ test('menu picture text strips formatting control tokens before rendering', asyn
     }),
   )
 
-  assert.equal(result.some((text) => /\\f\[|\\ax\[|\\ay\[|<R>|\\A|\\E/.test(text)), false)
+  assert.equal(result.some((text) => /\\f\[|\\-\[|\\ax\[|\\ay\[|<R>|\\A|\\E/.test(text)), false)
 })
 
 test('menu window helper entries have non-zero size', async () => {
@@ -2369,6 +2369,67 @@ test('menu window helper entries have non-zero size', async () => {
 
   assert.ok(result.helperCount >= 3)
   assert.ok(result.nonZeroSizeCount >= 3)
+})
+
+test('menu character pane text entries use computed coordinates instead of staying at the origin', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_character_coords=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_character_coords=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      return [10204, 10205, 10206, 10213].map((pictureId) => {
+        const entry = runtime.pictureEntries.get(pictureId)
+        return {
+          pictureId,
+          left: entry?.style.left ?? '',
+          top: entry?.style.top ?? '',
+          text: entry?.textContent ?? '',
+        }
+      })
+    }),
+  )
+
+  assert.equal(result.every((entry) => (entry.left !== '0px' || entry.top !== '0px') && entry.text.length > 0), true)
 })
 
 test('character pane cursor uses CursorBase away from the origin', async () => {
