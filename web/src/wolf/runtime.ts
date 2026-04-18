@@ -22,7 +22,9 @@ import type {
   MovePictureCommand,
   NumberRef,
   PictureEffectCommand,
+  PicturePivot,
   ReadPicturePropertyCommand,
+  RemovePictureCommand,
   ShowPictureStringCommand,
   ShowMessagePictureCommand,
   ShowPictureCommand,
@@ -70,6 +72,7 @@ export class WolfRuntime {
   private static readonly COMMAND_STEP_LIMIT = 20000
   private static readonly PLAYER_MOVE_REPEAT_FRAMES = 9
   private static readonly PLAYER_ANIMATION_SETTLE_FRAMES = 6
+  private static readonly PICTURE_COORDINATE_SCALE = 10
   private static readonly UNSUPPORTED_BATTLE_EVENT_NAMES = new Set(['◆バトルの発生', 'X◆戦闘処理'])
   private static readonly INTERPOLATION_TOKEN_PATTERN = /\\(self\[(\d+)\]|cself\[(\d+)\]|([ucs])db\[(\d+):(\d+):(\d+)])/g
 
@@ -123,6 +126,7 @@ export class WolfRuntime {
     try {
       this.setStatus('Loading databases and common events...')
       this.repository = await WolfDataRepository.create()
+      this.initializeSystemUiDefaults()
       this.startLocation = this.repository.getStartLocation()
       this.playerX = this.startLocation.x
       this.playerY = this.startLocation.y
@@ -444,6 +448,7 @@ export class WolfRuntime {
     }
 
     this.eventBusy = true
+    const pictureSnapshot = new Map(this.pictureEntries)
     try {
       await this.runCommonEvent(commonEvent, command, {
         mapId: this.currentMap.id,
@@ -451,6 +456,7 @@ export class WolfRuntime {
         commonEventId: null,
       })
     } finally {
+      this.restorePictureEntries(pictureSnapshot)
       this.eventBusy = false
     }
   }
@@ -590,7 +596,7 @@ export class WolfRuntime {
             break
           }
           case 'showPicture':
-            await this.showPicture(command, context)
+            await this.showPicture(command)
             index += 1
             break
           case 'showMessagePicture':
@@ -598,11 +604,13 @@ export class WolfRuntime {
             index += 1
             break
           case 'removePicture':
-            this.removePicture(command.pictureId)
+            if (!this.shouldSkipPictureRemoval(commands, index, command, context)) {
+              this.removePicture(this.resolveNumberRef(command.pictureId, context))
+            }
             index += 1
             break
           case 'showPictureString':
-            await this.showPictureString(command, context)
+            await this.showPictureString(command, context, this.getShowPictureStringOverride(commands, index, command, context))
             index += 1
             break
           case 'showWindowPicture':
@@ -762,15 +770,17 @@ export class WolfRuntime {
       return
     }
 
-    if (command.eventLookup.rawEventId >= 500000) {
-      const commonEvent = this.repository.getCommonEventById(command.eventLookup.rawEventId - 500000)
+    const resolvedEventId = this.resolveNumberRef(command.eventLookup.rawEventId, context)
+
+    if (resolvedEventId >= 500000) {
+      const commonEvent = this.repository.getCommonEventById(resolvedEventId - 500000)
       if (commonEvent !== null) {
         await this.runCommonEvent(commonEvent, command, context)
       }
       return
     }
 
-    const targetEventId = command.eventLookup.rawEventId
+    const targetEventId = resolvedEventId
     const targetEvent = this.currentMap.events.find((event) => event.id === targetEventId)
     if (targetEvent !== undefined) {
       const page = this.getActivePage(targetEvent)
@@ -790,8 +800,11 @@ export class WolfRuntime {
     context: CommandContext,
   ): Promise<void> {
     const args = command.numberArgs.map((ref) => this.resolveNumberRef(ref, context))
+    for (let index = 1; index <= 4; index += 1) {
+      commonEvent.numberVariables[index] = 0
+    }
     for (let index = 0; index < Math.min(4, args.length); index += 1) {
-      commonEvent.numberVariables[index] = args[index]
+      commonEvent.numberVariables[index + 1] = args[index]
     }
 
     if (WolfRuntime.UNSUPPORTED_BATTLE_EVENT_NAMES.has(commonEvent.name)) {
@@ -913,17 +926,82 @@ export class WolfRuntime {
       return
     }
 
-    const value = this.repository.getDatabase(command.database).getString(command.table, command.record, command.field)
+    const value = this.repository.getDatabase(command.database).getString(
+      this.resolveNumberRef(command.table, context),
+      this.resolveNumberRef(command.record, context),
+      this.resolveNumberRef(command.field, context),
+    )
     this.assignStringRef(command.targetRaw, value, context)
   }
 
   private applyUpdater(updater: Updater, context: CommandContext): void {
+    if (updater.left.kind === 'db' && this.isStringDatabaseRef(updater.left, context)) {
+      this.applyStringDatabaseUpdater(updater, context)
+      return
+    }
+
     const leftValue = this.resolveNumberRef(updater.left, context)
     const rightValue1 = this.resolveNumberRef(updater.right1, context)
     const rightValue2 = updater.right2 === null ? 0 : this.resolveNumberRef(updater.right2, context)
     const computedRightValue = this.applyRightOperator(updater.rightOperator, rightValue1, rightValue2)
     const nextValue = this.applyAssignOperator(updater.assignOperator, leftValue, computedRightValue)
     this.assignNumberRef(updater.left, nextValue, context)
+  }
+
+  private isStringDatabaseRef(ref: NumberRef, context: CommandContext): ref is Extract<NumberRef, { kind: 'db' }> {
+    if (this.repository === null || ref.kind !== 'db') {
+      return false
+    }
+
+    const table = this.resolveNumberRef(ref.table, context)
+    const field = this.resolveNumberRef(ref.field, context)
+    return this.repository.getDatabase(ref.database).schemas[table]?.columns[field]?.type === 'string'
+  }
+
+  private applyStringDatabaseUpdater(updater: Updater, context: CommandContext): void {
+    if (this.repository === null || updater.left.kind !== 'db') {
+      return
+    }
+
+    const store = this.repository.getDatabase(updater.left.database)
+    const table = this.resolveNumberRef(updater.left.table, context)
+    const record = this.resolveNumberRef(updater.left.record, context)
+    const field = this.resolveNumberRef(updater.left.field, context)
+    const currentValue = store.getString(table, record, field)
+    const nextValue = this.applyStringAssignOperator(
+      updater.assignOperator,
+      currentValue,
+      this.resolveUpdaterStringValue(updater.right1, context),
+    )
+    store.setString(table, record, field, nextValue)
+  }
+
+  private resolveUpdaterStringValue(ref: NumberRef, context: CommandContext): string {
+    if (ref.kind === 'db') {
+      if (this.isStringDatabaseRef(ref, context)) {
+        return this.repository?.getDatabase(ref.database).getString(
+          this.resolveNumberRef(ref.table, context),
+          this.resolveNumberRef(ref.record, context),
+          this.resolveNumberRef(ref.field, context),
+        ) ?? ''
+      }
+      return String(this.resolveNumberRef(ref, context))
+    }
+
+    if (ref.value >= 15000000 || (ref.value >= 1600000 && ref.value % 100 >= 5 && ref.value % 100 <= 9)) {
+      return this.resolveStringRef(ref.value, context)
+    }
+
+    return String(this.resolveNumberRef(ref, context))
+  }
+
+  private applyStringAssignOperator(operator: number, currentValue: string, nextValue: string): string {
+    switch (operator) {
+      case 1:
+        return `${currentValue}${nextValue}`
+      default:
+        return nextValue
+    }
   }
 
   private applyRightOperator(operator: number, left: number, right: number): number {
@@ -1386,7 +1464,7 @@ export class WolfRuntime {
     ].join('\n'))
   }
 
-  private async showPicture(command: ShowPictureCommand, context: CommandContext): Promise<void> {
+  private async showPicture(command: ShowPictureCommand): Promise<void> {
     if (this.repository === null) {
       return
     }
@@ -1397,31 +1475,43 @@ export class WolfRuntime {
     entry.className = 'picture-entry'
     entry.dataset.baseWidth = String(image.naturalWidth || image.width || 0)
     entry.dataset.baseHeight = String(image.naturalHeight || image.height || 0)
-    this.placePictureEntry(entry, command.pictureId, command.x, command.y, command.scale, command.pivot, context)
+    this.placePictureEntry(entry, command.pictureId, command.x, command.y, command.scale, command.pivot)
   }
 
   private showMessagePicture(command: ShowMessagePictureCommand, context: CommandContext): void {
     const entry = document.createElement('div')
     entry.className = 'picture-entry'
-    entry.textContent = this.sanitizePictureText(this.interpolateString(command.message, context))
+    const renderedText = this.sanitizePictureText(this.interpolateString(command.message, context))
+    const estimatedSize = this.estimatePictureTextSize(renderedText)
+    entry.textContent = renderedText
     entry.style.whiteSpace = 'pre'
+    entry.dataset.baseWidth = String(estimatedSize.width)
+    entry.dataset.baseHeight = String(estimatedSize.height)
+    const pictureId = this.resolveNumberRef(command.pictureId, context)
+    const resolvedX = this.resolveNumberRef(command.x, context)
+    const resolvedY = this.resolveNumberRef(command.y, context)
+    const existingEntry = this.pictureEntries.get(pictureId)
+    const preserveLayout = this.shouldPreserveReplacementLayout(existingEntry, resolvedX, resolvedY, command.scale)
     this.placePictureEntry(
       entry,
-      this.resolveNumberRef(command.pictureId, context),
-      this.resolveNumberRef(command.x, context),
-      this.resolveNumberRef(command.y, context),
-      command.scale,
+      pictureId,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'x') : resolvedX,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'y') : resolvedY,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'scale') : command.scale,
       command.pivot,
-      context,
     )
   }
 
-  private async showPictureString(command: ShowPictureStringCommand, context: CommandContext): Promise<void> {
+  private async showPictureString(
+    command: ShowPictureStringCommand,
+    context: CommandContext,
+    filePathRawOverride: number | null = null,
+  ): Promise<void> {
     if (this.repository === null) {
       return
     }
 
-    const filePath = this.resolveStringRef(command.filePathRaw, context)
+    const filePath = this.resolveStringRef(filePathRawOverride ?? command.filePathRaw, context)
     if (filePath.length === 0) {
       return
     }
@@ -1432,14 +1522,19 @@ export class WolfRuntime {
     entry.className = 'picture-entry'
     entry.dataset.baseWidth = String(image.naturalWidth || image.width || 0)
     entry.dataset.baseHeight = String(image.naturalHeight || image.height || 0)
+    const pictureId = this.resolveNumberRef(command.pictureId, context)
+    const resolvedX = this.resolveNumberRef(command.x, context)
+    const resolvedY = this.resolveNumberRef(command.y, context)
+    const resolvedScale = this.resolveNumberRef(command.scale, context) * 0.01
+    const existingEntry = this.pictureEntries.get(pictureId)
+    const preserveLayout = this.shouldPreserveReplacementLayout(existingEntry, resolvedX, resolvedY, resolvedScale)
     this.placePictureEntry(
       entry,
-      this.resolveNumberRef(command.pictureId, context),
-      this.resolveNumberRef(command.x, context),
-      this.resolveNumberRef(command.y, context),
-      this.resolveNumberRef(command.scale, context) * 0.01,
+      pictureId,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'x') : resolvedX,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'y') : resolvedY,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'scale') : resolvedScale,
       command.pivot,
-      context,
     )
   }
 
@@ -1473,8 +1568,7 @@ export class WolfRuntime {
       this.resolveNumberRef(command.x, context),
       this.resolveNumberRef(command.y, context),
       this.resolveNumberRef(command.scale, context) * 0.01,
-      'leftTop',
-      context,
+      command.pivot,
     )
   }
 
@@ -1492,9 +1586,17 @@ export class WolfRuntime {
     const nextTop = this.resolveNumberRef(command.y, context)
     const nextScaleRaw = this.resolveNumberRef(command.scale, context)
 
-    entry.style.left = `${nextLeft <= -1000000 ? currentLeft : nextLeft}px`
-    entry.style.top = `${nextTop <= -1000000 ? currentTop : nextTop}px`
-    entry.style.transform = `scale(${nextScaleRaw <= -1000000 ? currentScale : nextScaleRaw * 0.01})`
+    const anchorX = nextLeft <= -1000000 ? currentLeft : nextLeft
+    const anchorY = nextTop <= -1000000 ? currentTop : nextTop
+    const scale = nextScaleRaw <= -1000000 ? currentScale : nextScaleRaw * 0.01
+    this.applyPictureLayout(
+      entry,
+      pictureId,
+      anchorX,
+      anchorY,
+      scale,
+      this.readPicturePivot(entry),
+    )
   }
 
   private readPictureProperty(command: ReadPicturePropertyCommand, context: CommandContext): void {
@@ -1505,7 +1607,7 @@ export class WolfRuntime {
   }
 
   private applyPictureEffect(command: PictureEffectCommand, context: CommandContext): void {
-    if (command.effectType !== 32) {
+    if (command.effectType !== 16 && command.effectType !== 32) {
       return
     }
 
@@ -1517,8 +1619,38 @@ export class WolfRuntime {
 
     const currentLeft = this.readPictureMetric(entry, 'x')
     const currentTop = this.readPictureMetric(entry, 'y')
-    entry.style.left = `${currentLeft + this.resolveNumberRef(command.x, context)}px`
-    entry.style.top = `${currentTop + this.resolveNumberRef(command.y, context)}px`
+    this.applyPictureLayout(
+      entry,
+      pictureId,
+      currentLeft + this.resolveNumberRef(command.x, context),
+      currentTop + this.resolveNumberRef(command.y, context),
+      this.readPictureMetric(entry, 'scale'),
+      this.readPicturePivot(entry),
+    )
+  }
+
+  private shouldSkipPictureRemoval(
+    commands: WolfCommand[],
+    index: number,
+    command: RemovePictureCommand,
+    context: CommandContext,
+  ): boolean {
+    const pictureId = this.resolveNumberRef(command.pictureId, context)
+    for (let cursor = index + 1; cursor < commands.length; cursor += 1) {
+      const candidate = commands[cursor]
+      switch (candidate.kind) {
+        case 'blank':
+        case 'debugComment':
+        case 'checkpoint':
+          continue
+        case 'movePicture':
+          return this.resolveNumberRef(candidate.pictureId, context) === pictureId
+        default:
+          return false
+      }
+    }
+
+    return false
   }
 
   private placePictureEntry(
@@ -1527,10 +1659,9 @@ export class WolfRuntime {
     x: number,
     y: number,
     scale: number,
-    pivot: string,
-    context: CommandContext,
+    pivot: PicturePivot,
   ): void {
-    this.applyPictureLayout(entry, pictureId, x, y, scale, pivot, context)
+    this.applyPictureLayout(entry, pictureId, x, y, scale, pivot)
     this.pictureEntries.get(pictureId)?.remove()
     this.pictureEntries.set(pictureId, entry)
     this.elements.pictureLayer.append(entry)
@@ -1542,14 +1673,16 @@ export class WolfRuntime {
     x: number,
     y: number,
     scale: number,
-    pivot: string,
-    context: CommandContext,
+    pivot: PicturePivot,
   ): void {
-    void pictureId
-    void pivot
-    void context
-    element.style.left = `${x}px`
-    element.style.top = `${y}px`
+    const layout = this.calculatePictureLayout(element, x, y, scale, pivot)
+    element.dataset.pictureId = String(pictureId)
+    element.dataset.anchorX = String(x)
+    element.dataset.anchorY = String(y)
+    element.dataset.anchorScale = String(scale)
+    element.dataset.pivot = pivot
+    element.style.left = `${layout.left}px`
+    element.style.top = `${layout.top}px`
     element.style.transform = `scale(${scale})`
   }
 
@@ -1559,10 +1692,10 @@ export class WolfRuntime {
     switch (property) {
       case 'x':
       case 0:
-        return Number.parseFloat(element.style.left || '0') || 0
+        return Number.parseFloat(element.dataset.anchorX || '0') || 0
       case 'y':
       case 1:
-        return Number.parseFloat(element.style.top || '0') || 0
+        return Number.parseFloat(element.dataset.anchorY || '0') || 0
       case 2:
         return Math.round(bounds.width
           || Number.parseFloat(element.dataset.baseWidth || '0')
@@ -1575,13 +1708,33 @@ export class WolfRuntime {
         const opacity = Number.parseFloat(element.style.opacity || '1')
         return Number.isFinite(opacity) ? Math.round(opacity * 255) : 255
       }
+      case 9:
+        return this.pictureEntries.has(Number.parseInt(element.dataset.pictureId || '-1', 10)) ? 1 : 0
       case 'scale': {
-        const match = /scale\(([^)]+)\)/.exec(element.style.transform)
-        return match === null ? 1 : Number.parseFloat(match[1]) || 1
+        return Number.parseFloat(element.dataset.anchorScale || '1') || 1
       }
       default:
         return 0
     }
+  }
+
+  private getShowPictureStringOverride(
+    commands: WolfCommand[],
+    index: number,
+    command: ShowPictureStringCommand,
+    context: CommandContext,
+  ): number | null {
+    if (command.filePathRaw !== 1600008 || context.commonEventId === null) {
+      return null
+    }
+
+    const nextCommand = commands[index + 1]
+    if (nextCommand?.kind !== 'pictureEffect' || nextCommand.effectType !== 16) {
+      return null
+    }
+
+    const pictureId = this.resolveNumberRef(command.pictureId, context)
+    return this.resolveNumberRef(nextCommand.pictureId, context) === pictureId ? 1600009 : null
   }
 
   private sanitizePictureText(text: string): string {
@@ -1610,9 +1763,138 @@ export class WolfRuntime {
     }
   }
 
+  private shouldPreserveReplacementLayout(
+    existingEntry: PictureEntry | undefined,
+    resolvedX: number,
+    resolvedY: number,
+    resolvedScale: number,
+  ): existingEntry is PictureEntry {
+    if (existingEntry === undefined || resolvedX !== 0 || resolvedY !== 0) {
+      return false
+    }
+
+    if (resolvedScale <= 0) {
+      return true
+    }
+
+    if (resolvedScale !== 1) {
+      return false
+    }
+
+    return this.readPictureMetric(existingEntry, 'x') !== 0
+      || this.readPictureMetric(existingEntry, 'y') !== 0
+      || this.readPictureMetric(existingEntry, 'scale') !== 1
+      || this.readPicturePivot(existingEntry) !== 'leftTop'
+  }
+
+  private calculatePictureLayout(
+    element: HTMLElement,
+    x: number,
+    y: number,
+    scale: number,
+    pivot: PicturePivot,
+  ): { left: number; top: number } {
+    const baseWidth = Number.parseFloat(element.dataset.baseWidth || '0') || 0
+    const baseHeight = Number.parseFloat(element.dataset.baseHeight || '0') || 0
+    const scaledWidth = baseWidth * scale
+    const scaledHeight = baseHeight * scale
+    const pivotOffset = this.getPivotOffset(pivot, scaledWidth, scaledHeight)
+    const anchorX = x / WolfRuntime.PICTURE_COORDINATE_SCALE
+    const anchorY = y / WolfRuntime.PICTURE_COORDINATE_SCALE
+    return {
+      left: Math.round(anchorX - pivotOffset.x),
+      top: Math.round(anchorY - pivotOffset.y),
+    }
+  }
+
+  private getPivotOffset(pivot: PicturePivot, width: number, height: number): { x: number; y: number } {
+    switch (pivot) {
+      case 'centerTop':
+        return { x: width / 2, y: 0 }
+      case 'rightTop':
+        return { x: width, y: 0 }
+      case 'leftMiddle':
+        return { x: 0, y: height / 2 }
+      case 'center':
+        return { x: width / 2, y: height / 2 }
+      case 'rightMiddle':
+        return { x: width, y: height / 2 }
+      case 'leftBottom':
+        return { x: 0, y: height }
+      case 'centerBottom':
+        return { x: width / 2, y: height }
+      case 'rightBottom':
+        return { x: width, y: height }
+      default:
+        return { x: 0, y: 0 }
+    }
+  }
+
+  private readPicturePivot(entry: PictureEntry): PicturePivot {
+    const pivot = entry.dataset.pivot
+    switch (pivot) {
+      case 'centerTop':
+      case 'rightTop':
+      case 'leftMiddle':
+      case 'center':
+      case 'rightMiddle':
+      case 'leftBottom':
+      case 'centerBottom':
+      case 'rightBottom':
+        return pivot
+      default:
+        return 'leftTop'
+    }
+  }
+
+  private initializeSystemUiDefaults(): void {
+    if (this.repository === null) {
+      return
+    }
+
+    const systemUiTable = 18
+    const changeableDb = this.repository.changeableDb
+    const defaults = [
+      { record: 3, value: 10 },
+      { record: 5, value: 10 },
+      { record: 6, value: 8 },
+      { record: 7, value: 6 },
+      { record: 97, value: 10 },
+      { record: 98, value: 10 },
+    ] as const
+
+    for (const entry of defaults) {
+      if (changeableDb.getInt(systemUiTable, entry.record, 0) === 0) {
+        changeableDb.setInt(systemUiTable, entry.record, 0, entry.value)
+      }
+    }
+  }
+
   private removePicture(pictureId: number): void {
     this.pictureEntries.get(pictureId)?.remove()
     this.pictureEntries.delete(pictureId)
+  }
+
+  private restorePictureEntries(snapshot: Map<number, PictureEntry>): void {
+    for (const [pictureId, entry] of this.pictureEntries) {
+      if (!snapshot.has(pictureId)) {
+        entry.remove()
+        this.pictureEntries.delete(pictureId)
+      }
+    }
+
+    for (const [pictureId, entry] of snapshot) {
+      const currentEntry = this.pictureEntries.get(pictureId)
+      if (currentEntry === entry) {
+        continue
+      }
+
+      currentEntry?.remove()
+      this.pictureEntries.set(pictureId, entry)
+      if (!entry.isConnected) {
+        this.elements.pictureLayer.append(entry)
+      }
+    }
   }
 
   private async showMessage(message: string): Promise<void> {

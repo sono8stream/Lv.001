@@ -277,7 +277,7 @@ test('string debug common event shows the hero name from changeable DB', async (
         {
           kind: 'callEvent',
           indent: 0,
-          eventLookup: { type: 'id', rawEventId: 500215 },
+          eventLookup: { type: 'id', rawEventId: { kind: 'raw', value: 500215 } },
           numberArgs: [],
           hasReturnValue: false,
           returnDestination: null,
@@ -291,6 +291,200 @@ test('string debug common event shows the hero name from changeable DB', async (
 
   assert.equal(result[0], '数値変数は1')
   assert.ok(result.slice(1).every((message) => message === '文字列変数はヒーローさん'))
+})
+
+test('runCommonEvent maps number arguments to common event vars 1-4', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_common_event_arg_slots=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = {
+        id: 900,
+        name: 'arg-slot-check',
+        commands: [],
+        returnValueRaw: null,
+        numberVariables: Array.from({ length: 10 }, (_, index) => index + 100),
+        stringVariables: [],
+      }
+      runtime.repository = { commonEvents: [], getCommonEventById() { return null }, getCommonEventByName() { return null } }
+
+      await runtime.runCommonEvent(
+        commonEvent,
+        {
+          kind: 'callEvent',
+          indent: 0,
+          eventLookup: { type: 'name', name: commonEvent.name },
+          numberArgs: [
+            { kind: 'raw', value: 11 },
+            { kind: 'raw', value: 22 },
+            { kind: 'raw', value: 33 },
+          ],
+          hasReturnValue: false,
+          returnDestination: null,
+        },
+        { mapId: 1, eventId: null, commonEventId: null },
+      )
+
+      return commonEvent.numberVariables.slice(0, 6)
+    }),
+  )
+
+  assert.deepEqual(result, [100, 11, 22, 33, 0, 105])
+})
+
+test('changeStringDatabase resolves dynamic DB coordinates before assigning cself text', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_dynamic_change_string_db=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = {
+        id: 901,
+        name: 'dynamic-string-db',
+        commands: [
+          { kind: 'changeStringDatabase', indent: 0, targetRaw: 1600007, database: 'changeable', table: { kind: 'raw', value: 18 }, record: { kind: 'raw', value: 1600010 }, field: { kind: 'raw', value: 1 } },
+          { kind: 'message', indent: 0, text: '\\cself[7]' },
+        ],
+        returnValueRaw: null,
+        numberVariables: Array.from({ length: 20 }, () => 0),
+        stringVariables: Array.from({ length: 5 }, () => ''),
+      }
+      commonEvent.numberVariables[5] = 24
+
+      const messages = []
+      runtime.showMessage = async (message) => {
+        messages.push(message)
+      }
+      runtime.repository = {
+        commonEvents: [commonEvent],
+        getCommonEventById(id) {
+          return id === commonEvent.id ? commonEvent : null
+        },
+        getCommonEventByName() {
+          return null
+        },
+        getDatabase() {
+          return {
+            getString(table, record, field) {
+              return `${table}:${record}:${field}`
+            },
+          }
+        },
+      }
+
+      await runtime.runCommonEvent(
+        commonEvent,
+        {
+          kind: 'callEvent',
+          indent: 0,
+          eventLookup: { type: 'name', name: commonEvent.name },
+          numberArgs: [],
+          hasReturnValue: false,
+          returnDestination: null,
+        },
+        { mapId: 1, eventId: null, commonEventId: null },
+      )
+
+      return messages[0]
+    }),
+  )
+
+  assert.equal(result, '18:24:1')
+})
+
+test('changeVariable writes string DB fields from cself text instead of numeric zero', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_string_db_write=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = {
+        id: 902,
+        name: 'string-db-write',
+        commands: [],
+        returnValueRaw: null,
+        numberVariables: Array.from({ length: 20 }, () => 0),
+        stringVariables: Array.from({ length: 5 }, () => ''),
+      }
+      commonEvent.stringVariables[0] = 'menu-label'
+
+      const store = {
+        schemas: [{ columns: [{ type: 'int' }, { type: 'string' }] }],
+        values: new Map([['0:2:1', 'before']]),
+        getString(table, record, field) {
+          return this.values.get(`${table}:${record}:${field}`) ?? ''
+        },
+        setString(table, record, field, value) {
+          this.values.set(`${table}:${record}:${field}`, value)
+        },
+        getInt() {
+          return 0
+        },
+        setInt() {},
+      }
+      runtime.repository = {
+        commonEvents: [commonEvent],
+        getCommonEventById(id) {
+          return id === commonEvent.id ? commonEvent : null
+        },
+        getCommonEventByName() {
+          return null
+        },
+        getDatabase() {
+          return store
+        },
+      }
+
+      await runtime.executeCommands([
+        {
+          kind: 'changeVariable',
+          indent: 0,
+          updaters: [{
+            left: { kind: 'db', database: 'changeable', table: { kind: 'raw', value: 0 }, record: { kind: 'raw', value: 2 }, field: { kind: 'raw', value: 1 } },
+            right1: { kind: 'raw', value: 1600005 },
+            right2: { kind: 'raw', value: 0 },
+            assignOperator: 0,
+            rightOperator: 0,
+          }],
+        },
+      ], { mapId: 1, eventId: null, commonEventId: 902 })
+
+      return store.getString(0, 2, 1)
+    }),
+  )
+
+  assert.equal(result, 'menu-label')
 })
 
 test('debug panel shows executing event and command payload', async () => {
@@ -1429,7 +1623,7 @@ test('picture helper commands read size and move an existing picture entry', asy
       await runtime.executeCommands([
         { kind: 'readPictureProperty', indent: 0, targetRaw: 1600010, pictureId: { kind: 'raw', value: 7 }, propertyId: 2 },
         { kind: 'readPictureProperty', indent: 0, targetRaw: 1600011, pictureId: { kind: 'raw', value: 7 }, propertyId: 3 },
-        { kind: 'movePicture', indent: 0, pictureId: { kind: 'raw', value: 7 }, x: { kind: 'raw', value: 48 }, y: { kind: 'raw', value: 72 }, scale: { kind: 'raw', value: 200 } },
+        { kind: 'movePicture', indent: 0, pictureId: { kind: 'raw', value: 7 }, x: { kind: 'raw', value: 480 }, y: { kind: 'raw', value: 720 }, scale: { kind: 'raw', value: 200 } },
       ], context)
 
       return {
@@ -1447,6 +1641,374 @@ test('picture helper commands read size and move an existing picture entry', asy
   assert.equal(result.left, '48px')
   assert.equal(result.top, '72px')
   assert.equal(result.transform, 'scale(2)')
+})
+
+test('removePicture resolves dynamic picture ids through common event variables', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_dynamic_remove_picture=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = {
+        id: 127,
+        name: 'X[移]メニュー起動',
+        commands: [],
+        returnValueRaw: null,
+        numberVariables: Array.from({ length: 30 }, () => 0),
+        stringVariables: [],
+      }
+      commonEvent.numberVariables[16] = 7
+      runtime.repository = {
+        commonEvents: [],
+        getCommonEventById(id) {
+          return id === 127 ? commonEvent : null
+        },
+        getCommonEventByName() {
+          return null
+        },
+      }
+
+      const entry = document.createElement('div')
+      entry.className = 'picture-entry'
+      runtime.elements.pictureLayer.append(entry)
+      runtime.pictureEntries.set(7, entry)
+
+      await runtime.executeCommands([
+        { kind: 'removePicture', indent: 0, pictureId: { kind: 'raw', value: 1600021 } },
+      ], { mapId: 1, eventId: null, commonEventId: 127 })
+
+      return {
+        inMap: runtime.pictureEntries.has(7),
+        stillConnected: entry.isConnected,
+      }
+    }),
+  )
+
+  assert.equal(result.inMap, false)
+  assert.equal(result.stillConnected, false)
+})
+
+test('pictureEffect type 16 applies cursor-style relative offsets', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_picture_effect_16=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+      runtime.repository = { commonEvents: [] }
+
+      const entry = document.createElement('div')
+      entry.className = 'picture-entry'
+      entry.dataset.pictureId = '7'
+      entry.dataset.anchorX = '640'
+      entry.dataset.anchorY = '320'
+      entry.dataset.anchorScale = '1'
+      entry.dataset.baseWidth = '12'
+      entry.dataset.baseHeight = '12'
+      entry.dataset.pivot = 'center'
+      entry.style.left = '58px'
+      entry.style.top = '26px'
+      entry.style.transform = 'scale(1)'
+      runtime.elements.pictureLayer.append(entry)
+      runtime.pictureEntries.set(7, entry)
+
+      await runtime.executeCommands([
+        {
+          kind: 'pictureEffect',
+          indent: 0,
+          effectType: 16,
+          pictureId: { kind: 'raw', value: 7 },
+          x: { kind: 'raw', value: -100 },
+          y: { kind: 'raw', value: -100 },
+        },
+      ], { mapId: 1, eventId: null, commonEventId: null })
+
+      return {
+        left: entry.style.left,
+        top: entry.style.top,
+        anchorX: entry.dataset.anchorX,
+        anchorY: entry.dataset.anchorY,
+      }
+    }),
+  )
+
+  assert.equal(result.left, '48px')
+  assert.equal(result.top, '16px')
+  assert.equal(result.anchorX, '540')
+  assert.equal(result.anchorY, '220')
+})
+
+test('showMessagePicture preserves existing layout for FRAME-style replacements', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_frame_layout_preserve=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = {
+        id: 127,
+        name: 'X[移]メニュー起動',
+        commands: [],
+        returnValueRaw: null,
+        numberVariables: Array.from({ length: 30 }, () => 0),
+        stringVariables: [],
+      }
+      commonEvent.numberVariables[5] = 0
+      commonEvent.numberVariables[6] = 0
+      commonEvent.numberVariables[16] = 7
+      runtime.repository = {
+        commonEvents: [],
+        getCommonEventById(id) {
+          return id === 127 ? commonEvent : null
+        },
+        getCommonEventByName() {
+          return null
+        },
+      }
+
+      const existing = document.createElement('div')
+      existing.className = 'picture-entry'
+      existing.dataset.pictureId = '7'
+      existing.dataset.anchorX = '640'
+      existing.dataset.anchorY = '320'
+      existing.dataset.anchorScale = '1'
+      existing.dataset.baseWidth = '48'
+      existing.dataset.baseHeight = '24'
+      existing.dataset.pivot = 'center'
+      existing.style.left = '40px'
+      existing.style.top = '20px'
+      existing.style.transform = 'scale(1)'
+      runtime.elements.pictureLayer.append(existing)
+      runtime.pictureEntries.set(7, existing)
+
+      await runtime.executeCommands([
+        {
+          kind: 'showMessagePicture',
+          indent: 0,
+          pictureId: { kind: 'raw', value: 1600021 },
+          message: 'FRAME',
+          pivot: 'center',
+          x: { kind: 'raw', value: 1600010 },
+          y: { kind: 'raw', value: 1600011 },
+          scale: 1,
+        },
+      ], { mapId: 1, eventId: null, commonEventId: 127 })
+
+      const entry = runtime.pictureEntries.get(7)
+      return {
+        text: entry?.textContent ?? '',
+        left: entry?.style.left ?? '',
+        top: entry?.style.top ?? '',
+        anchorX: entry?.dataset.anchorX ?? '',
+        anchorY: entry?.dataset.anchorY ?? '',
+        pivot: entry?.dataset.pivot ?? '',
+      }
+    }),
+  )
+
+  assert.equal(result.text, 'FRAME')
+  assert.equal(result.left, '40px')
+  assert.equal(result.top, '20px')
+  assert.equal(result.anchorX, '640')
+  assert.equal(result.anchorY, '320')
+  assert.equal(result.pivot, 'center')
+})
+
+test('tryOpenMenu removes menu pictures and restores overwritten entries on close', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_picture_cleanup=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const original = document.createElement('div')
+      original.className = 'picture-entry'
+      original.textContent = 'map-picture'
+      original.dataset.pictureId = '5'
+      runtime.elements.pictureLayer.append(original)
+      runtime.pictureEntries.set(5, original)
+
+      const menuEvent = {
+        id: 127,
+        name: 'X[移]メニュー起動',
+        commands: [
+          { kind: 'showMessagePicture', indent: 0, pictureId: { kind: 'raw', value: 5 }, message: 'menu-replaced', pivot: 'leftTop', x: { kind: 'raw', value: 0 }, y: { kind: 'raw', value: 0 }, scale: 1 },
+          { kind: 'showMessagePicture', indent: 0, pictureId: { kind: 'raw', value: 100 }, message: 'menu-only', pivot: 'leftTop', x: { kind: 'raw', value: 0 }, y: { kind: 'raw', value: 0 }, scale: 1 },
+        ],
+        returnValueRaw: null,
+        numberVariables: [],
+        stringVariables: [],
+      }
+
+      runtime.currentMap = { id: 1, width: 20, height: 15, movableGrid: [], events: [], lowerCanvas: document.createElement('canvas'), upperCanvas: document.createElement('canvas') }
+      runtime.repository = {
+        commonEvents: [menuEvent],
+        getCommonEventById(id) {
+          return id === 127 ? menuEvent : null
+        },
+        getCommonEventByName(name) {
+          return name === menuEvent.name ? menuEvent : null
+        },
+      }
+
+      await runtime.tryOpenMenu()
+
+      return {
+        restoredText: runtime.pictureEntries.get(5)?.textContent ?? '',
+        restoredSameNode: runtime.pictureEntries.get(5) === original,
+        restoredConnected: original.isConnected,
+        menuOnlyExists: runtime.pictureEntries.has(100),
+      }
+    }),
+  )
+
+  assert.equal(result.restoredText, 'map-picture')
+  assert.equal(result.restoredSameNode, true)
+  assert.equal(result.restoredConnected, true)
+  assert.equal(result.menuOnlyExists, false)
+})
+
+test('removePicture immediately before movePicture keeps the entry for menu-style shifts', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_remove_before_move=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+      runtime.repository = { commonEvents: [] }
+
+      const entry = document.createElement('div')
+      entry.className = 'picture-entry'
+      entry.dataset.pictureId = '7'
+      entry.dataset.anchorX = '0'
+      entry.dataset.anchorY = '0'
+      entry.dataset.anchorScale = '1'
+      entry.dataset.baseWidth = '48'
+      entry.dataset.baseHeight = '16'
+      entry.dataset.pivot = 'leftTop'
+      entry.style.left = '0px'
+      entry.style.top = '0px'
+      entry.style.transform = 'scale(1)'
+      runtime.elements.pictureLayer.append(entry)
+      runtime.pictureEntries.set(7, entry)
+
+      await runtime.executeCommands([
+        { kind: 'removePicture', indent: 0, pictureId: { kind: 'raw', value: 7 } },
+        { kind: 'movePicture', indent: 0, pictureId: { kind: 'raw', value: 7 }, x: { kind: 'raw', value: -240 }, y: { kind: 'raw', value: 160 }, scale: { kind: 'raw', value: -1000000 } },
+      ], { mapId: 1, eventId: null, commonEventId: null })
+
+      return {
+        stillExists: runtime.pictureEntries.has(7),
+        left: entry.style.left,
+        top: entry.style.top,
+      }
+    }),
+  )
+
+  assert.equal(result.stillExists, true)
+  assert.equal(result.left, '-24px')
+  assert.equal(result.top, '16px')
+})
+
+test('showWindowPicture honors center pivot while keeping anchor coordinates readable', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_picture_center_pivot=1')
+      const dataMod = await import('/src/wolf/data.ts?test_picture_center_pivot=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+      runtime.repository = await dataMod.WolfDataRepository.create()
+
+      const context = { mapId: 1, eventId: null, commonEventId: 127 }
+      await runtime.executeCommands([
+        {
+          kind: 'showWindowPicture',
+          indent: 0,
+          pictureId: { kind: 'raw', value: 9 },
+          message: '',
+          pivot: 'center',
+          width: { kind: 'raw', value: 40 },
+          height: { kind: 'raw', value: 20 },
+          x: { kind: 'raw', value: 1000 },
+          y: { kind: 'raw', value: 800 },
+          scale: { kind: 'raw', value: 100 },
+          opacity: { kind: 'raw', value: 255 },
+        },
+        { kind: 'readPictureProperty', indent: 0, targetRaw: 1600010, pictureId: { kind: 'raw', value: 9 }, propertyId: 0 },
+        { kind: 'readPictureProperty', indent: 0, targetRaw: 1600011, pictureId: { kind: 'raw', value: 9 }, propertyId: 1 },
+        { kind: 'readPictureProperty', indent: 0, targetRaw: 1600012, pictureId: { kind: 'raw', value: 9 }, propertyId: 9 },
+      ], context)
+
+      const entry = runtime.pictureEntries.get(9)
+      return {
+        left: entry?.style.left ?? '',
+        top: entry?.style.top ?? '',
+        anchorX: runtime.resolveNumberRef({ kind: 'raw', value: 1600010 }, context),
+        anchorY: runtime.resolveNumberRef({ kind: 'raw', value: 1600011 }, context),
+        inUse: runtime.resolveNumberRef({ kind: 'raw', value: 1600012 }, context),
+      }
+    }),
+  )
+
+  assert.equal(result.left, '80px')
+  assert.equal(result.top, '70px')
+  assert.equal(result.anchorX, 1000)
+  assert.equal(result.anchorY, 800)
+  assert.equal(result.inUse, 1)
 })
 
 test('menu common event produces window-like picture entries after draw helpers run', async () => {
@@ -1510,6 +2072,64 @@ test('menu common event produces window-like picture entries after draw helpers 
 
   assert.ok(result.pictureCount >= 10)
   assert.ok(result.windowHelperCount >= 3)
+})
+
+test('menu common event positions multiple entries away from the origin', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_non_origin_entries=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_non_origin_entries=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const entries = [...runtime.elements.pictureLayer.children].map((node) => ({
+        left: node.style.left,
+        top: node.style.top,
+      }))
+
+      return entries.filter((entry) => entry.left !== '0px' || entry.top !== '0px').length
+    }),
+  )
+
+  assert.ok(result >= 5)
 })
 
 test('menu picture text strips formatting control tokens before rendering', async () => {
@@ -1628,6 +2248,72 @@ test('menu window helper entries have non-zero size', async () => {
 
   assert.ok(result.helperCount >= 3)
   assert.ok(result.nonZeroSizeCount >= 3)
+})
+
+test('character pane cursor uses CursorBase away from the origin', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_character_pane_cursor=1')
+      const dataMod = await import('/src/wolf/data.ts?test_character_pane_cursor=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 15 }, () => Array.from({ length: 20 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 10, y: 7 }
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const commonEvent = runtime.repository.getCommonEventById(90)
+      await runtime.runCommonEvent(commonEvent, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'id', rawEventId: { kind: 'raw', value: 90 } },
+        numberArgs: [{ kind: 'raw', value: 0 }],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const cursorEntry = [...runtime.elements.pictureLayer.children].find((node) =>
+        node instanceof HTMLImageElement && (node.getAttribute('src') ?? '').includes('CursorBase.png'))
+
+      return cursorEntry === undefined
+        ? null
+        : {
+            left: cursorEntry.style.left,
+            top: cursorEntry.style.top,
+            width: cursorEntry.dataset.baseWidth ?? '',
+            height: cursorEntry.dataset.baseHeight ?? '',
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.notEqual(result.left, '0px')
+  assert.notEqual(result.top, '0px')
+  assert.equal(result.width, '12')
+  assert.equal(result.height, '12')
 })
 
 test('shop common event parses control-flow commands with dedicated kinds', async () => {

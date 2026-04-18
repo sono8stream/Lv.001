@@ -104,6 +104,19 @@ class WolfDatabaseStore {
     }
   }
 
+  setString(table: number, record: number, field: number, value: string): void {
+    const key = makeDbKey(table, record, field)
+    if (this.stringMap.has(key)) {
+      this.stringMap.set(key, value)
+      return
+    }
+
+    if (this.intMap.has(key)) {
+      const numericValue = Number.parseInt(value, 10)
+      this.intMap.set(key, Number.isFinite(numericValue) ? numericValue : 0)
+    }
+  }
+
   getString(table: number, record: number, field: number): string {
     const key = makeDbKey(table, record, field)
     if (this.stringMap.has(key)) {
@@ -172,12 +185,20 @@ function convertTrigger(triggerValue: number): EventTriggerType {
 function convertPivot(value: number): PicturePivot {
   switch (value) {
     case 0x10:
-      return 'center'
+      return 'centerTop'
     case 0x20:
-      return 'leftBottom'
-    case 0x30:
       return 'rightTop'
-    case 0x40:
+    case 0x01:
+      return 'leftMiddle'
+    case 0x11:
+      return 'center'
+    case 0x21:
+      return 'rightMiddle'
+    case 0x02:
+      return 'leftBottom'
+    case 0x12:
+      return 'centerBottom'
+    case 0x22:
       return 'rightBottom'
     default:
       return 'leftTop'
@@ -916,9 +937,9 @@ export class WolfDataRepository {
         indent: meta.indentDepth,
         targetRaw: targetValueRaw,
         database,
-        table: typeNo,
-        record: dataNo,
-        field: fieldNo,
+        table: rawRef(typeNo),
+        record: rawRef(dataNo),
+        field: rawRef(fieldNo),
       } satisfies ChangeStringDatabaseCommand
     }
 
@@ -942,7 +963,7 @@ export class WolfDataRepository {
     const operationType = (meta.numberArgs[1] ?? 0) & 0x0f
     if (operationType === 0x00) {
       const sourceType = ((meta.numberArgs[1] ?? 0) >> 4) & 0x0f
-      const pivot = (((meta.numberArgs[1] ?? 0) >> 8) & 0xff) & 0xf0
+      const pivot = ((meta.numberArgs[1] ?? 0) >> 8) & 0xff
       if (sourceType === 0x00) {
         return {
           kind: 'showPicture',
@@ -988,6 +1009,7 @@ export class WolfDataRepository {
           indent: meta.indentDepth,
           pictureId: rawRef(meta.numberArgs[2] ?? 0),
           message: meta.stringArgs[0] ?? '',
+          pivot: convertPivot(((meta.numberArgs[1] ?? 0) >> 8) & 0xff),
           width: rawRef(meta.numberArgs[4] ?? 0),
           height: rawRef(meta.numberArgs[5] ?? 0),
           x: rawRef(meta.numberArgs[8] ?? 0),
@@ -1010,11 +1032,11 @@ export class WolfDataRepository {
     }
 
     if (operationType === 0x02) {
-      return { kind: 'removePicture', indent: meta.indentDepth, pictureId: meta.numberArgs[2] ?? 0 } satisfies RemovePictureCommand
+      return { kind: 'removePicture', indent: meta.indentDepth, pictureId: rawRef(meta.numberArgs[2] ?? 0) } satisfies RemovePictureCommand
     }
 
     if (operationType === 0x03 && meta.numberArgs.length <= 4) {
-      return { kind: 'removePicture', indent: meta.indentDepth, pictureId: meta.numberArgs[2] ?? 0 } satisfies RemovePictureCommand
+      return { kind: 'removePicture', indent: meta.indentDepth, pictureId: rawRef(meta.numberArgs[2] ?? 0) } satisfies RemovePictureCommand
     }
 
     return { kind: 'unknown', indent: meta.indentDepth, key: meta.numberArgs[0] ?? -1 } satisfies UnknownCommand
@@ -1059,7 +1081,7 @@ export class WolfDataRepository {
     return {
       kind: 'callEvent',
       indent: meta.indentDepth,
-      eventLookup: { type: 'id', rawEventId: meta.numberArgs[1] ?? 0 },
+      eventLookup: { type: 'id', rawEventId: rawRef(meta.numberArgs[1] ?? 0) },
       numberArgs,
       hasReturnValue,
       returnDestination: hasReturnValue ? rawRef(meta.numberArgs[returnDestinationIndex] ?? 0) : null,

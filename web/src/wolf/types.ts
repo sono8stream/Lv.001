@@ -164,9 +164,9 @@ export interface ChangeStringDatabaseCommand {
   indent: number
   targetRaw: number
   database: DatabaseType
-  table: number
-  record: number
-  field: number
+  table: NumberRef
+  record: NumberRef
+  field: NumberRef
 }
 
 export interface MovePositionCommand {
@@ -182,7 +182,7 @@ export interface CallEventCommand {
   kind: 'callEvent'
   indent: number
   eventLookup:
-    | { type: 'id'; rawEventId: number }
+    | { type: 'id'; rawEventId: NumberRef }
     | { type: 'name'; name: string }
   numberArgs: NumberRef[]
   hasReturnValue: boolean
@@ -228,7 +228,16 @@ export interface LoopContinueCommand {
   indent: number
 }
 
-export type PicturePivot = 'leftTop' | 'center' | 'leftBottom' | 'rightTop' | 'rightBottom'
+export type PicturePivot =
+  | 'leftTop'
+  | 'centerTop'
+  | 'rightTop'
+  | 'leftMiddle'
+  | 'center'
+  | 'rightMiddle'
+  | 'leftBottom'
+  | 'centerBottom'
+  | 'rightBottom'
 
 export interface ShowPictureCommand {
   kind: 'showPicture'
@@ -255,7 +264,7 @@ export interface ShowMessagePictureCommand {
 export interface RemovePictureCommand {
   kind: 'removePicture'
   indent: number
-  pictureId: number
+  pictureId: NumberRef
 }
 
 export interface ShowPictureStringCommand {
@@ -274,6 +283,7 @@ export interface ShowWindowPictureCommand {
   indent: number
   pictureId: NumberRef
   message: string
+  pivot: PicturePivot
   width: NumberRef
   height: NumberRef
   x: NumberRef
