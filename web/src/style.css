@@ -206,6 +206,8 @@ select {
 
 .picture-layer {
   pointer-events: none;
+  transform: scale(3);
+  transform-origin: top left;
 }
 
 .hidden {

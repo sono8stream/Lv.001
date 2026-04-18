@@ -80,6 +80,8 @@ export class WolfRuntime {
   private readonly context: CanvasRenderingContext2D
   private readonly pictureEntries = new Map<number, PictureEntry>()
   private readonly pressedKeys = new Set<string>()
+  /** Keys pressed since last consume — not cleared by keyup, only by consumeKey */
+  private readonly bufferedPresses = new Set<string>()
   private readonly virtualKeyTimers = new Map<string, number>()
   private readonly currentMapEventVariables = new Map<string, number[]>()
   private readonly triggeredAutoEvents = new Set<string>()
@@ -153,6 +155,7 @@ export class WolfRuntime {
   private installInput(): void {
     window.addEventListener('keydown', (event) => {
       this.pressedKeys.add(event.key)
+      this.bufferedPresses.add(event.key)
       if (this.currentMessageResolver !== null && this.isConfirmKey(event.key)) {
         event.preventDefault()
         this.resolveCurrentMessage()
@@ -206,6 +209,7 @@ export class WolfRuntime {
     }
 
     this.pressedKeys.add(key)
+    this.bufferedPresses.add(key)
     const existingTimer = this.virtualKeyTimers.get(key)
     if (existingTimer !== undefined) {
       window.clearTimeout(existingTimer)
@@ -295,6 +299,7 @@ export class WolfRuntime {
 
   private consumeKey(key: string): void {
     this.pressedKeys.delete(key)
+    this.bufferedPresses.delete(key)
   }
 
   private async stepPlayer(): Promise<void> {
@@ -1712,7 +1717,6 @@ export class WolfRuntime {
 
   private readPictureMetric(entry: PictureEntry, property: number | 'x' | 'y' | 'scale'): number {
     const element = entry
-    const bounds = element.getBoundingClientRect()
     switch (property) {
       case 'x':
       case 0:
@@ -1720,14 +1724,22 @@ export class WolfRuntime {
       case 'y':
       case 1:
         return Number.parseFloat(element.dataset.anchorY || '0') || 0
-      case 2:
-        return Math.round(bounds.width
-          || Number.parseFloat(element.dataset.baseWidth || '0')
-          || (element instanceof HTMLImageElement ? element.naturalWidth : element.clientWidth))
-      case 3:
-        return Math.round(bounds.height
-          || Number.parseFloat(element.dataset.baseHeight || '0')
-          || (element instanceof HTMLImageElement ? element.naturalHeight : element.clientHeight))
+      case 2: {
+        const baseWidth = Number.parseFloat(element.dataset.baseWidth || '0') || 0
+        if (baseWidth > 0) {
+          const ownScale = Number.parseFloat(element.dataset.anchorScale || '1') || 1
+          return Math.round(baseWidth * ownScale)
+        }
+        return element instanceof HTMLImageElement ? element.naturalWidth : element.clientWidth
+      }
+      case 3: {
+        const baseHeight = Number.parseFloat(element.dataset.baseHeight || '0') || 0
+        if (baseHeight > 0) {
+          const ownScale = Number.parseFloat(element.dataset.anchorScale || '1') || 1
+          return Math.round(baseHeight * ownScale)
+        }
+        return element instanceof HTMLImageElement ? element.naturalHeight : element.clientHeight
+      }
       case 5: {
         const opacity = Number.parseFloat(element.style.opacity || '1')
         return Number.isFinite(opacity) ? Math.round(opacity * 255) : 255
@@ -2103,7 +2115,7 @@ export class WolfRuntime {
 
   private consumeFirstPressed(keys: readonly string[]): string | null {
     for (const key of keys) {
-      if (this.pressedKeys.has(key)) {
+      if (this.bufferedPresses.has(key) || this.pressedKeys.has(key)) {
         this.consumeKey(key)
         return key
       }
