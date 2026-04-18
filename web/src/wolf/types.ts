@@ -347,6 +347,21 @@ export interface UnknownCommand {
   key: number
 }
 
+export interface PlaySystemSeCommand {
+  kind: 'playSystemSe'
+  indent: number
+}
+
+export interface PlaySeFileCommand {
+  kind: 'playSeFile'
+  indent: number
+}
+
+export interface SaveSlotCommand {
+  kind: 'saveSlot'
+  indent: number
+}
+
 export type WolfCommand =
   | BlankCommand
   | DebugCommentCommand
@@ -379,6 +394,9 @@ export type WolfCommand =
   | LabelSetCommand
   | LabelJumpCommand
   | AbortEventCommand
+  | PlaySystemSeCommand
+  | PlaySeFileCommand
+  | SaveSlotCommand
   | UnknownCommand
 
 export interface EventPage {

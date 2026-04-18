@@ -530,6 +530,9 @@ export class WolfRuntime {
           case 'checkpoint':
           case 'debugComment':
           case 'labelSet':
+          case 'playSystemSe':
+          case 'playSeFile':
+          case 'saveSlot':
             index += 1
             break
           case 'message':

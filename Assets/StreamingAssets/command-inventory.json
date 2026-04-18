@@ -7,7 +7,7 @@
     },
     {
       "kind": "debugComment",
-      "count": 5591
+      "count": 5642
     },
     {
       "kind": "blank",
@@ -110,8 +110,20 @@
       "count": 49
     },
     {
+      "kind": "playSystemSe",
+      "count": 32
+    },
+    {
       "kind": "readPictureProperty",
       "count": 25
+    },
+    {
+      "kind": "playSeFile",
+      "count": 18
+    },
+    {
+      "kind": "saveSlot",
+      "count": 11
     },
     {
       "kind": "choice",
@@ -128,52 +140,6 @@
   ],
   "unsupportedCommandKeys": [
     {
-      "key": 106,
-      "count": 51,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 50,
-          "commonEventName": "X[共]アイテム増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 50,
-          "commonEventName": "X[共]アイテム増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 51,
-          "commonEventName": "X[共]武器増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 51,
-          "commonEventName": "X[共]武器増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 52,
-          "commonEventName": "X[共]防具増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 52,
-          "commonEventName": "X[共]防具増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 54,
-          "commonEventName": "X[共]ｱｲﾃﾑ所持数取得"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 54,
-          "commonEventName": "X[共]ｱｲﾃﾑ所持数取得"
-        }
-      ]
-    },
-    {
       "key": 107,
       "count": 1,
       "samples": [
@@ -181,52 +147,6 @@
           "scope": "common",
           "commonEventId": 112,
           "commonEventName": "X[移]装備一覧算出"
-        }
-      ]
-    },
-    {
-      "key": 112,
-      "count": 32,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 49,
-          "commonEventName": "X[共]システムSE再生"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 63,
-          "commonEventName": "X[共]メッセージウィンドウ"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 64,
-          "commonEventName": "X[共]万能ｳｨﾝﾄﾞｳ描画処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 70,
-          "commonEventName": "X[移]パラメータ増減"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 79,
-          "commonEventName": "X[移]パーティー情報計算"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 80,
-          "commonEventName": "X[移]パーティー画像再設定"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 85,
-          "commonEventName": "X[移]┣ お店　描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 90,
-          "commonEventName": "X[移]キャラクター欄描画"
         }
       ]
     },
@@ -294,52 +214,6 @@
           "scope": "common",
           "commonEventId": 126,
           "commonEventName": "X[移]歩行時_並列キー処理"
-        }
-      ]
-    },
-    {
-      "key": 140,
-      "count": 18,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 49,
-          "commonEventName": "X[共]システムSE再生"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 118,
-          "commonEventName": "X[移]ｱｲﾃﾑ使用効果処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 119,
-          "commonEventName": "X[移]技能使用効果処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 164,
-          "commonEventName": "X[戦]行動実行結果算出"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 183,
-          "commonEventName": "X[戦]技能エフェクト描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 188,
-          "commonEventName": "X◆戦闘処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 188,
-          "commonEventName": "X◆戦闘処理"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 188,
-          "commonEventName": "X◆戦闘処理"
         }
       ]
     },
@@ -468,79 +342,6 @@
           "scope": "common",
           "commonEventId": 126,
           "commonEventName": "X[移]歩行時_並列キー処理"
-        }
-      ]
-    },
-    {
-      "key": 220,
-      "count": 2,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 131,
-          "commonEventName": "X┣[移]セーブ欄実行"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 131,
-          "commonEventName": "X┣[移]セーブ欄実行"
-        }
-      ]
-    },
-    {
-      "key": 221,
-      "count": 8,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 48,
-          "commonEventName": "X[共]基本ｼｽﾃﾑ自動初期化"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 94,
-          "commonEventName": "X[移]セーブ・ロード画面描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 94,
-          "commonEventName": "X[移]セーブ・ロード画面描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 94,
-          "commonEventName": "X[移]セーブ・ロード画面描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 94,
-          "commonEventName": "X[移]セーブ・ロード画面描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 94,
-          "commonEventName": "X[移]セーブ・ロード画面描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 94,
-          "commonEventName": "X[移]セーブ・ロード画面描画"
-        },
-        {
-          "scope": "common",
-          "commonEventId": 131,
-          "commonEventName": "X┣[移]セーブ欄実行"
-        }
-      ]
-    },
-    {
-      "key": 222,
-      "count": 1,
-      "samples": [
-        {
-          "scope": "common",
-          "commonEventId": 131,
-          "commonEventName": "X┣[移]セーブ欄実行"
         }
       ]
     },

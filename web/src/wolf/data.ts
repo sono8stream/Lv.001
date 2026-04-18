@@ -50,6 +50,9 @@ import type {
   WolfCommand,
   WolfMapData,
   WolfMapEvent,
+  PlaySystemSeCommand,
+  PlaySeFileCommand,
+  SaveSlotCommand,
 } from './types'
 import { TILE_SIZE } from './types'
 
@@ -712,6 +715,7 @@ export class WolfDataRepository {
       case 0x65:
         return { kind: 'message', indent: meta.indentDepth, text: meta.stringArgs[0] ?? '' } satisfies MessageCommand
       case 0x67:
+      case 0x6a:
         return { kind: 'debugComment', indent: meta.indentDepth, text: meta.stringArgs[0] ?? '' } satisfies DebugCommentCommand
       case 0x63:
         return { kind: 'checkpoint', indent: meta.indentDepth } satisfies CheckpointCommand
@@ -778,6 +782,14 @@ export class WolfDataRepository {
         return { kind: 'loopEnd', indent: meta.indentDepth } satisfies LoopEndCommand
       case 0x1f3:
         return { kind: 'forkEnd', indent: meta.indentDepth, label: `${meta.indentDepth}.0` } satisfies ForkEndCommand
+      case 0x70:
+        return { kind: 'playSystemSe', indent: meta.indentDepth } satisfies PlaySystemSeCommand
+      case 0x8c:
+        return { kind: 'playSeFile', indent: meta.indentDepth } satisfies PlaySeFileCommand
+      case 0xdc:
+      case 0xdd:
+      case 0xde:
+        return { kind: 'saveSlot', indent: meta.indentDepth } satisfies SaveSlotCommand
       default:
         return { kind: 'unknown', indent: meta.indentDepth, key } satisfies UnknownCommand
     }
