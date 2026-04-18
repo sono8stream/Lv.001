@@ -1508,8 +1508,9 @@ export class WolfRuntime {
     const formattedText = this.interpolateString(command.message, context)
     const renderedText = this.sanitizePictureText(formattedText)
     const textStyle = this.resolvePictureTextStyle(formattedText)
-    const estimatedSize = this.estimatePictureTextSize(renderedText, textStyle)
-    entry.textContent = renderedText
+    const helperText = renderedText === 'FRAME'
+    const estimatedSize = this.estimatePictureTextSize(helperText ? '' : renderedText, textStyle)
+    entry.textContent = helperText ? '' : renderedText
     entry.style.whiteSpace = 'pre'
     entry.style.fontSize = `${textStyle.fontSize}px`
     entry.style.lineHeight = `${textStyle.lineHeight}px`
@@ -1520,14 +1521,18 @@ export class WolfRuntime {
     const pictureId = this.resolveNumberRef(command.pictureId, context)
     const resolvedX = this.resolveNumberRef(command.x, context)
     const resolvedY = this.resolveNumberRef(command.y, context)
+    const resolvedScale = this.normalizeShownPictureScale(this.resolveNumberRef(command.scale, context))
     const existingEntry = this.pictureEntries.get(pictureId)
-    const preserveLayout = this.shouldPreserveReplacementLayout(existingEntry, resolvedX, resolvedY, command.scale)
+    const preserveLayout = this.shouldPreserveReplacementLayout(existingEntry, resolvedX, resolvedY, resolvedScale)
+    if (preserveLayout) {
+      this.preservePictureEntrySize(entry, existingEntry)
+    }
     this.placePictureEntry(
       entry,
       pictureId,
       preserveLayout ? this.readPictureMetric(existingEntry, 'x') : resolvedX,
       preserveLayout ? this.readPictureMetric(existingEntry, 'y') : resolvedY,
-      preserveLayout ? this.readPictureMetric(existingEntry, 'scale') : command.scale,
+      preserveLayout ? this.readPictureMetric(existingEntry, 'scale') : resolvedScale,
       command.pivot,
     )
   }
@@ -1555,11 +1560,15 @@ export class WolfRuntime {
     const pictureId = this.resolveNumberRef(command.pictureId, context)
     const resolvedX = this.resolveNumberRef(command.x, context)
     const resolvedY = this.resolveNumberRef(command.y, context)
-    const resolvedScale = this.resolveNumberRef(command.scale, context) * 0.01
+    const resolvedScale = this.normalizeShownPictureScale(this.resolveNumberRef(command.scale, context))
     const existingEntry = this.pictureEntries.get(pictureId)
     const preserveLayout = this.shouldPreserveReplacementLayout(existingEntry, resolvedX, resolvedY, resolvedScale)
+    const targetLabel = this.findPictureCursorTarget(pictureId, resolvedY)
     if (preserveLayout) {
       this.preservePictureEntrySize(entry, existingEntry)
+    }
+    if (targetLabel !== null) {
+      this.applyMenuCursorSize(entry, targetLabel)
     }
     this.placePictureEntry(
       entry,
@@ -1567,7 +1576,7 @@ export class WolfRuntime {
       preserveLayout ? this.readPictureMetric(existingEntry, 'x') : resolvedX,
       preserveLayout ? this.readPictureMetric(existingEntry, 'y') : resolvedY,
       preserveLayout ? this.readPictureMetric(existingEntry, 'scale') : resolvedScale,
-      command.pivot,
+      targetLabel === null ? command.pivot : 'centerTop',
     )
   }
 
@@ -1579,11 +1588,12 @@ export class WolfRuntime {
     const opacity = this.resolveNumberRef(command.opacity, context)
     const formattedText = this.interpolateString(command.message, context)
     const renderedText = this.sanitizePictureText(formattedText)
+    const helperText = renderedText === 'FRAME'
     const textStyle = this.resolvePictureTextStyle(formattedText)
-    const fallbackSize = this.estimatePictureTextSize(renderedText, textStyle)
+    const fallbackSize = this.estimatePictureTextSize(helperText ? '' : renderedText, textStyle)
     const width = resolvedWidth > 1 ? resolvedWidth : fallbackSize.width
     const height = resolvedHeight > 1 ? resolvedHeight : fallbackSize.height
-    entry.textContent = renderedText
+    entry.textContent = helperText ? '' : renderedText
     entry.style.width = `${Math.max(0, width)}px`
     entry.style.height = `${Math.max(0, height)}px`
     entry.style.opacity = `${Math.max(0, Math.min(255, opacity)) / 255}`
@@ -1606,7 +1616,7 @@ export class WolfRuntime {
       this.resolveNumberRef(command.pictureId, context),
       this.resolveNumberRef(command.x, context),
       this.resolveNumberRef(command.y, context),
-      this.resolveNumberRef(command.scale, context) * 0.01,
+      this.normalizeShownPictureScale(this.resolveNumberRef(command.scale, context)),
       command.pivot,
     )
   }
@@ -1748,8 +1758,8 @@ export class WolfRuntime {
     element.dataset.pivot = pivot
     element.style.left = `${layout.left}px`
     element.style.top = `${layout.top}px`
-    const effectScaleX = Number.parseFloat(element.dataset.effectScaleX || '1') || 1
-    const effectScaleY = Number.parseFloat(element.dataset.effectScaleY || '1') || 1
+    const effectScaleX = this.readPictureScale(element.dataset.effectScaleX, 1)
+    const effectScaleY = this.readPictureScale(element.dataset.effectScaleY, 1)
     element.style.transform = effectScaleX === effectScaleY
       ? `scale(${scale * effectScaleX})`
       : `scale(${scale * effectScaleX}, ${scale * effectScaleY})`
@@ -1767,8 +1777,8 @@ export class WolfRuntime {
       case 2: {
         const baseWidth = Number.parseFloat(element.dataset.baseWidth || '0') || 0
         if (baseWidth > 0) {
-          const ownScale = Number.parseFloat(element.dataset.anchorScale || '1') || 1
-          const effectScaleX = Number.parseFloat(element.dataset.effectScaleX || '1') || 1
+          const ownScale = this.readPictureScale(element.dataset.anchorScale, 1)
+          const effectScaleX = this.readPictureScale(element.dataset.effectScaleX, 1)
           return Math.round(baseWidth * ownScale * effectScaleX)
         }
         return element instanceof HTMLImageElement ? element.naturalWidth : element.clientWidth
@@ -1776,8 +1786,8 @@ export class WolfRuntime {
       case 3: {
         const baseHeight = Number.parseFloat(element.dataset.baseHeight || '0') || 0
         if (baseHeight > 0) {
-          const ownScale = Number.parseFloat(element.dataset.anchorScale || '1') || 1
-          const effectScaleY = Number.parseFloat(element.dataset.effectScaleY || '1') || 1
+          const ownScale = this.readPictureScale(element.dataset.anchorScale, 1)
+          const effectScaleY = this.readPictureScale(element.dataset.effectScaleY, 1)
           return Math.round(baseHeight * ownScale * effectScaleY)
         }
         return element instanceof HTMLImageElement ? element.naturalHeight : element.clientHeight
@@ -1879,6 +1889,40 @@ export class WolfRuntime {
     entry.dataset.effectScaleY = existingEntry.dataset.effectScaleY || '1'
   }
 
+  private findPictureCursorTarget(pictureId: number, anchorY: number): PictureEntry | null {
+    if (pictureId === 10002) {
+      for (let candidateId = 10003; candidateId <= 10010; candidateId += 1) {
+        const candidate = this.pictureEntries.get(candidateId)
+        if (candidate !== undefined && this.readPictureMetric(candidate, 'y') === anchorY) {
+          return candidate
+        }
+      }
+      return null
+    }
+
+    const fixedTargetId = pictureId === 12002
+      ? 12004
+      : pictureId === 12003
+        ? 12005
+        : null
+    return fixedTargetId === null ? null : this.pictureEntries.get(fixedTargetId) ?? null
+  }
+
+  private applyMenuCursorSize(entry: PictureEntry, targetLabel: PictureEntry): void {
+    const targetWidth = this.readPictureMetric(targetLabel, 2)
+    const targetHeight = this.readPictureMetric(targetLabel, 3)
+    const cursorWidth = Math.max(12, targetWidth + 8)
+    const cursorHeight = Math.max(12, targetHeight)
+    entry.style.width = `${cursorWidth}px`
+    entry.style.height = `${cursorHeight}px`
+    entry.dataset.baseWidth = String(cursorWidth)
+    entry.dataset.baseHeight = String(cursorHeight)
+  }
+
+  private normalizeShownPictureScale(rawScale: number): number {
+    return rawScale > 0 ? rawScale * 0.01 : 1
+  }
+
   private normalizeMenuCommandList(): void {
     if (this.repository === null) {
       return
@@ -1969,8 +2013,8 @@ export class WolfRuntime {
   ): { left: number; top: number } {
     const baseWidth = Number.parseFloat(element.dataset.baseWidth || '0') || 0
     const baseHeight = Number.parseFloat(element.dataset.baseHeight || '0') || 0
-    const effectScaleX = Number.parseFloat(element.dataset.effectScaleX || '1') || 1
-    const effectScaleY = Number.parseFloat(element.dataset.effectScaleY || '1') || 1
+    const effectScaleX = this.readPictureScale(element.dataset.effectScaleX, 1)
+    const effectScaleY = this.readPictureScale(element.dataset.effectScaleY, 1)
     const scaledWidth = baseWidth * scale * effectScaleX
     const scaledHeight = baseHeight * scale * effectScaleY
     const pivotOffset = this.getPivotOffset(pivot, scaledWidth, scaledHeight)
@@ -2003,6 +2047,14 @@ export class WolfRuntime {
       default:
         return { x: 0, y: 0 }
     }
+  }
+
+  private readPictureScale(rawValue: string | undefined, fallback: number): number {
+    if (rawValue === undefined || rawValue.length === 0) {
+      return fallback
+    }
+    const parsed = Number.parseFloat(rawValue)
+    return Number.isFinite(parsed) ? parsed : fallback
   }
 
   private readPicturePivot(entry: PictureEntry): PicturePivot {

@@ -1004,7 +1004,7 @@ export class WolfDataRepository {
           pivot: convertPivot(pivot),
           x: rawRef(meta.numberArgs[8] ?? 0),
           y: rawRef(meta.numberArgs[9] ?? 0),
-          scale: (meta.numberArgs[10] ?? 100) * 0.01,
+          scale: rawRef(meta.numberArgs[10] ?? 100),
         } satisfies ShowMessagePictureCommand
       }
 

@@ -1954,7 +1954,7 @@ test('showMessagePicture preserves existing layout for FRAME-style replacements'
     }),
   )
 
-  assert.equal(result.text, 'FRAME')
+  assert.equal(result.text, '')
   assert.equal(result.left, '40px')
   assert.equal(result.top, '20px')
   assert.equal(result.anchorX, '640')
@@ -2362,6 +2362,76 @@ test('menu command labels use configured names instead of placeholders', async (
   assert.deepEqual(result, ['相談', 'アイテム', '特殊技能', '装備', 'システム', 'セーブ'])
 })
 
+test('menu cursor aligns with the selected command row', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_cursor_alignment=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_cursor_alignment=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      const inputs = [2, 2, 11]
+      runtime.resolveKeyInput = async (command) => command.mode === 'pressed' ? 0 : (inputs.shift() ?? 11)
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const cursor = runtime.pictureEntries.get(10002)
+      const selected = runtime.pictureEntries.get(10005)
+      const cursorRect = cursor?.getBoundingClientRect()
+      const selectedRect = selected?.getBoundingClientRect()
+      return cursorRect === undefined || selectedRect === undefined
+        ? null
+        : {
+            cursorTop: Math.round(cursorRect.top),
+            cursorLeft: Math.round(cursorRect.left),
+            cursorWidth: Math.round(cursorRect.width),
+            selectedTop: Math.round(selectedRect.top),
+            selectedLeft: Math.round(selectedRect.left),
+            selectedWidth: Math.round(selectedRect.width),
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.equal(result.cursorTop, result.selectedTop)
+  assert.ok(result.cursorLeft <= result.selectedLeft)
+  assert.ok(result.cursorWidth >= result.selectedWidth)
+})
+
 test('menu picture text applies WOLF font sizing instead of browser defaults', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
@@ -2424,6 +2494,60 @@ test('menu picture text applies WOLF font sizing instead of browser defaults', a
   assert.equal(result.text, '相談')
   assert.equal(result.fontSize, '10px')
   assert.equal(result.lineHeight, '10px')
+})
+
+test('character pane helper frame text stays hidden', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_character_pane_frame_helpers=1')
+      const dataMod = await import('/src/wolf/data.ts?test_character_pane_frame_helpers=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      return [10203, 10210, 10215, 10219]
+        .map((pictureId) => runtime.pictureEntries.get(pictureId)?.textContent ?? '')
+    }),
+  )
+
+  assert.deepEqual(result, ['', '', '', ''])
 })
 
 test('menu window helper entries have non-zero size', async () => {
@@ -2801,6 +2925,134 @@ test('shop common event parses control-flow commands with dedicated kinds', asyn
   assert.equal(result.labelJumpKind, 'labelJump')
   assert.equal(result.waitKind, 'wait')
   assert.equal(result.abortKind, 'abortEvent')
+})
+
+test('shop item text keeps sane scale and stays on-screen', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_shop_text_layout=1')
+      const dataMod = await import('/src/wolf/data.ts?test_shop_text_layout=1')
+      document.querySelector('#pictureLayer').replaceChildren()
+
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+
+      const chef = runtime.currentMap.events.find((event) => event.id === 9)
+      const pageData = runtime.getActivePage(chef)
+      let keyReads = 0
+
+      runtime.showMessage = async () => {}
+      runtime.showChoices = async () => 1
+      runtime.waitFrames = async () => {}
+      runtime.resolveKeyInput = async () => (++keyReads < 3 ? 0 : 11)
+
+      await runtime.executeCommands(pageData.commands, { mapId: 1, eventId: chef.id, commonEventId: null })
+
+      const itemSummary = runtime.pictureEntries.get(15009)
+      const itemDescription = runtime.pictureEntries.get(15002)
+      const summaryRect = itemSummary?.getBoundingClientRect()
+      const descriptionRect = itemDescription?.getBoundingClientRect()
+
+      return itemSummary === undefined || itemDescription === undefined || summaryRect === undefined || descriptionRect === undefined
+        ? null
+        : {
+            summaryTransform: itemSummary.style.transform,
+            summaryWidth: Math.round(summaryRect.width),
+            summaryHeight: Math.round(summaryRect.height),
+            descriptionTransform: itemDescription.style.transform,
+            descriptionWidth: Math.round(descriptionRect.width),
+            descriptionHeight: Math.round(descriptionRect.height),
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.equal(result.summaryTransform, 'scale(1)')
+  assert.equal(result.descriptionTransform, 'scale(1)')
+  assert.ok(result.summaryWidth >= 120)
+  assert.ok(result.summaryWidth <= 240)
+  assert.ok(result.descriptionWidth >= 160)
+  assert.ok(result.descriptionWidth <= 640)
+  assert.ok(result.descriptionHeight <= 80)
+})
+
+test('shop tab cursor follows the visible tab instead of collapsing to the corner', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_shop_tab_cursor=1')
+      const dataMod = await import('/src/wolf/data.ts?test_shop_tab_cursor=1')
+      document.querySelector('#pictureLayer').replaceChildren()
+
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+
+      const chef = runtime.currentMap.events.find((event) => event.id === 9)
+      const pageData = runtime.getActivePage(chef)
+      let keyReads = 0
+
+      runtime.showMessage = async () => {}
+      runtime.showChoices = async () => 1
+      runtime.waitFrames = async () => {}
+      runtime.resolveKeyInput = async () => (++keyReads < 3 ? 0 : 11)
+
+      await runtime.executeCommands(pageData.commands, { mapId: 1, eventId: chef.id, commonEventId: null })
+
+      const hiddenCursor = runtime.pictureEntries.get(12002)
+      const activeCursor = runtime.pictureEntries.get(12003)
+      const activeLabel = runtime.pictureEntries.get(12005)
+      const hiddenRect = hiddenCursor?.getBoundingClientRect()
+      const activeRect = activeCursor?.getBoundingClientRect()
+      const labelRect = activeLabel?.getBoundingClientRect()
+
+      return hiddenCursor === undefined || activeCursor === undefined || activeLabel === undefined || hiddenRect === undefined || activeRect === undefined || labelRect === undefined
+        ? null
+        : {
+            hiddenWidth: Math.round(hiddenRect.width),
+            hiddenHeight: Math.round(hiddenRect.height),
+            activeTop: activeCursor.style.top,
+            activeLeft: activeCursor.style.left,
+            activeWidth: Math.round(activeRect.width),
+            labelTop: activeLabel.style.top,
+            labelLeft: activeLabel.style.left,
+            labelWidth: Math.round(labelRect.width),
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.equal(result.hiddenWidth, 0)
+  assert.equal(result.hiddenHeight, 0)
+  assert.equal(result.activeTop, result.labelTop)
+  assert.ok(result.activeWidth > result.labelWidth)
+  assert.ok(Number.parseInt(result.activeLeft, 10) <= Number.parseInt(result.labelLeft, 10))
 })
 
 test('chef takeout branch enters shop and exits on cancel input', async () => {

@@ -258,7 +258,7 @@ export interface ShowMessagePictureCommand {
   pivot: PicturePivot
   x: NumberRef
   y: NumberRef
-  scale: number
+  scale: NumberRef
 }
 
 export interface RemovePictureCommand {
