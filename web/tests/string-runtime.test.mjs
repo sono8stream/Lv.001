@@ -343,6 +343,127 @@ test('runCommonEvent maps number arguments to common event vars 1-4', async () =
   assert.deepEqual(result, [100, 11, 22, 33, 0, 105])
 })
 
+test('choice UI supports keyboard navigation and confirm keys', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_choice_keyboard=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.installInput()
+      const pending = runtime.showChoices({
+        kind: 'choice',
+        indent: 0,
+        options: ['first', 'second', 'third'],
+      })
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }))
+      const selectedAfterDown = [...document.querySelectorAll('#choiceList .choice-button')].map((button) =>
+        button.classList.contains('selected'),
+      )
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }))
+
+      return {
+        choiceIndex: await pending,
+        selectedAfterDown,
+        hiddenAfterConfirm: document.querySelector('#choiceBox').classList.contains('hidden'),
+      }
+    }),
+  )
+
+  assert.deepEqual(result.selectedAfterDown, [false, true, false])
+  assert.equal(result.choiceIndex, 1)
+  assert.equal(result.hiddenAfterConfirm, true)
+})
+
+test('picture entries keep pictureId order when lower ids are redrawn later', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_picture_order=1')
+      const host = document.createElement('div')
+      host.innerHTML = `
+        <canvas id="picture-order-canvas" width="320" height="240"></canvas>
+        <pre id="picture-order-status"></pre>
+        <div id="picture-order-message" class="hidden"></div>
+        <div id="picture-order-message-text"></div>
+        <div id="picture-order-choice" class="hidden"></div>
+        <div id="picture-order-choice-list"></div>
+        <div id="picture-order-choice-title"></div>
+        <div id="picture-order-layer"></div>
+        <div id="picture-order-error"></div>
+      `
+      document.body.append(host)
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: host.querySelector('#picture-order-canvas'),
+        statusPanel: host.querySelector('#picture-order-status'),
+        messageBox: host.querySelector('#picture-order-message'),
+        messageText: host.querySelector('#picture-order-message-text'),
+        choiceBox: host.querySelector('#picture-order-choice'),
+        choiceList: host.querySelector('#picture-order-choice-list'),
+        choiceTitle: host.querySelector('#picture-order-choice-title'),
+        pictureLayer: host.querySelector('#picture-order-layer'),
+        errorBox: host.querySelector('#picture-order-error'),
+      })
+      const context = { mapId: 1, eventId: null, commonEventId: null }
+
+      runtime.showMessagePicture({
+        kind: 'showMessagePicture',
+        indent: 0,
+        pictureId: { kind: 'raw', value: 20 },
+        message: 'twenty',
+        pivot: 'leftTop',
+        x: { kind: 'raw', value: 0 },
+        y: { kind: 'raw', value: 0 },
+        scale: 1,
+      }, context)
+      runtime.showMessagePicture({
+        kind: 'showMessagePicture',
+        indent: 0,
+        pictureId: { kind: 'raw', value: 10 },
+        message: 'ten',
+        pivot: 'leftTop',
+        x: { kind: 'raw', value: 0 },
+        y: { kind: 'raw', value: 0 },
+        scale: 1,
+      }, context)
+      runtime.showMessagePicture({
+        kind: 'showMessagePicture',
+        indent: 0,
+        pictureId: { kind: 'raw', value: 30 },
+        message: 'thirty',
+        pivot: 'leftTop',
+        x: { kind: 'raw', value: 0 },
+        y: { kind: 'raw', value: 0 },
+        scale: 1,
+      }, context)
+      runtime.showMessagePicture({
+        kind: 'showMessagePicture',
+        indent: 0,
+        pictureId: { kind: 'raw', value: 20 },
+        message: 'twenty-again',
+        pivot: 'leftTop',
+        x: { kind: 'raw', value: 0 },
+        y: { kind: 'raw', value: 0 },
+        scale: 1,
+      }, context)
+
+      return [...host.querySelectorAll('#picture-order-layer > *')].map((node) => Number(node.dataset.pictureId))
+    }),
+  )
+
+  assert.deepEqual(result, [10, 20, 30])
+})
+
 test('changeStringDatabase resolves dynamic DB coordinates before assigning cself text', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {

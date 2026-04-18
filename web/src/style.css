@@ -2,9 +2,14 @@
   color: #f2f1ef;
   background: #141414;
   font-family:
+    'Noto Sans JP',
+    'Noto Sans CJK JP',
     Inter,
+    'Segoe UI',
+    Meiryo,
     'Hiragino Kaku Gothic ProN',
     'Yu Gothic',
+    'MS PGothic',
     system-ui,
     sans-serif;
   font-synthesis: none;
@@ -267,6 +272,7 @@ select {
   cursor: pointer;
 }
 
+.choice-button.selected,
 .choice-button:hover,
 .choice-button:focus-visible {
   outline: none;

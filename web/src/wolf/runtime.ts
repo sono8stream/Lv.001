@@ -100,6 +100,8 @@ export class WolfRuntime {
   private tickCount = 0
   private currentMessageResolver: (() => void) | null = null
   private currentChoiceResolver: ((value: number) => void) | null = null
+  private currentChoiceButtons: HTMLButtonElement[] = []
+  private currentChoiceIndex = 0
   private playerSpriteSheet: HTMLImageElement | null = null
   private playerSpriteFallback: HTMLCanvasElement
 
@@ -154,6 +156,10 @@ export class WolfRuntime {
       if (this.currentMessageResolver !== null && this.isConfirmKey(event.key)) {
         event.preventDefault()
         this.resolveCurrentMessage()
+        return
+      }
+      if (this.handleChoiceKey(event.key)) {
+        event.preventDefault()
       }
     })
 
@@ -192,6 +198,10 @@ export class WolfRuntime {
   private pressVirtualKey(key: string): void {
     if (this.currentMessageResolver !== null && this.isConfirmKey(key)) {
       this.resolveCurrentMessage()
+      return
+    }
+
+    if (this.handleChoiceKey(key)) {
       return
     }
 
@@ -1076,11 +1086,10 @@ export class WolfRuntime {
   }
 
   private resolveNumberRef(ref: NumberRef, context: CommandContext): number {
-    if (this.repository === null) {
-      return 0
-    }
-
     if (ref.kind === 'db') {
+      if (this.repository === null) {
+        return 0
+      }
       const store = this.repository.getDatabase(ref.database)
       const table = this.resolveNumberRef(ref.table, context)
       const record = this.resolveNumberRef(ref.record, context)
@@ -1664,7 +1673,19 @@ export class WolfRuntime {
     this.applyPictureLayout(entry, pictureId, x, y, scale, pivot)
     this.pictureEntries.get(pictureId)?.remove()
     this.pictureEntries.set(pictureId, entry)
-    this.elements.pictureLayer.append(entry)
+    this.insertPictureEntry(entry, pictureId)
+  }
+
+  private insertPictureEntry(entry: PictureEntry, pictureId: number): void {
+    const nextSibling = [...this.elements.pictureLayer.children].find((child) => {
+      const childPictureId = Number.parseInt((child as HTMLElement).dataset.pictureId || '', 10)
+      return Number.isFinite(childPictureId) && childPictureId > pictureId
+    })
+    if (nextSibling === undefined) {
+      this.elements.pictureLayer.append(entry)
+      return
+    }
+    this.elements.pictureLayer.insertBefore(entry, nextSibling)
   }
 
   private applyPictureLayout(
@@ -1924,29 +1945,85 @@ export class WolfRuntime {
   private async showChoices(command: ChoiceCommand): Promise<number> {
     this.elements.choiceList.innerHTML = ''
     this.elements.choiceBox.classList.remove('hidden')
+    this.currentChoiceButtons = []
+    this.currentChoiceIndex = 0
     for (let index = 0; index < command.options.length; index += 1) {
       const button = document.createElement('button')
       button.type = 'button'
       button.className = 'choice-button'
+      button.dataset.choiceIndex = String(index)
       button.textContent = this.interpolateString(command.options[index], {
         mapId: this.currentMap?.id ?? 0,
         eventId: null,
         commonEventId: null,
       })
       button.addEventListener('click', () => {
-        if (this.currentChoiceResolver !== null) {
-          const resolve = this.currentChoiceResolver
-          this.currentChoiceResolver = null
-          this.elements.choiceBox.classList.add('hidden')
-          resolve(index)
-        }
+        this.resolveCurrentChoice(index)
       })
       this.elements.choiceList.append(button)
+      this.currentChoiceButtons.push(button)
     }
+    this.updateChoiceSelection()
 
     return new Promise<number>((resolve) => {
       this.currentChoiceResolver = resolve
     })
+  }
+
+  private handleChoiceKey(key: string): boolean {
+    if (this.currentChoiceResolver === null || this.currentChoiceButtons.length === 0) {
+      return false
+    }
+
+    if (key === 'ArrowUp' || key === 'w' || key === 'W') {
+      this.moveChoiceSelection(-1)
+      return true
+    }
+
+    if (key === 'ArrowDown' || key === 's' || key === 'S') {
+      this.moveChoiceSelection(1)
+      return true
+    }
+
+    if (this.isConfirmKey(key)) {
+      this.resolveCurrentChoice(this.currentChoiceIndex)
+      return true
+    }
+
+    return false
+  }
+
+  private moveChoiceSelection(direction: number): void {
+    if (this.currentChoiceButtons.length === 0) {
+      return
+    }
+
+    const count = this.currentChoiceButtons.length
+    this.currentChoiceIndex = (this.currentChoiceIndex + direction + count) % count
+    this.updateChoiceSelection()
+  }
+
+  private updateChoiceSelection(): void {
+    for (let index = 0; index < this.currentChoiceButtons.length; index += 1) {
+      const button = this.currentChoiceButtons[index]
+      const selected = index === this.currentChoiceIndex
+      button.classList.toggle('selected', selected)
+      button.setAttribute('aria-selected', selected ? 'true' : 'false')
+      button.tabIndex = selected ? 0 : -1
+    }
+  }
+
+  private resolveCurrentChoice(index: number): void {
+    if (this.currentChoiceResolver === null) {
+      return
+    }
+
+    const resolve = this.currentChoiceResolver
+    this.currentChoiceResolver = null
+    this.currentChoiceButtons = []
+    this.currentChoiceIndex = 0
+    this.elements.choiceBox.classList.add('hidden')
+    resolve(index)
   }
 
   private async resolveKeyInput(command: KeyInputCommand): Promise<number> {
