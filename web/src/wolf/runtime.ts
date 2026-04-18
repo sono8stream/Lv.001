@@ -821,11 +821,11 @@ export class WolfRuntime {
   ): Promise<void> {
     this.initializeSystemUiDefaults()
     const args = command.numberArgs.map((ref) => this.resolveNumberRef(ref, context))
-    for (let index = 1; index <= 4; index += 1) {
+    for (let index = 0; index < 4; index += 1) {
       commonEvent.numberVariables[index] = 0
     }
     for (let index = 0; index < Math.min(4, args.length); index += 1) {
-      commonEvent.numberVariables[index + 1] = args[index]
+      commonEvent.numberVariables[index] = args[index]
     }
 
     if (WolfRuntime.UNSUPPORTED_BATTLE_EVENT_NAMES.has(commonEvent.name)) {
@@ -841,6 +841,10 @@ export class WolfRuntime {
       eventId: context.eventId,
       commonEventId: commonEvent.id,
     })
+
+    if (commonEvent.id === 89 || commonEvent.name === 'X┗[移]メニューコマンド算出') {
+      this.normalizeMenuCommandList()
+    }
 
     if (command.hasReturnValue && command.returnDestination !== null && commonEvent.returnValueRaw !== null) {
       this.assignNumberRef(
@@ -1501,10 +1505,16 @@ export class WolfRuntime {
   private showMessagePicture(command: ShowMessagePictureCommand, context: CommandContext): void {
     const entry = document.createElement('div')
     entry.className = 'picture-entry'
-    const renderedText = this.sanitizePictureText(this.interpolateString(command.message, context))
-    const estimatedSize = this.estimatePictureTextSize(renderedText)
+    const formattedText = this.interpolateString(command.message, context)
+    const renderedText = this.sanitizePictureText(formattedText)
+    const textStyle = this.resolvePictureTextStyle(formattedText)
+    const estimatedSize = this.estimatePictureTextSize(renderedText, textStyle)
     entry.textContent = renderedText
     entry.style.whiteSpace = 'pre'
+    entry.style.fontSize = `${textStyle.fontSize}px`
+    entry.style.lineHeight = `${textStyle.lineHeight}px`
+    entry.style.fontFamily = '\'MS PGothic\', Meiryo, \'Noto Sans JP\', sans-serif'
+    entry.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 0.9)'
     entry.dataset.baseWidth = String(estimatedSize.width)
     entry.dataset.baseHeight = String(estimatedSize.height)
     const pictureId = this.resolveNumberRef(command.pictureId, context)
@@ -1548,6 +1558,9 @@ export class WolfRuntime {
     const resolvedScale = this.resolveNumberRef(command.scale, context) * 0.01
     const existingEntry = this.pictureEntries.get(pictureId)
     const preserveLayout = this.shouldPreserveReplacementLayout(existingEntry, resolvedX, resolvedY, resolvedScale)
+    if (preserveLayout) {
+      this.preservePictureEntrySize(entry, existingEntry)
+    }
     this.placePictureEntry(
       entry,
       pictureId,
@@ -1564,8 +1577,10 @@ export class WolfRuntime {
     const resolvedWidth = this.resolveNumberRef(command.width, context)
     const resolvedHeight = this.resolveNumberRef(command.height, context)
     const opacity = this.resolveNumberRef(command.opacity, context)
-    const renderedText = this.sanitizePictureText(this.interpolateString(command.message, context))
-    const fallbackSize = this.estimatePictureTextSize(renderedText)
+    const formattedText = this.interpolateString(command.message, context)
+    const renderedText = this.sanitizePictureText(formattedText)
+    const textStyle = this.resolvePictureTextStyle(formattedText)
+    const fallbackSize = this.estimatePictureTextSize(renderedText, textStyle)
     const width = resolvedWidth > 1 ? resolvedWidth : fallbackSize.width
     const height = resolvedHeight > 1 ? resolvedHeight : fallbackSize.height
     entry.textContent = renderedText
@@ -1579,6 +1594,10 @@ export class WolfRuntime {
       : 'rgba(15, 25, 45, 0.82)'
     entry.style.color = '#fff'
     entry.style.whiteSpace = 'pre'
+    entry.style.fontSize = `${textStyle.fontSize}px`
+    entry.style.lineHeight = `${textStyle.lineHeight}px`
+    entry.style.fontFamily = '\'MS PGothic\', Meiryo, \'Noto Sans JP\', sans-serif'
+    entry.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 0.9)'
     entry.style.padding = '2px 4px'
     entry.dataset.baseWidth = String(Math.max(0, width))
     entry.dataset.baseHeight = String(Math.max(0, height))
@@ -1627,13 +1646,27 @@ export class WolfRuntime {
   }
 
   private applyPictureEffect(command: PictureEffectCommand, context: CommandContext): void {
-    if (command.effectType !== 16 && command.effectType !== 32) {
-      return
-    }
-
     const pictureId = this.resolveNumberRef(command.pictureId, context)
     const entry = this.pictureEntries.get(pictureId)
     if (entry === undefined) {
+      return
+    }
+
+    if (command.effectType === 80) {
+      entry.dataset.effectScaleX = String(Math.max(0, this.resolveNumberRef(command.x, context)) * 0.01)
+      entry.dataset.effectScaleY = String(Math.max(0, this.resolveNumberRef(command.y, context)) * 0.01)
+      this.applyPictureLayout(
+        entry,
+        pictureId,
+        this.readPictureMetric(entry, 'x'),
+        this.readPictureMetric(entry, 'y'),
+        this.readPictureMetric(entry, 'scale'),
+        this.readPicturePivot(entry),
+      )
+      return
+    }
+
+    if (command.effectType !== 16 && command.effectType !== 32) {
       return
     }
 
@@ -1715,7 +1748,11 @@ export class WolfRuntime {
     element.dataset.pivot = pivot
     element.style.left = `${layout.left}px`
     element.style.top = `${layout.top}px`
-    element.style.transform = `scale(${scale})`
+    const effectScaleX = Number.parseFloat(element.dataset.effectScaleX || '1') || 1
+    const effectScaleY = Number.parseFloat(element.dataset.effectScaleY || '1') || 1
+    element.style.transform = effectScaleX === effectScaleY
+      ? `scale(${scale * effectScaleX})`
+      : `scale(${scale * effectScaleX}, ${scale * effectScaleY})`
   }
 
   private readPictureMetric(entry: PictureEntry, property: number | 'x' | 'y' | 'scale'): number {
@@ -1731,7 +1768,8 @@ export class WolfRuntime {
         const baseWidth = Number.parseFloat(element.dataset.baseWidth || '0') || 0
         if (baseWidth > 0) {
           const ownScale = Number.parseFloat(element.dataset.anchorScale || '1') || 1
-          return Math.round(baseWidth * ownScale)
+          const effectScaleX = Number.parseFloat(element.dataset.effectScaleX || '1') || 1
+          return Math.round(baseWidth * ownScale * effectScaleX)
         }
         return element instanceof HTMLImageElement ? element.naturalWidth : element.clientWidth
       }
@@ -1739,7 +1777,8 @@ export class WolfRuntime {
         const baseHeight = Number.parseFloat(element.dataset.baseHeight || '0') || 0
         if (baseHeight > 0) {
           const ownScale = Number.parseFloat(element.dataset.anchorScale || '1') || 1
-          return Math.round(baseHeight * ownScale)
+          const effectScaleY = Number.parseFloat(element.dataset.effectScaleY || '1') || 1
+          return Math.round(baseHeight * ownScale * effectScaleY)
         }
         return element instanceof HTMLImageElement ? element.naturalHeight : element.clientHeight
       }
@@ -1790,16 +1829,110 @@ export class WolfRuntime {
       .trim()
   }
 
-  private estimatePictureTextSize(text: string): { width: number; height: number } {
+  private resolvePictureTextStyle(text: string): { fontSize: number; lineHeight: number } {
+    const fontMatches = [...text.matchAll(/\\f\[([^\]]+)\]/g)]
+    const fontValue = fontMatches.length === 0
+      ? this.readDefaultPictureFontSize()
+      : Number.parseInt(fontMatches.at(-1)?.[1] ?? '', 10)
+    const fontSize = Number.isFinite(fontValue) && fontValue > 0
+      ? Math.max(6, Math.round(fontValue / 10))
+      : this.readDefaultPictureFontSize()
+    return {
+      fontSize,
+      lineHeight: fontSize,
+    }
+  }
+
+  private readDefaultPictureFontSize(): number {
+    const systemUiRecord = this.repository?.changeableDb?.getInt?.(18, 5, 0) ?? 100
+    return Math.max(6, Math.round(systemUiRecord / 10))
+  }
+
+  private estimatePictureTextSize(text: string, textStyle?: { fontSize: number; lineHeight: number }): { width: number; height: number } {
     if (text.length === 0) {
       return { width: 160, height: 24 }
     }
 
+    const fontSize = textStyle?.fontSize ?? this.readDefaultPictureFontSize()
+    const lineHeight = textStyle?.lineHeight ?? fontSize
+    const glyphWidth = Math.max(6, Math.round(fontSize * 0.8))
     const lines = text.split('\n')
     const maxLength = lines.reduce((longest, line) => Math.max(longest, line.length), 0)
     return {
-      width: Math.max(48, maxLength * 8 + 8),
-      height: Math.max(24, lines.length * 16 + 8),
+      width: Math.max(48, maxLength * glyphWidth + 8),
+      height: Math.max(24, lines.length * lineHeight + 8),
+    }
+  }
+
+  private preservePictureEntrySize(entry: PictureEntry, existingEntry: PictureEntry): void {
+    const width = this.readPictureMetric(existingEntry, 2)
+    const height = this.readPictureMetric(existingEntry, 3)
+    if (width > 0) {
+      entry.style.width = `${width}px`
+      entry.dataset.baseWidth = String(width)
+    }
+    if (height > 0) {
+      entry.style.height = `${height}px`
+      entry.dataset.baseHeight = String(height)
+    }
+    entry.dataset.effectScaleX = existingEntry.dataset.effectScaleX || '1'
+    entry.dataset.effectScaleY = existingEntry.dataset.effectScaleY || '1'
+  }
+
+  private normalizeMenuCommandList(): void {
+    if (this.repository === null) {
+      return
+    }
+
+    const changeableDb = this.repository.changeableDb
+    const userDb = this.repository.userDb
+    if (
+      changeableDb === undefined
+      || userDb === undefined
+      || typeof changeableDb.setInt !== 'function'
+      || typeof changeableDb.setString !== 'function'
+      || typeof userDb.getInt !== 'function'
+      || typeof userDb.getString !== 'function'
+    ) {
+      return
+    }
+
+    const commandCodes = Array.from({ length: 8 }, (_, index) => userDb.getInt(17, 0, index + 3))
+      .filter((code) => code > 0)
+    if (commandCodes.length === 0) {
+      return
+    }
+
+    for (let index = 0; index < 8; index += 1) {
+      const record = 23 + index
+      const code = commandCodes[index] ?? 0
+      changeableDb.setInt(18, record, 0, code)
+      changeableDb.setString(18, record, 1, this.resolveMenuCommandLabel(code))
+    }
+
+    changeableDb.setInt(18, 22, 0, commandCodes.length)
+  }
+
+  private resolveMenuCommandLabel(code: number): string {
+    if (this.repository === null || code <= 0) {
+      return ''
+    }
+
+    const userDb = this.repository.userDb
+    switch (code) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        return userDb.getString(15, 0, code - 1)
+      case 10:
+      case 11:
+      case 12:
+      case 13:
+        return userDb.getString(17, 0, 11 + (code - 10) * 2)
+      default:
+        return ''
     }
   }
 
@@ -1836,8 +1969,10 @@ export class WolfRuntime {
   ): { left: number; top: number } {
     const baseWidth = Number.parseFloat(element.dataset.baseWidth || '0') || 0
     const baseHeight = Number.parseFloat(element.dataset.baseHeight || '0') || 0
-    const scaledWidth = baseWidth * scale
-    const scaledHeight = baseHeight * scale
+    const effectScaleX = Number.parseFloat(element.dataset.effectScaleX || '1') || 1
+    const effectScaleY = Number.parseFloat(element.dataset.effectScaleY || '1') || 1
+    const scaledWidth = baseWidth * scale * effectScaleX
+    const scaledHeight = baseHeight * scale * effectScaleY
     const pivotOffset = this.getPivotOffset(pivot, scaledWidth, scaledHeight)
     const anchorX = x / WolfRuntime.PICTURE_COORDINATE_SCALE
     const anchorY = y / WolfRuntime.PICTURE_COORDINATE_SCALE

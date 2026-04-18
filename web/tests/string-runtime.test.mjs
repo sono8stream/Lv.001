@@ -293,7 +293,7 @@ test('string debug common event shows the hero name from changeable DB', async (
   assert.ok(result.slice(1).every((message) => message === '文字列変数はヒーローさん'))
 })
 
-test('runCommonEvent maps number arguments to common event vars 1-4', async () => {
+test('runCommonEvent maps number arguments to common event vars 0-3', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
       const runtimeMod = await import('/src/wolf/runtime.ts?test_common_event_arg_slots=1')
@@ -340,7 +340,7 @@ test('runCommonEvent maps number arguments to common event vars 1-4', async () =
     }),
   )
 
-  assert.deepEqual(result, [100, 11, 22, 33, 0, 105])
+  assert.deepEqual(result, [11, 22, 33, 0, 104, 105])
 })
 
 test('choice UI supports keyboard navigation and confirm keys', async () => {
@@ -2308,6 +2308,124 @@ test('menu picture text strips formatting control tokens before rendering', asyn
   assert.equal(result.some((text) => /\\f\[|\\-\[|\\ax\[|\\ay\[|<R>|\\A|\\E/.test(text)), false)
 })
 
+test('menu command labels use configured names instead of placeholders', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_command_labels=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_command_labels=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      return [10003, 10004, 10005, 10006, 10007, 10008].map((pictureId) =>
+        runtime.pictureEntries.get(pictureId)?.textContent ?? '')
+    }),
+  )
+
+  assert.deepEqual(result, ['相談', 'アイテム', '特殊技能', '装備', 'システム', 'セーブ'])
+})
+
+test('menu picture text applies WOLF font sizing instead of browser defaults', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_text_font_size=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_text_font_size=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const entry = runtime.pictureEntries.get(10003)
+      const styles = entry === undefined ? null : getComputedStyle(entry)
+      return styles === null
+        ? null
+        : {
+            text: entry.textContent ?? '',
+            fontSize: styles.fontSize,
+            lineHeight: styles.lineHeight,
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.equal(result.text, '相談')
+  assert.equal(result.fontSize, '10px')
+  assert.equal(result.lineHeight, '10px')
+})
+
 test('menu window helper entries have non-zero size', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
@@ -2432,6 +2550,84 @@ test('menu character pane text entries use computed coordinates instead of stayi
   assert.equal(result.every((entry) => (entry.left !== '0px' || entry.top !== '0px') && entry.text.length > 0), true)
 })
 
+test('showPictureString preserves helper dimensions for stretched cursor replacements', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_picture_string_preserve_size=1')
+      const dataMod = await import('/src/wolf/data.ts?test_picture_string_preserve_size=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.repository.getCommonEventById(88).stringVariables[0] = 'SystemFile/WindowBase_amania.png'
+
+      const existing = document.createElement('div')
+      existing.className = 'picture-entry'
+      existing.dataset.pictureId = '7'
+      existing.dataset.anchorX = '640'
+      existing.dataset.anchorY = '320'
+      existing.dataset.anchorScale = '1'
+      existing.dataset.baseWidth = '96'
+      existing.dataset.baseHeight = '24'
+      existing.dataset.pivot = 'center'
+      existing.style.left = '16px'
+      existing.style.top = '20px'
+      existing.style.width = '96px'
+      existing.style.height = '24px'
+      existing.style.transform = 'scale(1)'
+      runtime.elements.pictureLayer.append(existing)
+      runtime.pictureEntries.set(7, existing)
+
+      const context = { mapId: 1, eventId: null, commonEventId: 88 }
+      await runtime.executeCommands([
+        {
+          kind: 'showPictureString',
+          indent: 0,
+          pictureId: { kind: 'raw', value: 7 },
+          filePathRaw: 1600005,
+          pivot: 'center',
+          x: { kind: 'raw', value: 0 },
+          y: { kind: 'raw', value: 0 },
+          scale: { kind: 'raw', value: 100 },
+        },
+      ], context)
+
+      const entry = runtime.pictureEntries.get(7)
+      const rect = entry?.getBoundingClientRect()
+      return entry === undefined || rect === undefined
+        ? null
+        : {
+            src: entry instanceof HTMLImageElement ? entry.getAttribute('src') ?? '' : '',
+            left: entry.style.left,
+            top: entry.style.top,
+            width: entry.style.width,
+            height: entry.style.height,
+            baseWidth: entry.dataset.baseWidth ?? '',
+            baseHeight: entry.dataset.baseHeight ?? '',
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.match(result.src, /WindowBase_amania\.png$/)
+  assert.equal(result.left, '16px')
+  assert.equal(result.top, '20px')
+  assert.equal(result.width, '96px')
+  assert.equal(result.height, '24px')
+  assert.equal(result.baseWidth, '96')
+  assert.equal(result.baseHeight, '24')
+})
+
 test('character pane cursor uses CursorBase away from the origin', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
@@ -2496,6 +2692,86 @@ test('character pane cursor uses CursorBase away from the origin', async () => {
   assert.notEqual(result.top, '0px')
   assert.equal(result.width, '12')
   assert.equal(result.height, '12')
+})
+
+test('menu cursor stretches and moves with selection changes', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_cursor_motion=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_cursor_motion=1')
+
+      const collectCursor = async (inputs) => {
+        document.querySelector('#pictureLayer').replaceChildren()
+        const runtime = new runtimeMod.WolfRuntime({
+          canvas: document.querySelector('#gameCanvas'),
+          statusPanel: document.querySelector('#statusPanel'),
+          debugPanel: document.querySelector('#debugPanel'),
+          messageBox: document.querySelector('#messageBox'),
+          messageText: document.querySelector('#messageText'),
+          choiceBox: document.querySelector('#choiceBox'),
+          choiceList: document.querySelector('#choiceList'),
+          choiceTitle: document.querySelector('#choiceTitle'),
+          pictureLayer: document.querySelector('#pictureLayer'),
+          errorBox: document.querySelector('#errorBox'),
+        })
+
+        const layer = document.createElement('canvas')
+        layer.width = 320
+        layer.height = 240
+        runtime.repository = await dataMod.WolfDataRepository.create()
+        runtime.currentMap = {
+          id: 1,
+          width: 20,
+          height: 15,
+          movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+          events: [],
+          lowerCanvas: layer,
+          upperCanvas: layer,
+        }
+        runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+        runtime.waitFrames = async () => {}
+        runtime.showMessage = async () => {}
+        runtime.resolveKeyInput = async (command) => command.mode === 'pressed' ? 0 : (inputs.shift() ?? 11)
+
+        const menu = runtime.repository.getCommonEventById(127)
+        await runtime.runCommonEvent(menu, {
+          kind: 'callEvent',
+          indent: 0,
+          eventLookup: { type: 'name', name: menu.name },
+          numberArgs: [],
+          hasReturnValue: false,
+          returnDestination: null,
+        }, { mapId: 1, eventId: null, commonEventId: null })
+
+        const menuCursor = [...runtime.elements.pictureLayer.children].reverse().find((node) =>
+          node instanceof HTMLImageElement
+          && (node.getAttribute('src') ?? '').includes('CursorBase.png')
+          && node.dataset.pictureId === '10002')
+
+        if (!(menuCursor instanceof HTMLImageElement)) {
+          return null
+        }
+
+        const rect = menuCursor.getBoundingClientRect()
+        return {
+          left: menuCursor.style.left,
+          top: menuCursor.style.top,
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        }
+      }
+
+      const first = await collectCursor([2, 11])
+      const second = await collectCursor([2, 2, 11])
+      return { first, second }
+    }),
+  )
+
+  assert.ok(result.first !== null)
+  assert.ok(result.second !== null)
+  assert.ok(result.first.width > 12)
+  assert.ok(result.second.width > 12)
+  assert.notEqual(result.first.top, result.second.top)
 })
 
 test('shop common event parses control-flow commands with dedicated kinds', async () => {
