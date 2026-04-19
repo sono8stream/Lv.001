@@ -24,6 +24,7 @@ import type {
   PictureEffectCommand,
   PicturePivot,
   ReadPicturePropertyCommand,
+  ReadVariablePlusCommand,
   RemovePictureCommand,
   ShowPictureStringCommand,
   ShowMessagePictureCommand,
@@ -105,6 +106,9 @@ export class WolfRuntime {
   private currentChoiceIndex = 0
   private playerSpriteSheet: HTMLImageElement | null = null
   private playerSpriteFallback: HTMLCanvasElement
+  private readonly handleResize = () => {
+    this.syncPictureLayerScale()
+  }
 
   constructor(elements: RuntimeElements) {
     this.elements = elements
@@ -122,6 +126,8 @@ export class WolfRuntime {
       fallbackContext.fillStyle = '#0b2540'
       fallbackContext.fillRect(2, 2, TILE_SIZE - 4, TILE_SIZE - 4)
     }
+    this.syncPictureLayerScale()
+    window.addEventListener('resize', this.handleResize)
     this.setDebugInfo('debug: booting...')
   }
 
@@ -142,6 +148,8 @@ export class WolfRuntime {
 
       this.installInput()
       await this.changeMap(this.startLocation.mapId, this.startLocation.x, this.startLocation.y)
+      await this.runStartupCommonEvents()
+      await this.initializeStartingPartyVitals()
       this.setDebugIdle()
       this.render()
       requestAnimationFrame(() => this.loop())
@@ -644,6 +652,10 @@ export class WolfRuntime {
             this.readPictureProperty(command, context)
             index += 1
             break
+          case 'readVariablePlus':
+            this.readVariablePlus(command, context)
+            index += 1
+            break
           case 'pictureEffect':
             this.applyPictureEffect(command, context)
             index += 1
@@ -832,6 +844,10 @@ export class WolfRuntime {
       eventId: context.eventId,
       commonEventId: commonEvent.id,
     })
+
+    if (commonEvent.id === 84 || commonEvent.name === 'X[移]お店実行') {
+      this.removePicturesInRange(12000, 15999)
+    }
 
     if (commonEvent.id === 89 || commonEvent.name === 'X┗[移]メニューコマンド算出') {
       this.normalizeMenuCommandList()
@@ -1096,11 +1112,12 @@ export class WolfRuntime {
       if (this.repository === null) {
         return 0
       }
-      const store = this.repository.getDatabase(ref.database)
       const table = this.resolveNumberRef(ref.table, context)
       const record = this.resolveNumberRef(ref.record, context)
       const field = this.resolveNumberRef(ref.field, context)
-      return store.getInt(table, record, field)
+      return ref.database === 'changeable'
+        ? this.readChangeableDbInt(table, record, field)
+        : this.repository.getDatabase(ref.database).getInt(table, record, field)
     }
 
     const rawValue = ref.value
@@ -1488,6 +1505,7 @@ export class WolfRuntime {
     const entry = document.createElement('img')
     entry.src = image.src
     entry.className = 'picture-entry'
+    entry.dataset.assetPath = command.filePath
     entry.dataset.baseWidth = String(image.naturalWidth || image.width || 0)
     entry.dataset.baseHeight = String(image.naturalHeight || image.height || 0)
     this.placePictureEntry(entry, command.pictureId, command.x, command.y, command.scale, command.pivot)
@@ -1526,6 +1544,7 @@ export class WolfRuntime {
       preserveLayout ? this.readPictureMetric(existingEntry, 'scale') : resolvedScale,
       command.pivot,
     )
+    this.adjustWindowBaseHelperToText(pictureId, entry)
   }
 
   private async showPictureString(
@@ -1546,6 +1565,7 @@ export class WolfRuntime {
     const entry = document.createElement('img')
     entry.src = image.src
     entry.className = 'picture-entry'
+    entry.dataset.assetPath = filePath
     entry.dataset.baseWidth = String(image.naturalWidth || image.width || 0)
     entry.dataset.baseHeight = String(image.naturalHeight || image.height || 0)
     const pictureId = this.resolveNumberRef(command.pictureId, context)
@@ -1576,14 +1596,15 @@ export class WolfRuntime {
     entry.className = 'picture-entry'
     const resolvedWidth = this.resolveNumberRef(command.width, context)
     const resolvedHeight = this.resolveNumberRef(command.height, context)
+    const normalizedSize = this.normalizeWindowPictureSize(resolvedWidth, resolvedHeight)
     const opacity = this.resolveNumberRef(command.opacity, context)
     const formattedText = this.interpolateString(command.message, context)
     const renderedText = this.sanitizePictureText(formattedText)
     const helperText = renderedText === 'FRAME'
     const textStyle = this.resolvePictureTextStyle(formattedText)
     const fallbackSize = this.estimatePictureTextSize(helperText ? '' : renderedText, textStyle)
-    const width = resolvedWidth > 1 ? resolvedWidth : fallbackSize.width
-    const height = resolvedHeight > 1 ? resolvedHeight : fallbackSize.height
+    const width = normalizedSize.width > 1 ? normalizedSize.width : fallbackSize.width
+    const height = normalizedSize.height > 1 ? normalizedSize.height : fallbackSize.height
     entry.textContent = helperText ? '' : renderedText
     entry.style.width = `${Math.max(0, width)}px`
     entry.style.height = `${Math.max(0, height)}px`
@@ -1593,6 +1614,7 @@ export class WolfRuntime {
     entry.style.background = renderedText.length === 0
       ? 'linear-gradient(180deg, rgba(50, 80, 120, 0.9), rgba(15, 25, 45, 0.9))'
       : 'rgba(15, 25, 45, 0.82)'
+    entry.style.boxShadow = 'none'
     entry.style.color = '#fff'
     entry.style.whiteSpace = 'pre'
     entry.style.fontSize = `${textStyle.fontSize}px`
@@ -1600,6 +1622,8 @@ export class WolfRuntime {
     entry.style.fontFamily = '\'MS PGothic\', Meiryo, \'Noto Sans JP\', sans-serif'
     entry.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 0.9)'
     entry.style.padding = '2px 4px'
+    entry.style.overflow = 'hidden'
+    this.applyWindowPictureHelperStyle(entry, formattedText, renderedText)
     entry.dataset.baseWidth = String(Math.max(0, width))
     entry.dataset.baseHeight = String(Math.max(0, height))
     this.placePictureEntry(
@@ -1643,6 +1667,16 @@ export class WolfRuntime {
     const pictureId = this.resolveNumberRef(command.pictureId, context)
     const entry = this.pictureEntries.get(pictureId)
     const value = entry === undefined ? 0 : this.readPictureMetric(entry, command.propertyId)
+    this.assignNumberRef({ kind: 'raw', value: command.targetRaw }, value, context)
+  }
+
+  private readVariablePlus(command: ReadVariablePlusCommand, context: CommandContext): void {
+    let value = 0
+    if (command.mode === 0x1000) {
+      value = this.readPositionMetric(command.sourceRaw, command.propertyId, context)
+    } else if (command.mode === 0x3000) {
+      value = this.readSystemMetric(command.propertyId)
+    }
     this.assignNumberRef({ kind: 'raw', value: command.targetRaw }, value, context)
   }
 
@@ -1756,6 +1790,20 @@ export class WolfRuntime {
       : `scale(${scale * effectScaleX}, ${scale * effectScaleY})`
   }
 
+  private syncPictureLayerScale(): void {
+    const logicalWidth = Math.max(1, Math.round(this.elements.canvas.width / 3))
+    const logicalHeight = Math.max(1, Math.round(this.elements.canvas.height / 3))
+    const canvasRect = this.elements.canvas.getBoundingClientRect()
+    const visibleWidth = canvasRect.width > 0 ? canvasRect.width : this.elements.canvas.width
+    const visibleHeight = canvasRect.height > 0 ? canvasRect.height : this.elements.canvas.height
+    const scaleX = visibleWidth / logicalWidth
+    const scaleY = visibleHeight / logicalHeight
+
+    this.elements.pictureLayer.style.width = `${logicalWidth}px`
+    this.elements.pictureLayer.style.height = `${logicalHeight}px`
+    this.elements.pictureLayer.style.transform = `scale(${scaleX}, ${scaleY})`
+  }
+
   private readPictureMetric(entry: PictureEntry, property: number | 'x' | 'y' | 'scale'): number {
     const element = entry
     switch (property) {
@@ -1792,6 +1840,45 @@ export class WolfRuntime {
       case 'scale': {
         return Number.parseFloat(element.dataset.anchorScale || '1') || 1
       }
+      default:
+        return 0
+    }
+  }
+
+  private readPositionMetric(sourceRaw: number, propertyId: number, context: CommandContext): number {
+    const currentMap = this.currentMap
+    if (currentMap === null) {
+      return 0
+    }
+    const subject = sourceRaw === -2
+      ? { x: this.playerX, y: this.playerY }
+      : sourceRaw === -1 && context.eventId !== null
+        ? currentMap.events.find((event) => event.id === context.eventId) ?? null
+        : currentMap.events.find((event) => event.id === sourceRaw) ?? null
+    if (subject === null) {
+      return 0
+    }
+
+    switch (propertyId) {
+      case 2:
+        return subject.x
+      case 3:
+        return subject.y
+      default:
+        return 0
+    }
+  }
+
+  private readSystemMetric(propertyId: number): number {
+    const currentMap = this.currentMap
+    if (currentMap === null) {
+      return 0
+    }
+    switch (propertyId) {
+      case 0:
+        return currentMap.id
+      case 1:
+        return -1
       default:
         return 0
     }
@@ -1910,8 +1997,99 @@ export class WolfRuntime {
     entry.dataset.baseHeight = String(cursorHeight)
   }
 
+  private adjustWindowBaseHelperToText(pictureId: number, textEntry: PictureEntry): void {
+    const helperEntry = this.pictureEntries.get(pictureId - 1)
+    if (!(helperEntry instanceof HTMLImageElement) || !this.isWindowBaseHelper(helperEntry)) {
+      return
+    }
+
+    const helperLeft = Number.parseFloat(helperEntry.style.left || '0')
+    const helperTop = Number.parseFloat(helperEntry.style.top || '0')
+    const textLeft = Number.parseFloat(textEntry.style.left || '0')
+    const textTop = Number.parseFloat(textEntry.style.top || '0')
+    if (textLeft < helperLeft || textTop < helperTop) {
+      return
+    }
+
+    const textRect = this.measureLogicalPictureRect(textEntry)
+    const helperBaseWidth = Number.parseFloat(helperEntry.dataset.baseWidth || '0') || 0
+    const helperBaseHeight = Number.parseFloat(helperEntry.dataset.baseHeight || '0') || 0
+    const nextWidth = Math.max(helperBaseWidth, Math.ceil(textLeft - helperLeft + textRect.width + 4))
+    const nextHeight = Math.max(helperBaseHeight, Math.ceil(textTop - helperTop + textRect.height + 2))
+
+    helperEntry.style.width = `${nextWidth}px`
+    helperEntry.style.height = `${nextHeight}px`
+    helperEntry.dataset.baseWidth = String(nextWidth)
+    helperEntry.dataset.baseHeight = String(nextHeight)
+    this.applyPictureLayout(
+      helperEntry,
+      pictureId - 1,
+      this.readPictureMetric(helperEntry, 'x'),
+      this.readPictureMetric(helperEntry, 'y'),
+      this.readPictureMetric(helperEntry, 'scale'),
+      this.readPicturePivot(helperEntry),
+    )
+  }
+
   private normalizeShownPictureScale(rawScale: number): number {
     return rawScale > 0 ? rawScale * 0.01 : 1
+  }
+
+  private measureLogicalPictureRect(entry: PictureEntry): { width: number; height: number } {
+    const rect = entry.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) {
+      return {
+        width: Number.parseFloat(entry.style.width || entry.dataset.baseWidth || '0') || 0,
+        height: Number.parseFloat(entry.style.height || entry.dataset.baseHeight || '0') || 0,
+      }
+    }
+
+    const logicalWidth = Math.max(1, Math.round(this.elements.canvas.width / 3))
+    const logicalHeight = Math.max(1, Math.round(this.elements.canvas.height / 3))
+    const canvasRect = this.elements.canvas.getBoundingClientRect()
+    const visibleWidth = canvasRect.width > 0 ? canvasRect.width : this.elements.canvas.width
+    const visibleHeight = canvasRect.height > 0 ? canvasRect.height : this.elements.canvas.height
+    return {
+      width: rect.width / Math.max(visibleWidth / logicalWidth, 0.001),
+      height: rect.height / Math.max(visibleHeight / logicalHeight, 0.001),
+    }
+  }
+
+  private applyWindowPictureHelperStyle(entry: HTMLDivElement, formattedText: string, renderedText: string): void {
+    if (/<SQUARE>/i.test(formattedText) && renderedText === 'FRAME') {
+      entry.style.background = 'transparent'
+      entry.style.border = '1px solid rgba(235, 245, 255, 0.82)'
+      entry.style.boxShadow = 'inset 0 0 0 1px rgba(72, 92, 132, 0.8)'
+      entry.style.padding = '0'
+      return
+    }
+
+    if (/<GRADX-[^>]+>/i.test(formattedText)) {
+      entry.style.background = 'linear-gradient(90deg, rgba(228, 238, 255, 0.96), rgba(138, 164, 212, 0.92) 55%, rgba(58, 74, 116, 0.55))'
+      entry.style.border = 'none'
+      entry.style.boxShadow = 'none'
+      entry.style.padding = '0'
+      return
+    }
+
+    if (/<GRADY-[^>]+>/i.test(formattedText)) {
+      entry.style.background = 'linear-gradient(180deg, rgba(98, 112, 188, 0.18), rgba(48, 60, 120, 0.1) 55%, rgba(18, 24, 46, 0.08))'
+      entry.style.border = 'none'
+      entry.style.boxShadow = 'none'
+      entry.style.padding = '0'
+    }
+  }
+
+  private normalizeWindowPictureSize(width: number, height: number): { width: number; height: number } {
+    const viewportWidth = Math.max(1, Math.round((this.elements.canvas.width ?? 960) / 3))
+    const viewportHeight = Math.max(1, Math.round((this.elements.canvas.height ?? 720) / 3))
+    if (width > viewportWidth * 1.5 || height > viewportHeight * 1.5) {
+      return {
+        width: width / WolfRuntime.PICTURE_COORDINATE_SCALE,
+        height: height / WolfRuntime.PICTURE_COORDINATE_SCALE,
+      }
+    }
+    return { width, height }
   }
 
   private normalizeMenuCommandList(): void {
@@ -1993,6 +2171,11 @@ export class WolfRuntime {
       || this.readPictureMetric(existingEntry, 'y') !== 0
       || this.readPictureMetric(existingEntry, 'scale') !== 1
       || this.readPicturePivot(existingEntry) !== 'leftTop'
+  }
+
+  private isWindowBaseHelper(entry: PictureEntry): boolean {
+    const assetPath = entry.dataset.assetPath || (entry instanceof HTMLImageElement ? entry.getAttribute('src') ?? '' : '')
+    return /WindowBase_amania\.png$/i.test(assetPath)
   }
 
   private calculatePictureLayout(
@@ -2085,6 +2268,7 @@ export class WolfRuntime {
       { record: 5, value: 100 }, // font height in sub-pixel units (10px × scale 10)
       { record: 6, value: 80 },  // secondary font height in sub-pixel units (8px × scale 10)
       { record: 7, value: 60 },  // tertiary font height in sub-pixel units (6px × scale 10)
+      { record: 69, value: 7 },  // battle enemy slot count used by initial placement
       { record: 97, value: 10 },
       { record: 98, value: 10 },
     ] as const
@@ -2096,9 +2280,148 @@ export class WolfRuntime {
     }
   }
 
+  private async runStartupCommonEvents(): Promise<void> {
+    if (this.repository === null || this.currentMap === null) {
+      return
+    }
+
+    const startupEvents = this.repository.commonEvents.filter((commonEvent) =>
+      commonEvent.startupTriggerRaw === 35 && commonEvent.startupArgCount === 0,
+    )
+
+    for (const commonEvent of startupEvents) {
+      if (this.hasInfiniteLoop(commonEvent)) {
+        void this.runStartupCommonEvent(commonEvent).catch((error) => {
+          this.setDebugInfo(`debug: startup common ${commonEvent.id} failed: ${String(error)}`)
+        })
+        continue
+      }
+
+      await this.runStartupCommonEvent(commonEvent)
+    }
+  }
+
+  private async runStartupCommonEvent(commonEvent: CommonEventData): Promise<void> {
+    if (this.currentMap === null) {
+      return
+    }
+
+    await this.runCommonEvent(commonEvent, {
+      kind: 'callEvent',
+      indent: 0,
+      eventLookup: { type: 'name', name: commonEvent.name },
+      numberArgs: [],
+      hasReturnValue: false,
+      returnDestination: null,
+    }, {
+      mapId: this.currentMap.id,
+      eventId: null,
+      commonEventId: null,
+    })
+  }
+
+  private hasInfiniteLoop(commonEvent: CommonEventData): boolean {
+    return commonEvent.commands.some((command) => command.kind === 'loopStart' && command.isInfinite)
+  }
+
+  private async initializeStartingPartyVitals(): Promise<void> {
+    if (this.repository === null || this.currentMap === null) {
+      return
+    }
+
+    for (const actorId of await this.readStartingPartyActorIds()) {
+      if (actorId < 0) {
+        continue
+      }
+
+      const currentHp = this.repository.changeableDb.getInt(0, actorId, 6)
+      const maxHp = this.repository.changeableDb.getInt(0, actorId, 7)
+      if (currentHp === 0 && maxHp > 0) {
+        this.repository.changeableDb.setInt(0, actorId, 6, maxHp)
+      }
+
+      const currentSp = this.repository.changeableDb.getInt(0, actorId, 8)
+      const maxSp = this.repository.changeableDb.getInt(0, actorId, 9)
+      if (currentSp === 0 && maxSp > 0) {
+        this.repository.changeableDb.setInt(0, actorId, 8, maxSp)
+      }
+    }
+  }
+
+  private async readStartingPartyActorIds(): Promise<number[]> {
+    if (this.repository === null || this.currentMap === null) {
+      return []
+    }
+
+    const commonEvent = this.repository.getCommonEventById(105)
+      ?? this.repository.getCommonEventByName('X[移]選択位置主人公ID取得')
+    if (commonEvent === null || commonEvent.returnValueRaw === null) {
+      return []
+    }
+
+    const actorIds: number[] = []
+    for (let slotIndex = 0; slotIndex < 8; slotIndex += 1) {
+      await this.runCommonEvent(commonEvent, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: commonEvent.name },
+        numberArgs: [{ kind: 'raw', value: slotIndex }],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, {
+        mapId: this.currentMap.id,
+        eventId: null,
+        commonEventId: null,
+      })
+
+      const actorId = this.resolveNumberRef({ kind: 'raw', value: commonEvent.returnValueRaw }, {
+        mapId: this.currentMap.id,
+        eventId: null,
+        commonEventId: commonEvent.id,
+      })
+      if (actorId < 0) {
+        break
+      }
+      actorIds.push(actorId)
+    }
+
+    return actorIds
+  }
+
+  private readChangeableDbInt(table: number, record: number, field: number): number {
+    if (this.repository === null) {
+      return 0
+    }
+
+    const changeableDb = this.repository.changeableDb
+    const value = changeableDb.getInt(table, record, field)
+    if (value !== 0) {
+      return value
+    }
+
+    if (table === 17 && record >= (changeableDb.records[17]?.length ?? 0)) {
+      if (field === 0) {
+        return changeableDb.getInt(0, record, 7)
+      }
+      if (field === 1) {
+        return changeableDb.getInt(0, record, 9)
+      }
+    }
+
+    return value
+  }
+
   private removePicture(pictureId: number): void {
     this.pictureEntries.get(pictureId)?.remove()
     this.pictureEntries.delete(pictureId)
+  }
+
+  private removePicturesInRange(startPictureId: number, endPictureId: number): void {
+    for (const pictureId of [...this.pictureEntries.keys()]) {
+      if (pictureId >= startPictureId && pictureId <= endPictureId) {
+        this.removePicture(pictureId)
+      }
+    }
   }
 
   private restorePictureEntries(snapshot: Map<number, PictureEntry>): void {

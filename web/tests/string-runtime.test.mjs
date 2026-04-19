@@ -1130,6 +1130,62 @@ test('cancel key opens the menu common event when the player is idle', async () 
   assert.equal(result.escapeStillPressed, false)
 })
 
+test('boot discovers startup common events and seeds menu vitals before opening the menu', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_boot_startup_commons=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      await runtime.boot()
+
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: runtime.startLocation.mapId, eventId: null, commonEventId: null })
+
+      return {
+        startupEventIds: runtime.repository.commonEvents
+          .filter((commonEvent) => commonEvent.startupTriggerRaw === 35 && commonEvent.startupArgCount === 0)
+          .map((commonEvent) => commonEvent.id),
+        hpNow: runtime.repository.changeableDb.getInt(0, 12, 6),
+        hpMax: runtime.repository.changeableDb.getInt(0, 12, 7),
+        spNow: runtime.repository.changeableDb.getInt(0, 12, 8),
+        spMax: runtime.repository.changeableDb.getInt(0, 12, 9),
+        hpText: runtime.pictureEntries.get(10213)?.textContent ?? '',
+        spText: runtime.pictureEntries.get(10218)?.textContent ?? '',
+      }
+    }),
+  )
+
+  assert.deepEqual(result.startupEventIds, [48, 63, 126])
+  assert.equal(result.hpNow, 50)
+  assert.equal(result.hpMax, 50)
+  assert.equal(result.spNow, 20)
+  assert.equal(result.spMax, 20)
+  assert.equal(result.hpText, 'HP\n50/50')
+  assert.equal(result.spText, 'SP\n20/20')
+})
+
 test('cancel key does not open the menu while another event is running', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
@@ -1610,6 +1666,28 @@ test('menu common event parses loop-continue commands with a dedicated kind', as
   assert.deepEqual(result.continueKinds, ['loopContinue', 'loopContinue', 'loopContinue'])
 })
 
+test('variable-plus command 124 parses supported coordinate and system getter variants', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const dataMod = await import('/src/wolf/data.ts?test_variable_plus_124_kinds=1')
+      const repo = await dataMod.WolfDataRepository.create()
+      const encounter = repo.getCommonEventById(37)
+      const walk = repo.getCommonEventById(126)
+      const battle = repo.getCommonEventById(188)
+
+      return {
+        encounterKinds: encounter.commands.slice(4, 6).map((command) => command.kind),
+        walkKinds: [walk.commands[56].kind, walk.commands[60].kind, walk.commands[103].kind, walk.commands[104].kind],
+        battleKind: battle.commands[10].kind,
+      }
+    }),
+  )
+
+  assert.deepEqual(result.encounterKinds, ['readVariablePlus', 'readVariablePlus'])
+  assert.deepEqual(result.walkKinds, ['readVariablePlus', 'readVariablePlus', 'readVariablePlus', 'readVariablePlus'])
+  assert.equal(result.battleKind, 'readVariablePlus')
+})
+
 test('loop-continue jumps back to the current loop start without running the rest of the body', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
@@ -1674,6 +1752,53 @@ test('loop-continue jumps back to the current loop start without running the res
 
   assert.equal(result.count, 3)
   assert.equal(result.body, 2)
+})
+
+test('readVariablePlus resolves player coordinates and current map id for supported 124 variants', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_read_variable_plus_124=1')
+      const dataMod = await import('/src/wolf/data.ts?test_read_variable_plus_124=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const commonEvent = { id: 1, name: 'test-variable-plus', commands: [], returnValueRaw: null, numberVariables: [], stringVariables: [] }
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      const originalGetCommonEventById = runtime.repository.getCommonEventById.bind(runtime.repository)
+      runtime.repository.getCommonEventById = (id) => (id === 1 ? commonEvent : originalGetCommonEventById(id))
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+
+      const context = { mapId: 1, eventId: null, commonEventId: 1 }
+      await runtime.executeCommands([
+        { kind: 'readVariablePlus', indent: 0, targetRaw: 1600010, mode: 0x1000, sourceRaw: -2, propertyId: 2 },
+        { kind: 'readVariablePlus', indent: 0, targetRaw: 1600011, mode: 0x1000, sourceRaw: -2, propertyId: 3 },
+        { kind: 'readVariablePlus', indent: 0, targetRaw: 1600012, mode: 0x3000, sourceRaw: 0, propertyId: 0 },
+        { kind: 'readVariablePlus', indent: 0, targetRaw: 1600013, mode: 0x3000, sourceRaw: 1, propertyId: 1 },
+      ], context)
+
+      return {
+        x: runtime.resolveNumberRef({ kind: 'raw', value: 1600010 }, context),
+        y: runtime.resolveNumberRef({ kind: 'raw', value: 1600011 }, context),
+        mapId: runtime.resolveNumberRef({ kind: 'raw', value: 1600012 }, context),
+        audioSourceKind: runtime.resolveNumberRef({ kind: 'raw', value: 1600013 }, context),
+      }
+    }),
+  )
+
+  assert.equal(result.x, 12)
+  assert.equal(result.y, 8)
+  assert.equal(result.mapId, 1)
+  assert.equal(result.audioSourceKind, -1)
 })
 
 test('menu draw common events parse dedicated picture helper kinds', async () => {
@@ -2613,6 +2738,328 @@ test('menu window helper entries have non-zero size', async () => {
   assert.ok(result.nonZeroSizeCount >= 3)
 })
 
+test('menu overlays stay within the visible viewport in the real app frame', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_real_menu_viewport=1')
+      const dataMod = await import('/src/wolf/data.ts?test_real_menu_viewport=1')
+      const canvas = document.querySelector('#gameCanvas')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas,
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const canvasRect = canvas.getBoundingClientRect()
+      const pictureIds = [10002, 10011, 10012, 10203, 10219]
+      return {
+        canvasWidth: Math.round(canvasRect.width),
+        canvasHeight: Math.round(canvasRect.height),
+        overlays: pictureIds.map((pictureId) => {
+          const entry = runtime.pictureEntries.get(pictureId)
+          const rect = entry?.getBoundingClientRect()
+          return rect === undefined
+            ? null
+            : {
+                pictureId,
+                left: Math.round(rect.left - canvasRect.left),
+                top: Math.round(rect.top - canvasRect.top),
+                right: Math.round(rect.right - canvasRect.left),
+                bottom: Math.round(rect.bottom - canvasRect.top),
+              }
+        }),
+      }
+    }),
+  )
+
+  assert.ok(result.canvasWidth >= 900)
+  assert.ok(result.canvasHeight >= 675)
+  for (const overlay of result.overlays) {
+    assert.ok(overlay !== null)
+    assert.ok(overlay.left >= -1)
+    assert.ok(overlay.top >= -1)
+    assert.ok(overlay.right <= result.canvasWidth + 1)
+    assert.ok(overlay.bottom <= result.canvasHeight + 1)
+  }
+})
+
+test('menu overlays rescale with the visible canvas on narrower viewports', async () => {
+  const browser = await chromium.launch({ headless: true })
+  const page = await browser.newPage({ viewport: { width: 900, height: 900 } })
+
+  try {
+    await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 120000 })
+    const result = await page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_narrow_menu_viewport=1')
+      const dataMod = await import('/src/wolf/data.ts?test_narrow_menu_viewport=1')
+      const canvas = document.querySelector('#gameCanvas')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas,
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const canvasRect = canvas.getBoundingClientRect()
+      return {
+        canvasWidth: Math.round(canvasRect.width),
+        canvasHeight: Math.round(canvasRect.height),
+        overlays: [...runtime.pictureEntries.entries()].map(([pictureId, entry]) => {
+          const rect = entry.getBoundingClientRect()
+          return {
+            pictureId,
+            right: Math.round(rect.right - canvasRect.left),
+            bottom: Math.round(rect.bottom - canvasRect.top),
+          }
+        }).filter((entry) => entry.pictureId >= 10000 && entry.pictureId < 11000),
+      }
+    })
+
+    assert.ok(result.canvasWidth < 900)
+    assert.ok(result.canvasHeight < 700)
+    for (const overlay of result.overlays) {
+      assert.ok(overlay.right <= result.canvasWidth + 1)
+      assert.ok(overlay.bottom <= result.canvasHeight + 1)
+    }
+  } finally {
+    await browser.close()
+  }
+})
+
+test('menu character pane helper bars stay within sane bounds', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_character_bar_sizes=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_character_bar_sizes=1')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      const layer = document.createElement('canvas')
+      layer.width = 320
+      layer.height = 240
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.currentMap = {
+        id: 1,
+        width: 20,
+        height: 15,
+        movableGrid: Array.from({ length: 20 }, () => Array.from({ length: 15 }, () => true)),
+        events: [],
+        lowerCanvas: layer,
+        upperCanvas: layer,
+      }
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      return [10210, 10215, 10219].map((pictureId) => {
+        const entry = runtime.pictureEntries.get(pictureId)
+        return {
+          pictureId,
+          left: Number.parseFloat(entry?.style.left ?? '0'),
+          top: Number.parseFloat(entry?.style.top ?? '0'),
+          width: Number.parseFloat(entry?.style.width ?? '0'),
+          height: Number.parseFloat(entry?.style.height ?? '0'),
+        }
+      })
+    }),
+  )
+
+  for (const helper of result) {
+    assert.ok(helper.width > 40 && helper.width < 80, `unexpected helper width for ${helper.pictureId}: ${helper.width}`)
+    assert.ok(helper.height > 2 && helper.height < 8, `unexpected helper height for ${helper.pictureId}: ${helper.height}`)
+    assert.ok(helper.left + helper.width < 210, `helper ${helper.pictureId} extends too far right`)
+    assert.ok(helper.top < 90, `helper ${helper.pictureId} extends too far down`)
+  }
+})
+
+test('menu helper tokens keep the character pane frame transparent and bars thin', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_helper_token_style=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_helper_token_style=1')
+      const canvas = document.querySelector('#gameCanvas')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas,
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const frame = runtime.pictureEntries.get(10203)
+      const bar = runtime.pictureEntries.get(10210)
+      const barRect = bar?.getBoundingClientRect()
+      const canvasRect = canvas.getBoundingClientRect()
+      return {
+        frameBackground: frame?.style.background ?? '',
+        frameBorder: frame?.style.border ?? '',
+        barBackground: bar?.style.background ?? '',
+        barBorder: bar?.style.border ?? '',
+        barHeight: barRect === undefined
+          ? 0
+          : Math.round((barRect.height / Math.max(canvasRect.height, 1)) * 240),
+      }
+    }),
+  )
+
+  assert.equal(result.frameBackground, 'transparent')
+  assert.match(result.frameBorder, /rgba\(235, 245, 255/)
+  assert.ok(result.barBackground === 'transparent' || /linear-gradient\(90deg/.test(result.barBackground), `unexpected helper bar background: ${result.barBackground}`)
+  assert.ok(result.barBorder === '' || /rgba\(235, 245, 255/.test(result.barBorder), `unexpected helper bar border: ${result.barBorder}`)
+  assert.ok(result.barHeight <= 5, `expected thin helper bar, got ${result.barHeight}`)
+})
+
+test('menu gold helper stretches to cover the gold label', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_menu_gold_helper=1')
+      const dataMod = await import('/src/wolf/data.ts?test_menu_gold_helper=1')
+      const canvas = document.querySelector('#gameCanvas')
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas,
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+      runtime.resolveKeyInput = async () => 11
+      runtime.waitFrames = async () => {}
+      runtime.showMessage = async () => {}
+
+      const menu = runtime.repository.getCommonEventById(127)
+      await runtime.runCommonEvent(menu, {
+        kind: 'callEvent',
+        indent: 0,
+        eventLookup: { type: 'name', name: menu.name },
+        numberArgs: [],
+        hasReturnValue: false,
+        returnDestination: null,
+      }, { mapId: 1, eventId: null, commonEventId: null })
+
+      const helper = runtime.pictureEntries.get(10011)
+      const label = runtime.pictureEntries.get(10012)
+      const helperRect = helper?.getBoundingClientRect()
+      const labelRect = label?.getBoundingClientRect()
+      return helperRect === undefined || labelRect === undefined
+        ? null
+        : {
+            helperWidth: Math.round(helperRect.width),
+            helperHeight: Math.round(helperRect.height),
+            helperLeft: Math.round(helperRect.left),
+            helperTop: Math.round(helperRect.top),
+            helperRight: Math.round(helperRect.right),
+            helperBottom: Math.round(helperRect.bottom),
+            labelRight: Math.round(labelRect.right),
+            labelBottom: Math.round(labelRect.bottom),
+          }
+    }),
+  )
+
+  assert.ok(result !== null)
+  assert.ok(result.helperWidth > result.helperHeight, `expected stretched helper window, got ${JSON.stringify(result)}`)
+  assert.ok(result.helperRight >= result.labelRight, `gold helper does not cover label: ${JSON.stringify(result)}`)
+  assert.ok(result.helperBottom >= result.labelBottom, `gold helper is too short: ${JSON.stringify(result)}`)
+})
+
 test('menu character pane text entries use computed coordinates instead of staying at the origin', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
@@ -2953,14 +3400,29 @@ test('shop item text keeps sane scale and stays on-screen', async () => {
 
       const chef = runtime.currentMap.events.find((event) => event.id === 9)
       const pageData = runtime.getActivePage(chef)
+
       let keyReads = 0
+      const originalRemovePicturesInRange = runtime.removePicturesInRange.bind(runtime)
 
       runtime.showMessage = async () => {}
       runtime.showChoices = async () => 1
       runtime.waitFrames = async () => {}
       runtime.resolveKeyInput = async () => (++keyReads < 3 ? 0 : 11)
+      runtime.removePicturesInRange = (...args) => {
+        if (args[0] === 12000 && args[1] === 15999) {
+          throw new Error('STOP_BEFORE_SHOP_CLEANUP')
+        }
+        return originalRemovePicturesInRange(...args)
+      }
 
-      await runtime.executeCommands(pageData.commands, { mapId: 1, eventId: chef.id, commonEventId: null })
+      try {
+        await runtime.executeCommands(pageData.commands, { mapId: 1, eventId: chef.id, commonEventId: null })
+      } catch (error) {
+        const message = String(error && error.message ? error.message : error)
+        if (!message.includes('STOP_BEFORE_SHOP_CLEANUP')) {
+          throw error
+        }
+      }
 
       const itemSummary = runtime.pictureEntries.get(15009)
       const itemDescription = runtime.pictureEntries.get(15002)
@@ -3016,14 +3478,29 @@ test('shop tab cursor follows the visible tab instead of collapsing to the corne
 
       const chef = runtime.currentMap.events.find((event) => event.id === 9)
       const pageData = runtime.getActivePage(chef)
+
       let keyReads = 0
+      const originalRemovePicturesInRange = runtime.removePicturesInRange.bind(runtime)
 
       runtime.showMessage = async () => {}
       runtime.showChoices = async () => 1
       runtime.waitFrames = async () => {}
       runtime.resolveKeyInput = async () => (++keyReads < 3 ? 0 : 11)
+      runtime.removePicturesInRange = (...args) => {
+        if (args[0] === 12000 && args[1] === 15999) {
+          throw new Error('STOP_BEFORE_SHOP_CLEANUP')
+        }
+        return originalRemovePicturesInRange(...args)
+      }
 
-      await runtime.executeCommands(pageData.commands, { mapId: 1, eventId: chef.id, commonEventId: null })
+      try {
+        await runtime.executeCommands(pageData.commands, { mapId: 1, eventId: chef.id, commonEventId: null })
+      } catch (error) {
+        const message = String(error && error.message ? error.message : error)
+        if (!message.includes('STOP_BEFORE_SHOP_CLEANUP')) {
+          throw error
+        }
+      }
 
       const hiddenCursor = runtime.pictureEntries.get(12002)
       const activeCursor = runtime.pictureEntries.get(12003)
@@ -3097,6 +3574,9 @@ test('chef takeout branch enters shop and exits on cancel input', async () => {
           ok: true,
           debug: runtime.elements.debugPanel?.textContent ?? '',
           snapshots,
+          remainingShopPictures: [...runtime.pictureEntries.entries()]
+            .filter(([pictureId]) => pictureId >= 12000 && pictureId <= 15999)
+            .map(([pictureId, entry]) => ({ pictureId, text: entry.textContent ?? '' })),
         }
       } catch (error) {
         return {
@@ -3112,9 +3592,10 @@ test('chef takeout branch enters shop and exits on cancel input', async () => {
   assert.equal(result.ok, true)
   assert.equal(result.snapshots.find((entry) => entry.type === 'choice').options[1], 'お持ち帰りでお願いします')
   assert.match(result.debug, /debug: idle/)
+  assert.deepEqual(result.remainingShopPictures, [])
 })
 
-test('battle entry common event runs the existing battle flow instead of stopping at the unsupported message', async () => {
+test('battle entry common event reaches action setup with enemy layout instead of collapsing into an empty victory path', async () => {
   const result = await withPage(async (page) =>
     page.evaluate(async () => {
       const runtimeMod = await import('/src/wolf/runtime.ts?test_battle_entry_flow=1')
@@ -3137,23 +3618,25 @@ test('battle entry common event runs the existing battle flow instead of stoppin
       runtime.startLocation = { mapId: 1, x: 12, y: 8 }
       await runtime.changeMap(1, 12, 8)
 
-      const battleSnapshots = []
       const shownMessages = []
-      let keyReads = 0
-
-      runtime.waitFrames = async () => {
-        const battlePictureIds = [...runtime.pictureEntries.keys()].filter((pictureId) => pictureId >= 10000)
-        battleSnapshots.push({
-          battleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
-          pictureCount: battlePictureIds.length,
-          pictureIds: battlePictureIds.slice(0, 12),
-        })
+      const visitedBattleEvents = []
+      const originalRunCommonEvent = runtime.runCommonEvent.bind(runtime)
+      runtime.runCommonEvent = async (commonEvent, command, context) => {
+        if (commonEvent.id >= 188 && commonEvent.id <= 201) {
+          visitedBattleEvents.push(commonEvent.name)
+        }
+        if (commonEvent.id === 191) {
+          throw new Error('STOP_AT_ACTION_SETUP')
+        }
+        return originalRunCommonEvent(commonEvent, command, context)
       }
+
+      runtime.waitFrames = async () => {}
       runtime.showMessage = async (message) => {
         shownMessages.push(message)
       }
       runtime.showChoices = async () => 0
-      runtime.resolveKeyInput = async () => (++keyReads > 20 ? 11 : 2)
+      runtime.resolveKeyInput = async () => 11
 
       const commonEvent = runtime.repository.getCommonEventById(28)
       try {
@@ -3165,19 +3648,39 @@ test('battle entry common event runs the existing battle flow instead of stoppin
           hasReturnValue: false,
           returnDestination: null,
         }, { mapId: 1, eventId: null, commonEventId: null })
-        return {
-          ok: true,
-          shownMessages,
-          battleSnapshots,
-          finalBattleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
-        }
+          return {
+            ok: true,
+            shownMessages,
+            stoppedAtActionSetup: false,
+            visitedBattleEvents,
+          }
       } catch (error) {
+        const errorText = String(error && error.message ? error.message : error)
+        if (errorText.includes('STOP_AT_ACTION_SETUP')) {
+          const battlePictures = [...runtime.pictureEntries.entries()]
+            .filter(([pictureId]) => pictureId >= 10000 && pictureId < 20000)
+            .map(([pictureId, entry]) => ({
+              pictureId,
+              text: entry.textContent ?? '',
+              left: entry.style.left,
+              top: entry.style.top,
+            }))
+          return {
+            ok: true,
+            shownMessages,
+            stoppedAtActionSetup: true,
+            visitedBattleEvents,
+            enemySlotCount: runtime.repository.changeableDb.getInt(18, 69, 0),
+            battleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
+            battlePictures,
+          }
+        }
         return {
           ok: false,
-          error: String(error && error.message ? error.message : error),
+          error: errorText,
           shownMessages,
-          battleSnapshots,
-          finalBattleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
+          stoppedAtActionSetup: false,
+          visitedBattleEvents,
         }
       }
     }),
@@ -3185,8 +3688,12 @@ test('battle entry common event runs the existing battle flow instead of stoppin
 
   assert.equal(result.ok, true)
   assert.ok(!result.shownMessages.includes('戦闘はまだ Web 版で未対応です。'))
-  assert.ok(result.battleSnapshots.some((snapshot) => snapshot.battleFlag === 1))
-  assert.ok(result.battleSnapshots.some((snapshot) => snapshot.pictureIds.includes(10000)))
-  assert.ok(result.battleSnapshots.some((snapshot) => snapshot.pictureCount >= 15))
-  assert.equal(result.finalBattleFlag, 0)
+  assert.equal(result.stoppedAtActionSetup, true)
+  assert.equal(result.enemySlotCount, 7)
+  assert.equal(result.battleFlag, 1)
+  assert.ok(result.visitedBattleEvents.includes('X┣◆戦闘キャラ配置'))
+  assert.ok(result.visitedBattleEvents.includes('X┣◆行動内容のセット'))
+  assert.ok(result.battlePictures.some((picture) => picture.pictureId === 10000))
+  assert.ok(result.battlePictures.some((picture) => picture.pictureId === 10805 && picture.text.includes('オオカミ')))
+  assert.ok(!result.shownMessages.some((message) => message.includes('ゴールド入手')))
 })

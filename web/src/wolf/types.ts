@@ -309,6 +309,15 @@ export interface ReadPicturePropertyCommand {
   propertyId: number
 }
 
+export interface ReadVariablePlusCommand {
+  kind: 'readVariablePlus'
+  indent: number
+  targetRaw: number
+  mode: number
+  sourceRaw: number
+  propertyId: number
+}
+
 export interface PictureEffectCommand {
   kind: 'pictureEffect'
   indent: number
@@ -399,6 +408,7 @@ export type WolfCommand =
   | ShowWindowPictureCommand
   | MovePictureCommand
   | ReadPicturePropertyCommand
+  | ReadVariablePlusCommand
   | PictureEffectCommand
   | WaitCommand
   | LabelSetCommand
@@ -436,6 +446,8 @@ export interface WolfMapEvent {
 export interface CommonEventData {
   id: number
   name: string
+  startupTriggerRaw: number
+  startupArgCount: number
   commands: WolfCommand[]
   returnValueRaw: number | null
   numberVariables: number[]

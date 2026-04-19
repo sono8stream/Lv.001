@@ -36,6 +36,7 @@ import type {
   PictureEffectCommand,
   PicturePivot,
   ReadPicturePropertyCommand,
+  ReadVariablePlusCommand,
   RemovePictureCommand,
   ShowMessagePictureCommand,
   ShowPictureCommand,
@@ -1072,6 +1073,28 @@ export class WolfDataRepository {
       } satisfies ReadPicturePropertyCommand
     }
 
+    if (mode === 0x1000) {
+      return {
+        kind: 'readVariablePlus',
+        indent: meta.indentDepth,
+        targetRaw: meta.numberArgs[1] ?? 0,
+        mode,
+        sourceRaw: meta.numberArgs[3] ?? 0,
+        propertyId: meta.numberArgs[4] ?? 0,
+      } satisfies ReadVariablePlusCommand
+    }
+
+    if (mode === 0x3000) {
+      return {
+        kind: 'readVariablePlus',
+        indent: meta.indentDepth,
+        targetRaw: meta.numberArgs[1] ?? 0,
+        mode,
+        sourceRaw: meta.numberArgs[3] ?? 0,
+        propertyId: meta.numberArgs[3] ?? 0,
+      } satisfies ReadVariablePlusCommand
+    }
+
     return { kind: 'unknown', indent: meta.indentDepth, key: meta.numberArgs[0] ?? -1 } satisfies UnknownCommand
   }
 
@@ -1433,11 +1456,13 @@ export class WolfDataRepository {
       const eventId = reader.readInt(offset)
       offset = eventId.nextOffset
 
-      offset = reader.readByte(offset).nextOffset
+      const startupTriggerRaw = reader.readByte(offset)
+      offset = startupTriggerRaw.nextOffset
       offset = reader.readInt(offset).nextOffset
       offset = reader.readInt(offset).nextOffset
 
-      offset = reader.readByte(offset).nextOffset
+      const startupArgCount = reader.readByte(offset)
+      offset = startupArgCount.nextOffset
       offset = reader.readByte(offset).nextOffset
 
       const eventName = reader.readString(offset)
@@ -1509,6 +1534,8 @@ export class WolfDataRepository {
       commonEvents.push({
         id: eventId.value,
         name: eventName.value,
+        startupTriggerRaw: startupTriggerRaw.value,
+        startupArgCount: startupArgCount.value,
         commands,
         returnValueRaw,
         numberVariables: Array.from({ length: 95 }, () => 0),
