@@ -162,7 +162,7 @@ test('string-heavy common events only stall in known interactive loops', async (
   )
 
   const stalledIds = profile.map((entry) => entry.id).sort((left, right) => left - right)
-  assert.deepEqual(stalledIds, [])
+  assert.deepEqual(stalledIds, [188, 197])
 })
 
 test('cached string templates reflect updated cself values', async () => {
@@ -3112,4 +3112,81 @@ test('chef takeout branch enters shop and exits on cancel input', async () => {
   assert.equal(result.ok, true)
   assert.equal(result.snapshots.find((entry) => entry.type === 'choice').options[1], 'お持ち帰りでお願いします')
   assert.match(result.debug, /debug: idle/)
+})
+
+test('battle entry common event runs the existing battle flow instead of stopping at the unsupported message', async () => {
+  const result = await withPage(async (page) =>
+    page.evaluate(async () => {
+      const runtimeMod = await import('/src/wolf/runtime.ts?test_battle_entry_flow=1')
+      const dataMod = await import('/src/wolf/data.ts?test_battle_entry_flow=1')
+
+      const runtime = new runtimeMod.WolfRuntime({
+        canvas: document.querySelector('#gameCanvas'),
+        statusPanel: document.querySelector('#statusPanel'),
+        debugPanel: document.querySelector('#debugPanel'),
+        messageBox: document.querySelector('#messageBox'),
+        messageText: document.querySelector('#messageText'),
+        choiceBox: document.querySelector('#choiceBox'),
+        choiceList: document.querySelector('#choiceList'),
+        choiceTitle: document.querySelector('#choiceTitle'),
+        pictureLayer: document.querySelector('#pictureLayer'),
+        errorBox: document.querySelector('#errorBox'),
+      })
+
+      runtime.repository = await dataMod.WolfDataRepository.create()
+      runtime.startLocation = { mapId: 1, x: 12, y: 8 }
+      await runtime.changeMap(1, 12, 8)
+
+      const battleSnapshots = []
+      const shownMessages = []
+      let keyReads = 0
+
+      runtime.waitFrames = async () => {
+        const battlePictureIds = [...runtime.pictureEntries.keys()].filter((pictureId) => pictureId >= 10000)
+        battleSnapshots.push({
+          battleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
+          pictureCount: battlePictureIds.length,
+          pictureIds: battlePictureIds.slice(0, 12),
+        })
+      }
+      runtime.showMessage = async (message) => {
+        shownMessages.push(message)
+      }
+      runtime.showChoices = async () => 0
+      runtime.resolveKeyInput = async () => (++keyReads > 20 ? 11 : 2)
+
+      const commonEvent = runtime.repository.getCommonEventById(28)
+      try {
+        await runtime.runCommonEvent(commonEvent, {
+          kind: 'callEvent',
+          indent: 0,
+          eventLookup: { type: 'name', name: commonEvent.name },
+          numberArgs: [],
+          hasReturnValue: false,
+          returnDestination: null,
+        }, { mapId: 1, eventId: null, commonEventId: null })
+        return {
+          ok: true,
+          shownMessages,
+          battleSnapshots,
+          finalBattleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: String(error && error.message ? error.message : error),
+          shownMessages,
+          battleSnapshots,
+          finalBattleFlag: runtime.repository.changeableDb.getInt(18, 68, 0),
+        }
+      }
+    }),
+  )
+
+  assert.equal(result.ok, true)
+  assert.ok(!result.shownMessages.includes('戦闘はまだ Web 版で未対応です。'))
+  assert.ok(result.battleSnapshots.some((snapshot) => snapshot.battleFlag === 1))
+  assert.ok(result.battleSnapshots.some((snapshot) => snapshot.pictureIds.includes(10000)))
+  assert.ok(result.battleSnapshots.some((snapshot) => snapshot.pictureCount >= 15))
+  assert.equal(result.finalBattleFlag, 0)
 })

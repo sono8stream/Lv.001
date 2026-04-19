@@ -73,7 +73,6 @@ export class WolfRuntime {
   private static readonly PLAYER_MOVE_REPEAT_FRAMES = 9
   private static readonly PLAYER_ANIMATION_SETTLE_FRAMES = 6
   private static readonly PICTURE_COORDINATE_SCALE = 10
-  private static readonly UNSUPPORTED_BATTLE_EVENT_NAMES = new Set(['◆バトルの発生', 'X◆戦闘処理'])
   private static readonly INTERPOLATION_TOKEN_PATTERN = /\\(self\[(\d+)\]|cself\[(\d+)\]|([ucs])db\[(\d+):(\d+):(\d+)])/g
 
   private readonly elements: RuntimeElements
@@ -826,14 +825,6 @@ export class WolfRuntime {
     }
     for (let index = 0; index < Math.min(4, args.length); index += 1) {
       commonEvent.numberVariables[index] = args[index]
-    }
-
-    if (WolfRuntime.UNSUPPORTED_BATTLE_EVENT_NAMES.has(commonEvent.name)) {
-      if (command.hasReturnValue && command.returnDestination !== null) {
-        this.assignNumberRef(command.returnDestination, 0, context)
-      }
-      await this.showMessage('戦闘はまだ Web 版で未対応です。')
-      return
     }
 
     await this.executeCommands(commonEvent.commands, {
